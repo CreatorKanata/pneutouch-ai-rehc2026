@@ -12,6 +12,7 @@
 | [hardware.md](hardware.md) | DT-EBML63Q2557、HX710B、配線、電圧、通信 |
 | [sensor-options.md](sensor-options.md) | HX711・内蔵ADC・高速センサーの比較 |
 | [mcu-adc-option.md](mcu-adc-option.md) | DTの12 bit ADC、CN6回路、差動増幅と高速取得案 |
+| [mps20n0040d-amplifier-adc.md](mps20n0040d-amplifier-adc.md) | INA333基板の電源・R3・VREF、アンプ＋ADC構成、接続前の試験 |
 | [architecture.md](architecture.md) | `src/`構成、3アプリの責務、データ形式 |
 | [implementation-plan.md](implementation-plan.md) | 段階ごとの作業・検証・進む条件 |
 | [development-workflow.md](development-workflow.md) | Macで編集しWindows/LEXIDE-Ωでビルドする手順 |
