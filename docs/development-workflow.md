@@ -42,6 +42,15 @@ Mac単独のビルド環境作成は後続の選択肢とし、まず配布資�
 共有フォルダーから直接ビルドする方法も考えられるが、初回はWindowsローカルの短い
 ASCIIパスを使い、UNCパス・日本語パス・ファイル同期の問題を切り分けやすくする。
 
+## 追加SDKを取り込む際の注意
+
+- [追加資料の索引](reference-catalog.md)を起点に、採用パッケージとヘッダー/ライブラリーのハッシュを記録する。
+- 新AIサンプルのDebugは新ライブラリー、Releaseは同梱されていない旧ライブラリー名を参照している。
+  両構成を揃えてClean Buildし、HEX/mapを確認する。詳細は[要修正箇所](reference-integration.md)。
+- RB用のUARTF0/P20/P21と、DTのUARTF1/P70/P71・電源保持を分けて移植する。
+- Python例にはMacのポート探索と学習/保存APIの修正点がある。配布物の無修正動作を前提にしない。
+- AIVibrationの説明書Rev.20260417/20260421と、同梱HEX/EXEのバージョンは別に記録する。
+
 ## 既存ファームウェアと移行
 
 配布パッケージはAIVibrationInference向け。D3 / D4にはAISignalInferenceからの移行がある。

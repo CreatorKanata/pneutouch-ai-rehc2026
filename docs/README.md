@@ -10,11 +10,15 @@
 | [concept.md](concept.md) | ユーザーが記した構想の原文。変更せず保存 |
 | [product-design.md](product-design.md) | 技術仮説、7区画、デモ体験、成功条件 |
 | [hardware.md](hardware.md) | DT-EBML63Q2557、HX710B、配線、電圧、通信 |
-| [sensor-options.md](sensor-options.md) | HX711へのつなぎ替え条件、80 SPS、高速センサー候補 |
+| [sensor-options.md](sensor-options.md) | HX711・内蔵ADC・高速センサーの比較 |
+| [mcu-adc-option.md](mcu-adc-option.md) | DTの12 bit ADC、CN6回路、差動増幅と高速取得案 |
 | [architecture.md](architecture.md) | `src/`構成、3アプリの責務、データ形式 |
 | [implementation-plan.md](implementation-plan.md) | 段階ごとの作業・検証・進む条件 |
 | [development-workflow.md](development-workflow.md) | Macで編集しWindows/LEXIDE-Ωでビルドする手順 |
 | [research-notes.md](research-notes.md) | 参照元、確認したコード、重要な発見、未確認事項 |
+| [reference-catalog.md](reference-catalog.md) | 追加4グループの資料索引、版、読むべきソース |
+| [solist-ai-implementation.md](solist-ai-implementation.md) | 公式分類例、SDK世代、前処理、モデル保存 |
+| [reference-integration.md](reference-integration.md) | DTへの移植、UART互換性、配布コードの要修正箇所 |
 
 ## 文書の読み方
 
@@ -32,7 +36,8 @@
 | 項目 | 状態 |
 |---|---|
 | STL | `3d-models/dino-air-7segments.stl` を登録済み |
-| コンセプト・調査整理 | このコミットで文書化 |
+| コンセプト・調査整理 | 基準文書を作成済み。追加資料・内蔵ADC案の調査を反映 |
+| Solist-AI分類 | 公式の教師あり/4分類例を確認。DTでの4/7分類は未実装・未検証 |
 | MCU/PCアプリ | 構成とPhase 0仕様を定義。リポジトリへの実装追加は次の作業 |
 | Mac上の予備検証 | 作業用試作でC読取ロジック・受信処理のテスト、Arm向けオブジェクト生成を確認 |
 | Windows/LEXIDE | 起動中の環境を確認。新規プロジェクトの最終リンク・HEX生成は未確認 |
