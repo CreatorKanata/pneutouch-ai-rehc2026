@@ -1,0 +1,89 @@
+{
+  "schema": 1,
+  "date": "2026-09-20",
+  "topology": [
+    1,
+    3,
+    5,
+    6,
+    4,
+    2,
+    7
+  ],
+  "captures": [
+    {
+      "file": "raw/pressure-zone01-tail-20260920-171235.csv",
+      "sha256": "c810e8f0add53ad94feaa16a926b70d6c2ccd966c557eef24cc0a46ebb68674f",
+      "kind": "seven_zone",
+      "zone_id": 1,
+      "zone_name": "しっぽ",
+      "label_basis": "user instructed single zone per recording"
+    },
+    {
+      "file": "raw/pressure-zone02-back-20260920-171556.csv",
+      "sha256": "e55dcefba87a976c88d9fa5886eb595cb01734750173b708fcad3fd0aee27f0d",
+      "kind": "seven_zone",
+      "zone_id": 2,
+      "zone_name": "背中",
+      "label_basis": "user instructed single zone per recording"
+    },
+    {
+      "file": "raw/pressure-zone03-right-hind-leg-20260920-171839.csv",
+      "sha256": "4bc8510a9971a9a36af9bf7daa2891fbc16e50e1506a91253d77fa0a72d70b64",
+      "kind": "seven_zone",
+      "zone_id": 3,
+      "zone_name": "右後ろ足",
+      "label_basis": "user instructed single zone per recording"
+    },
+    {
+      "file": "raw/pressure-zone04-left-hind-leg-20260920-172018.csv",
+      "sha256": "c4c15b986eab4e07a609794ffbad7fef013c9041e483d3fe126eecde5fe73e07",
+      "kind": "seven_zone",
+      "zone_id": 4,
+      "zone_name": "左後ろ足",
+      "label_basis": "user instructed single zone per recording"
+    },
+    {
+      "file": "raw/pressure-zone05-right-front-leg-20260920-173826.csv",
+      "sha256": "e8e8f443b72c4852a2f6a6e262015c5df930bd76496429d29b20bfd6b45dd3e4",
+      "kind": "seven_zone",
+      "zone_id": 5,
+      "zone_name": "右前足",
+      "label_basis": "user instructed single zone per recording"
+    },
+    {
+      "file": "raw/pressure-zone06-left-front-leg-20260920-174028.csv",
+      "sha256": "a8062e38ab9cea6b4a742de5158bcfb9f9aeb7b8741a73528c7da402f1941bca",
+      "kind": "seven_zone",
+      "zone_id": 6,
+      "zone_name": "左前足",
+      "label_basis": "user instructed single zone per recording"
+    },
+    {
+      "file": "raw/pressure-zone07-neck-head-20260920-174226.csv",
+      "sha256": "b097f06b47aba2f18c2dd90f8cfe74e6ddb0dc9a0201e114b7b1688acbe85a86",
+      "kind": "seven_zone",
+      "zone_id": 7,
+      "zone_name": "首と頭",
+      "label_basis": "user instructed single zone per recording"
+    },
+    {
+      "file": "raw/pressure-tail-back-20260920-164229-continuous.csv",
+      "sha256": "f5636925afdd159ad66b9289430389f36b380fc1e19c5a540e57e67d2eb12f3b",
+      "kind": "alternating",
+      "zone_id": null,
+      "label_basis": "provisional: tail-first alternating order, no independent event timestamps"
+    }
+  ],
+  "nominal_sps": 40,
+  "protocol": {
+    "initial_quiet_seconds": 3,
+    "press_seconds": 1,
+    "released_wait_seconds": 3,
+    "repetitions_per_zone": 5,
+    "final_quiet_seconds": 3,
+    "left_right_reference": "dinosaur's own left and right",
+    "start_action": "Begin actions after assistant confirms acquisition has started.",
+    "note": "Target timing is an instruction, not measured contact ground truth. Do not label resting samples as touching the zone. Store instructed zone in session metadata; retain raw CSV labels empty until event annotation."
+  }
+}

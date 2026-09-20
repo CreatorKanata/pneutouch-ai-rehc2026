@@ -1,0 +1,80 @@
+{
+  "amplitude": [
+    "peak_counts",
+    "trough_counts"
+  ],
+  "press_shape": [
+    "rise_ms",
+    "decay_ms",
+    "width_ms",
+    "area_width_ms",
+    "slope_norm_s",
+    "asymmetry"
+  ],
+  "release_shape": [
+    "release_rise_ms",
+    "recovery_ms",
+    "release_width_ms",
+    "release_area_width_ms"
+  ],
+  "shape_ratios": [
+    "rise_ms",
+    "decay_ms",
+    "width_ms",
+    "area_width_ms",
+    "slope_norm_s",
+    "asymmetry",
+    "release_rise_ms",
+    "recovery_ms",
+    "release_width_ms",
+    "release_area_width_ms",
+    "trough_peak_ratio",
+    "area_ratio"
+  ],
+  "full_features": [
+    "peak_counts",
+    "trough_counts",
+    "rise_ms",
+    "decay_ms",
+    "width_ms",
+    "area_width_ms",
+    "slope_norm_s",
+    "asymmetry",
+    "release_rise_ms",
+    "recovery_ms",
+    "release_width_ms",
+    "release_area_width_ms",
+    "trough_peak_ratio",
+    "area_ratio"
+  ],
+  "spectral_shape": [
+    "spectral_centroid_hz",
+    "spectral_rms_hz",
+    "spectral_high_fraction"
+  ],
+  "relative_integrals": [
+    "area_width_ms",
+    "release_area_width_ms",
+    "trough_peak_ratio",
+    "area_ratio",
+    "slope_norm_s"
+  ],
+  "compact_time_ratios": [
+    "rise_ms",
+    "decay_ms",
+    "release_width_ms",
+    "trough_peak_ratio",
+    "area_ratio"
+  ],
+  "original_press_features": [
+    "peak_counts",
+    "rise_ms",
+    "peak_from_wave_onset_ms",
+    "decay_ms",
+    "area_counts_s",
+    "slope_norm_s"
+  ],
+  "baseline_control": [
+    "baseline_counts"
+  ]
+}

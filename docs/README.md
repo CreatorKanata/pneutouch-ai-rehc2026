@@ -11,6 +11,7 @@
 | [phase0-bringup.md](phase0-bringup.md) | 作成済みのHX710B計測プロジェクト：配線、LEXIDE、波形、CSV |
 | [product-design.md](product-design.md) | 技術仮説、7区画、デモ体験、成功条件 |
 | [local-hardware.md](local-hardware.md) | 現在の実機、COM6/7とMCU-LINKの区別、受信記録 |
+| [pressure-validation-20260920.md](pressure-validation-20260920.md) | 7区画43回の実測分析。原仮説、代替特徴、開始時刻未知の再生、約1秒のデモ条件 |
 | [hardware.md](hardware.md) | DT-EBML63Q2557、HX710B、配線、電圧、通信 |
 | [sensor-options.md](sensor-options.md) | HX711・内蔵ADC・高速センサーの比較 |
 | [mcu-adc-option.md](mcu-adc-option.md) | DTの12 bit ADC、CN6回路、差動増幅と高速取得案 |
@@ -44,8 +45,11 @@
 | MCU/PCアプリ | メインPneutouchAiへHX710B取得を移植。波形画面、CSV収集CLIを使用可能 |
 | Mac上の検証 | 採用コードのC/Python/JavaScriptテスト、疑似シリアル通信、9件のArmオブジェクト生成を確認 |
 | Windows/LEXIDE | Debugビルド・HEX生成成功、PneutouchAi Writeで書き込み済み |
-| センサー/恐竜の実機 | 配線済み。COM7で約39.72 SPS・欠番なしのCSV取得。押している間に約239万～765万countsへ変化。気密と分類性能は未確認 |
+| センサー/恐竜の実機 | 配線済み。COM7で7区画14,232点・約39.72 SPS・欠番0。完全波形43回を解析。気密と部位差の物理的原因は未確定 |
+| 部位特徴・デモ条件 | 立ち上がり、負側幅、正負面積比が候補。開始時刻なしの逐次再生を検証。約1秒で握って離すデモを提案。独立記録の分類評価・実機の連続推論は未完了 |
 | デモ動画 | ユーザーが用意。ファイル名と部位の対応は受領後に確定 |
 
-次の作業は[Phase 0の手順](phase0-bringup.md)に従った部位ラベルと押下時刻を付けた記録・気密評価。
-[実装プランのM1](implementation-plan.md)は、実測波形とCSVを取得できた時点で完了とする。
+次の作業は[実測分析の提案](pressure-validation-20260920.md#10-次に何を検証するか)に沿って、
+約1秒で握って離す条件で部位を混ぜた追加記録、保持・気密の切り分け、独立記録での評価。
+接触開始は圧力から自動検出し、外部の接触時刻をデモの入力にしない。
+[実装プランのM2](implementation-plan.md)は予備試験段階で、最低30回/部位の収集は未完了。
