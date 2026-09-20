@@ -1,2 +1,17 @@
 # ローカルの参照資料はバージョン管理しない
 /references/
+
+# 配布コード、生成設定、ローカルIDEのビルド出力
+/src/pneutouch-solist-ai/vendor/
+/src/pneutouch-solist-ai/generated/
+/src/pneutouch-solist-ai/Debug/
+/src/pneutouch-solist-ai/Release/
+.metadata/
+
+# ローカルの計測データと開発環境
+/captures/
+/build/
+/.venv/
+__pycache__/
+*.pyc
+.DS_Store

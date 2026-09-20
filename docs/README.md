@@ -8,6 +8,7 @@
 | 文書 | 内容 |
 |---|---|
 | [concept.md](concept.md) | ユーザーが記した構想の原文。変更せず保存 |
+| [phase0-bringup.md](phase0-bringup.md) | 作成済みのHX710B計測プロジェクト：配線、LEXIDE、波形、CSV |
 | [product-design.md](product-design.md) | 技術仮説、7区画、デモ体験、成功条件 |
 | [hardware.md](hardware.md) | DT-EBML63Q2557、HX710B、配線、電圧、通信 |
 | [sensor-options.md](sensor-options.md) | HX711・内蔵ADC・高速センサーの比較 |
@@ -39,12 +40,11 @@
 | STL | `3d-models/dino-air-7segments.stl` を登録済み |
 | コンセプト・調査整理 | 基準文書を作成済み。追加資料・内蔵ADC案の調査を反映 |
 | Solist-AI分類 | 公式の教師あり/4分類例を確認。DTでの4/7分類は未実装・未検証 |
-| MCU/PCアプリ | 構成とPhase 0仕様を定義。リポジトリへの実装追加は次の作業 |
-| Mac上の予備検証 | 作業用試作でC読取ロジック・受信処理のテスト、Arm向けオブジェクト生成を確認 |
-| Windows/LEXIDE | 起動中の環境を確認。新規プロジェクトの最終リンク・HEX生成は未確認 |
+| MCU/PCアプリ | Phase 0のCソース、LEXIDE設定、波形画面、CSV収集CLIを作成済み |
+| Mac上の検証 | 採用コードのC/Python/JavaScriptテスト、疑似シリアル通信、9件のArmオブジェクト生成を確認 |
+| Windows/LEXIDE | 依存物を含むインポート用ZIPを生成。最終リンク・HEX生成は未確認 |
 | センサー/恐竜の実機 | 給電、通信、気密、波形、分類性能は未確認 |
 | デモ動画 | ユーザーが用意。ファイル名と部位の対応は受領後に確定 |
 
-次の作業は、[実装プランのM1](implementation-plan.md)に従って
-`src/pneutouch-solist-ai/`のLEXIDEプロジェクトとPhase 0受信ツールを実装すること。
-予備試作のテスト結果は、最終的に採用したソースに対して再確認する。
+次の作業は[Phase 0の手順](phase0-bringup.md)に従ったWindowsビルド、配線、実機計測。
+[実装プランのM1](implementation-plan.md)は、実測波形とCSVを取得できた時点で完了とする。

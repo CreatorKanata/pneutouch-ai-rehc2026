@@ -1,15 +1,15 @@
-<!-- Target repository architecture; paths below describe the next implementation commit. -->
+<!-- Repository architecture: implemented Phase 0 modules and explicitly deferred AI/demo work. -->
 # ディレクトリ構成と責務
 
 ## 採用する構成
 
-以下は**実装時の配置計画**。この整理コミットではドキュメントを先に確定し、
-アプリ本体・IDE設定・準備スクリプトは次の実装で追加する。
+Phase 0のアプリ本体、IDE設定、準備・検証スクリプトを以下に配置した。
+AI学習・推論と動画デモは後続。`demo-visualizer/`は役割を示すREADMEのみを置く。
 
 ```text
 pneutouch-ai-rehc2026/
 ├── README.md
-├── config.py                          # 設定の原本（実装時に追加）
+├── config.py                          # 設定の原本
 ├── docs/                              # コンセプト・設計・手順・調査
 ├── 3d-models/
 │   └── dino-air-7segments.stl
@@ -22,13 +22,12 @@ pneutouch-ai-rehc2026/
 │   │   └── vendor/                    # ROHM/CMSISをローカル展開（Git除外）
 │   ├── learning-tool/                 # 開発者向け波形・データ収集・学習制御
 │   │   └── capture.py                 # CLI受信。画面と独立して動作確認できる
-│   ├── demo-visualizer/               # 来場者向け恐竜・動画・波形
-│   │   └── media/                     # ユーザー提供動画
+│   ├── demo-visualizer/               # 後続の来場者向けアプリ（READMEのみ）
 │   └── shared/                        # PC側で共有する通信解析・部位定義等
 ├── tools/                             # 依存資料展開、テスト、ローカル起動
 ├── tests/                             # Cホスト・PC通信処理等のテスト
-├── captures/                          # 実測CSVとメタデータ（Git除外予定）
-├── build/                             # ビルド・一時出力（Git除外予定）
+├── captures/                          # 計測時に作成するCSV保存先（Git除外）
+├── build/                             # ビルド・Windows転送用ZIP（Git除外）
 └── references/                        # 配布資料・参考コード（Git除外済み）
 ```
 
@@ -38,9 +37,12 @@ pneutouch-ai-rehc2026/
 
 ## MCU: pneutouch-solist-ai
 
-LEXIDEでフォルダーを選んで取り込めるプロジェクトにする。
+LEXIDEでフォルダーを選んで取り込めるプロジェクトを作成した。
 コピー元の参考デモをそのまま編集するのではなく、必要な起動・周辺回路のコードを利用して、
 PneuTouch用のアプリを組み立てる。
+
+`board.c`がハードウェア、`hx710b.c`が転送、`acquisition.c`が安定待ち・タイムアウト、
+`main.c`が連番付き送信を担当する。依存物と設定ヘッダーは`tools/prepare_vendor.py`で準備する。
 
 段階的なモジュール分割:
 
@@ -62,8 +64,9 @@ CLIも用意し、ブラウザ非対応やUSB接続の切り分けに使う。
 
 後続ではイベント単位の記録、波形重ね合わせ、ベースライン補正・正規化表示、
 学習指示、試行数、混同行列、モデル・構造・前処理のバージョン管理を追加する。
-**learning-toolという名称でも、初期版でSolist-AIの学習ができるとは限らない。**
-提供機能はフェーズごとに画面とREADMEへ明記する。
+初期版にはSolist-AIの学習機能は含めない。
+`shared/serial.mjs`が接続、`protocol.mjs`が解析、`measurement.mjs`が記録を担い、
+`learning-tool/chart.mjs`と`app.mjs`で描画・操作する。使い方は[計測手順](phase0-bringup.md)を参照。
 
 ## PC: demo-visualizer
 
@@ -131,8 +134,9 @@ Phase 0: `host_utc, seq, mcu_ms, raw, label`を基本とする。
 
 ## 設定と依存物
 
-ランタイム設定はルートの`config.py`へ集約し、CヘッダーやPC向け設定へ展開する方針。
-クロック/baud、取得レート、タイムアウト、窓長、録画上限、動画対応表をばらばらに持たない。
+ランタイム設定はルートの`config.py`へ集約し、CヘッダーやPC向け`/config.json`へ展開する。
+クロック/baud、取得レート、タイムアウト、表示点数、記録上限をばらばらに持たない。
+将来の窓長や動画対応表も同じ方針で管理する。
 ボード固有レジスター設定は資料の根拠と一緒にC側へ置く。
 
 自作コード・IDEメタデータ・展開手順をGit管理する。

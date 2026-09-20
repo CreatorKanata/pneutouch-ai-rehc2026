@@ -1,0 +1,50 @@
+<!doctype html>
+<!-- Local sensor console: inspect pressure and collect labeled CSV for later learning. -->
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>PneuTouch Console</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main>
+    <header><div><p class="eyebrow">PNEUTOUCH / PHASE 0</p><h1>圧力を、波形で見る。</h1>
+      <p class="muted">センサーの動作を確認し、触れた場所のラベルと一緒に記録します。</p></div>
+      <span id="connection" class="badge">未接続</span></header>
+    <section class="toolbar" aria-label="接続">
+      <button id="connect" disabled>センサーに接続</button>
+      <button id="disconnect" class="secondary" disabled>切断</button>
+      <span id="port-details" class="muted">CN9 · FT2232H B</span>
+    </section>
+    <p id="status" role="status">設定を読み込んでいます…</p>
+    <p id="issues" class="muted">欠番等 0 · 再起動推定 0 · 不正行 0</p>
+    <section class="panel">
+      <div class="chart-heading"><div><h2>圧力の生データ</h2><span class="muted">ADC counts / 縦軸は自動調整</span></div>
+        <div class="value"><strong id="raw">—</strong><span id="rate">受信待ち</span></div></div>
+      <canvas id="chart" aria-label="受信した圧力の時間変化">最新のADC値はグラフ上部にも表示します。</canvas>
+      <div class="chart-footer"><span id="range">センサーを接続すると波形を表示します</span><span>時間 →</span></div>
+    </section>
+    <section class="panel recording">
+      <div><h2>データを収集</h2><p class="muted">記録中にラベルを切り替えられます。学習・推論はまだ実行しません。</p></div>
+      <label for="label">触れている場所</label>
+      <select id="label">
+        <option value="">未指定</option>
+        <option value="0">0 · 触れていない</option><option value="1">1 · 尻尾</option>
+        <option value="2">2 · 背中</option><option value="3">3 · 右後ろ足</option>
+        <option value="4">4 · 左後ろ足</option><option value="5">5 · 右前足</option>
+        <option value="6">6 · 左前足</option><option value="7">7 · 首と頭</option>
+      </select>
+      <div class="actions"><button id="record" disabled>記録開始</button>
+        <button id="stop" class="secondary" disabled>記録停止</button>
+        <button id="download" class="secondary" disabled>CSVを保存</button>
+        <button id="clear" class="secondary" disabled>保存済み記録をクリア</button>
+        <span id="count" class="muted">0 サンプル</span></div>
+      <p class="note">記録はブラウザ内に保持されます。ページを閉じる前にCSVを保存してください。</p>
+      <p id="limit" class="note"></p>
+    </section>
+    <footer>3.3Vで接続 · <span id="nominal"></span> · 圧力単位への校正は未実施</footer>
+  </main>
+  <script type="module" src="app.mjs"></script>
+</body>
+</html>

@@ -1,0 +1,29 @@
+/* Calm local measurement UI; responsive chart and accessible controls. */
+:root { color-scheme: light; font-family: -apple-system, BlinkMacSystemFont, "Noto Sans JP", sans-serif; color: #213b35; background: #f2f5f1; }
+* { box-sizing: border-box; }
+body { margin: 0; }
+main { max-width: 1120px; margin: 0 auto; padding: 44px 28px; }
+header { display: flex; justify-content: space-between; align-items: center; gap: 24px; }
+.eyebrow { font-size: 12px; letter-spacing: .18em; font-weight: 700; color: #397769; }
+h1 { font-size: clamp(26px, 4vw, 36px); letter-spacing: -.035em; margin: 14px 0; }
+h2 { font-size: 17px; margin: 0 0 8px; }
+.muted, .note { color: #61756e; font-size: 13px; line-height: 1.7; }
+.badge { background: #e1e8e1; padding: 8px 16px; border-radius: 24px; white-space: nowrap; font-size: 13px; }
+.toolbar, .actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.toolbar { margin-top: 28px; }
+button, select { font: inherit; font-size: 14px; border-radius: 8px; padding: 11px 18px; }
+button { border: 1px solid #236758; color: white; background: #236758; cursor: pointer; }
+button.secondary, select { color: #315e51; background: white; border: 1px solid #ccd8cf; }
+button:disabled { opacity: .43; cursor: default; }
+button:focus-visible, select:focus-visible { outline: 3px solid #d6ad59; outline-offset: 3px; }
+#status { min-height: 24px; color: #466559; font-size: 13px; line-height: 1.6; margin: 16px 0; }
+.panel { background: #fff; border: 1px solid #dce5dc; border-radius: 16px; padding: 24px; margin: 18px 0; }
+.chart-heading { display: flex; justify-content: space-between; align-items: flex-start; }
+.value { display: grid; text-align: right; gap: 4px; font-variant-numeric: tabular-nums; }
+.value strong { font-size: 28px; font-weight: 600; }.value span { font-size: 12px; color: #718078; }
+canvas { display: block; width: 100%; height: 280px; margin-top: 20px; }
+.chart-footer { display: flex; justify-content: space-between; gap: 16px; color: #718078; font-size: 12px; }
+.recording label { display: block; margin: 18px 0 8px; font-size: 13px; }
+select { min-width: 230px; }.actions { margin-top: 18px; }.note { margin-bottom: 0; }
+footer { color: #77877d; font-size: 12px; margin: 28px 0; }
+@media (max-width: 600px) { main { padding: 24px 16px; } header { align-items: flex-start; } .panel { padding: 18px; } canvas { height: 220px; } }

@@ -10,11 +10,12 @@
 | 作業 | 使用環境 | 確認状況 |
 |---|---|---|
 | C / Python / JavaScriptの編集、Git | Mac | 利用可能 |
-| Cホストテスト、通信処理のテスト | Mac | 作業用試作で実施。採用コードで再確認する |
-| Arm向けCオブジェクト生成 | MacのClang | 試作と必要な配布コードで確認 |
+| Cホストテスト、通信処理のテスト | Mac | 採用コードで実施。pySerialと疑似端末による受信も確認 |
+| Arm向けCオブジェクト生成 | MacのClang | Phase 0と必要な配布コードの9件で確認 |
 | 最終リンク、HEX生成 | Windows / LEXIDE-Ω | 新規プロジェクトでは未実施 |
 | SWD書き込み・停止・Run | Windows / MCU-LINK | 今回のファームウェアでは未実施 |
-| 圧力波形・CSV・動画表示 | Macを第一候補 | 実機UARTでは未確認 |
+| 圧力波形・CSV | Mac / 対応ブラウザーまたはPython | UI表示と通信処理は検証済み。実機UARTでは未確認 |
+| デモ動画表示 | Macを第一候補 | 後続の実装 |
 
 MacのClangでCをコンパイルできても、Solist-AIライブラリーとの最終リンク、
 メモリー配置、Option領域、HEX生成、デバッガーの動作が保証されるわけではない。
@@ -22,17 +23,18 @@ Mac単独のビルド環境作成は後続の選択肢とし、まず配布資�
 
 ## LEXIDE-Ωの準備と取り込み方針
 
-参照: [資料D1 / D2 / D3 / D4](research-notes.md)。以下はM1実装後に使う手順の設計。
-準備スクリプトや自作プロジェクトは、この文書コミットにはまだ含まれない。
+参照: [資料D1 / D2 / D3 / D4](research-notes.md)。自作プロジェクトと準備スクリプトを作成済み。
+配線からCSV保存までの手順は[Phase 0の手順](phase0-bringup.md)にまとめた。
 
 1. WindowsのLEXIDE-Ω、デバッグドライバー、ROHMのデバイスパックを確認する。
    配布手順の対象は`ROHM.ML63Q25x7_DFP_1.0.1.pack`とCMSIS 5.9.0。
    導入済みバージョンとの組み合わせはWindows上で記録する。
 2. Macで`references/`の資料から必要なROHM/CMSISファイルをローカル展開する。
-   著作権表示を保ち、自作コードと`vendor/`を分ける。
+   `python3 tools/prepare_vendor.py`で著作権表示とハッシュを残し、`vendor/`へ展開する。
 3. `src/pneutouch-solist-ai/`全体をWindowsのローカルフォルダーへコピーする。
    例: `C:\PneuTouch\PneuTouchSolistAI`。`.project`、`.cproject`、`.settings/`、
    `generated/`、`vendor/`も含める。参照先だけMac側に残すコピーはしない。
+   `python3 tools/package_firmware.py`でこれらを含む`build/PneuTouchSolistAI.zip`を作れる。
 4. LEXIDEの既存プロジェクトのインポートから取り込み、MCUがML63Q2557であることを確認する。
    デバイスファミリーはML63Q25x7。元のAIVibrationInferenceを上書きしない。
 5. Clean / Buildを実行し、エラー、リンカーマップ、ROM/RAM量、HEX出力を保存する。
@@ -85,7 +87,13 @@ FT2232HはA/Bの複数インターフェースを持つため、UARTのB側を�
 - 切断時は読み取りを解除してポートを閉じる。対応しないブラウザーではCLIへ案内する。
 - learning-toolとdemo-visualizerは同じ受信処理を共有するが、初期は片方ずつ接続する。
 
-具体的な起動コマンドは実装後に追記する。まだないスクリプトを実行済みの手順として記載しない。
+リポジトリ直下で`python3 tools/serve.py`を実行し、Chrome / Edgeで
+`http://localhost:8000/learning-tool/`を開く。CLIの準備とCSV保存は[計測手順](phase0-bringup.md)を参照。
+
+Macで`python3 tools/test.py`によりC/Python/JavaScriptのテストを実行できる。
+pySerialを導入したPythonでは、Macの疑似端末を通す受信テストも含める。
+`python3 tools/check_firmware.py`は準備済み依存物でArmオブジェクトを生成する。
+これらは最終リンク・書き込み・実機試験を置き換えるものではない。
 
 ## 実機での最初の確認
 
