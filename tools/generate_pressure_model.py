@@ -48,7 +48,31 @@ def generate(source=SOURCE):
     lines += ['};', f'static const uint8_t model_labels[{count}] = {{' +
               ','.join(str(e['label']) for e in events) + '};',
               f'static const uint8_t model_order[{count*4}] = {{' +
-              ','.join(map(str, order)) + '};', '#endif', '']
+              ','.join(map(str, order)) + '};']
+    subset = [e for e in events if e['label'] in (3, 4)]
+    sx = np.array([e['features12'] for e in subset], dtype=np.float32)
+    sx[:, 5] = np.array([e['peak']/1000 for e in subset], dtype=np.float32)
+    slog = np.log(sx.astype(np.float64))
+    sm = slog.mean(0).astype(np.float32)
+    ss = (3*slog.std(0)).astype(np.float32)
+    assert (ss > 1e-8).all() and len(subset) >= 2
+    sw = ((np.log(sx)-sm)/ss).view(np.uint32) >> 16
+    srng = np.random.default_rng(1)
+    so = np.concatenate([srng.permutation(len(subset)) for _ in range(4)])
+    lines += ['/* Instance 1: HEAD/LEGS only. Input 5 is positive peak / 1000 counts. */',
+              '#define PNEU_SPECIALIST_HIDDEN 32U',
+              f'#define PNEU_SPECIALIST_EXAMPLES {len(subset)}U',
+              f'#define PNEU_SPECIALIST_STEPS {len(subset)*4}U',
+              f'static const float specialist_mean[12] = {{{floats(sm)}}};',
+              f'static const float specialist_scale[12] = {{{floats(ss)}}};',
+              f'static const float specialist_reference_shape[12] = {{{floats(subset[0]["features12"])}}};',
+              f'static const float specialist_reference_peak = {float(subset[0]["peak"]):.9e}f;',
+              f'static const uint16_t specialist_training[{len(subset)}][12] = {{']
+    lines += ['    {' + ','.join(f'0x{int(v):04x}' for v in row) + '},' for row in sw]
+    lines += ['};', f'static const uint8_t specialist_labels[{len(subset)}] = {{' +
+              ','.join(str(e['label']) for e in subset) + '};',
+              f'static const uint8_t specialist_order[{len(so)}] = {{' +
+              ','.join(map(str, so)) + '};', '#endif', '']
     return '\n'.join(lines)
 
 

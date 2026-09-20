@@ -38,7 +38,7 @@ def predict(device, z, y, indices):
     pred = scores.argmax(1)+1
     target = y[indices]
     cm = [[int(((target == a)&(pred == b)).sum()) for b in range(1,5)] for a in range(1,5)]
-    ba = float(np.mean([np.mean(pred[target == label] == label) for label in range(1,5)]))
+    ba = float(np.mean([np.mean(pred[target == label] == label) for label in np.unique(target)]))
     return dict(indices=indices.tolist(),targets=target.tolist(),predictions=pred.tolist(),
         scores=scores.tolist(),correct=int((pred == target).sum()),total=len(indices),
         balanced_accuracy=ba,confusion_matrix=cm)

@@ -73,7 +73,7 @@ static void process_features(const pressure_sample_t *sample)
         {
             unsigned i;
             static const char hex[] = "0123456789abcdef";
-            pneu_demo_class_t label = pneu_model_predict(features.event.value);
+            pneu_demo_class_t label = pneu_model_predict(features.event.value, features.event.peak);
             text("# PNEC1,"); number(features.event.id); board_putc(',');
             number(board_millis()); board_putc(','); text(pneu_class_name(label));
             board_putc(','); number(pneutouch_model.inference_us);
@@ -113,6 +113,8 @@ void pressure_app_init(void)
     number(pneutouch_model.training_examples); board_putc(',');
     number(pneutouch_model.training_steps); board_putc(',');
     number(pneutouch_model.training_us); text("\r\n");
+    text("# PNEM2,HEAD_LEGS,"); number(pneutouch_model.specialist_examples); board_putc(',');
+    number(pneutouch_model.specialist_steps); text(",input5=positive_peak_kcounts\r\n");
     pneutouch_status.state = PNEU_SETTLING;
 }
 

@@ -17,10 +17,11 @@ static unsigned predictions, displays;
 volatile pneu_model_status_t pneutouch_model;
 volatile pneu_display_status_t pneutouch_display;
 bool pneu_model_init(void) { pneutouch_model.ready = true; return true; }
-pneu_demo_class_t pneu_model_predict(const float values[12])
+pneu_demo_class_t pneu_model_predict(const float values[12], float positive_peak)
 {
     assert(values[0] > 199 && values[0] < 201); /* Actual extracted rise time */
     assert(values[10] > .99f && values[10] < 1.01f);
+    assert(positive_peak == 200000.0f);
     ++predictions; return PNEU_CLASS_BACK;
 }
 const char *pneu_class_name(pneu_demo_class_t label) { (void)label; return "BACK"; }

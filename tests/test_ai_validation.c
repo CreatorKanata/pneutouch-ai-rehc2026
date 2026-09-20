@@ -3,12 +3,25 @@
 #include <stdio.h>
 #include <string.h>
 #include "ai_validation.h"
+#include "pressure_model.h"
 #include "solistAi.h"
 
 static char rx[800], tx[4096];
 static unsigned rx_pos, tx_pos, now, trained, predicted, beta_rows, p_rows;
 static ODL_Parameters parameters;
 static uint32_t busy;
+static unsigned live_predictions;
+volatile pneu_model_status_t pneutouch_model;
+bool pneu_model_init(void) { return true; }
+pneu_demo_class_t pneu_model_predict(const float values[12], float peak)
+{
+    assert(peak == 1.0f);
+    for (unsigned i = 0; i < 12; ++i) assert(values[i] == 1.0f);
+    ++live_predictions;
+    pneutouch_model.primary_label = PNEU_CLASS_LEGS;
+    pneutouch_model.specialist_used = true;
+    return PNEU_CLASS_HEAD;
+}
 uint32_t board_millis(void) { return now; }
 uint32_t board_micros(void) { return now*1000U; }
 int board_getc(void) { return rx[rx_pos] ? (unsigned char)rx[rx_pos++] : -1; }
@@ -89,6 +102,18 @@ int main(void)
     now = 4001; (void)pneu_ai_validation_poll(); assert(strstr(tx, "AI_TIMEOUT"));
     busy = 0;
     now = 60001; assert(!pneu_ai_validation_poll()); assert(strstr(tx, "IDLE_TIMEOUT"));
+    {
+        char body[180] = "PAI1,LIVEPREDICT,11,";
+        for (unsigned i = 0; i < 13; ++i) strcat(body, "3f800000");
+        packet(body); assert(strstr(tx, "MODE_REQUIRED") && live_predictions == 0);
+        packet("PAI1,MODE,1");
+        packet(body); assert(strstr(tx, "LIVE_INIT_REQUIRED") && live_predictions == 0);
+        packet("PAI1,LIVEINIT,10"); assert(strstr(tx, "LIVEINIT,10"));
+        packet(body); assert(strstr(tx, "LIVEPREDICT,11,4,3,1,") && live_predictions == 1);
+        memcpy(body+strlen("PAI1,LIVEPREDICT,11,"), "7f800000", 8);
+        packet(body); assert(strstr(tx, "NONFINITE") && live_predictions == 1);
+        packet("PAI1,MODE,0"); assert(!pneu_ai_validation_poll());
+    }
     puts("AI protocol: CRC, explicit reset, one-hot teacher, prediction isolation, timeout PASS");
     return 0;
 }

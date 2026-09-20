@@ -1,5 +1,6 @@
 #include "ai_validation.h"
 #include "board.h"
+#include "pressure_model.h"
 #include "solistAi.h"
 #include "smpl_common.h"
 #include "irq.h"
@@ -10,7 +11,7 @@
 #define CLASS_COUNT 4U
 static char line[RX_CAPACITY];
 static unsigned used;
-static bool dropping, validation, initialized;
+static bool dropping, validation, initialized, live_ready;
 static unsigned job; /* 0 idle, 1 training, 2 prediction */
 static uint32_t token, started_us, last_command_ms;
 static uint16_t input_size;
@@ -90,18 +91,53 @@ static void command(void)
     last_command_ms = board_millis();
     if (!strcmp(fields[1], "MODE") && n == 3 && integer(fields[2], &id) && id <= 1) {
         validation = id != 0;
-        initialized = false;
+        initialized = live_ready = false;
         text("# PAI1,MODE,"); number(id); text("\r\n");
         return;
     }
     if (!validation) { error("MODE_REQUIRED"); return; }
     if (!integer(fields[2], &id)) { error("TOKEN"); return; }
+    /* Explicit validation only: exercise both boot-trained instances without
+       labelling these supplied vectors as physical sensor events. */
+    if (!strcmp(fields[1], "LIVEINIT") && n == 3) {
+        initialized = false;
+        live_ready = pneu_model_init();
+        if (!live_ready) { error("LIVE_INIT_FAILED"); return; }
+        text("# PAI1,LIVEINIT,"); number(id); text("\r\n");
+        return;
+    }
+    if (!strcmp(fields[1], "LIVEPREDICT") && n == 4) {
+        float values[13];
+        pneu_demo_class_t label;
+        if (!live_ready) { error("LIVE_INIT_REQUIRED"); return; }
+        p = fields[3];
+        if (strlen(p) != 13U*8U) { error("INPUT_SIZE"); return; }
+        for (i = 0; i < 13; ++i) {
+            uint32_t bits = 0;
+            for (j = 0; j < 8; ++j) {
+                int digit = hex(*p++);
+                if (digit < 0) { error("INPUT_HEX"); return; }
+                bits = (bits << 4)|(uint32_t)digit;
+            }
+            if ((bits & 0x7f800000U) == 0x7f800000U) { error("NONFINITE"); return; }
+            memcpy(&values[i], &bits, sizeof(bits));
+        }
+        label = pneu_model_predict(values, values[12]);
+        text("# PAI1,LIVEPREDICT,"); number(id); board_putc(','); number((uint32_t)label);
+        board_putc(','); number((uint32_t)pneutouch_model.primary_label);
+        board_putc(','); number(pneutouch_model.specialist_used ? 1U : 0U);
+        board_putc(','); number(pneutouch_model.inference_us);
+        for (i = 0; i < 4; ++i) { board_putc(','); hex16(pneutouch_model.scores[i]); }
+        text("\r\n");
+        return;
+    }
     if (!strcmp(fields[1], "INIT") && n == 7 && integer(fields[3], &inputs) &&
         integer(fields[4], &hidden) && integer(fields[5], &seed) && integer(fields[6], &activation)) {
         ODL_Parameters parameters;
         if ((inputs != 12 && inputs != 64 && inputs != 128) || hidden < 8 || hidden > 64 ||
             seed > 65535 || activation > 3) { error("PARAMETER"); return; }
         memset(&parameters, 0, sizeof(parameters));
+        live_ready = false;
         input_size = (uint16_t)inputs;
         parameters.inputSize = input_size; parameters.hiddenSize = (uint16_t)hidden;
         parameters.outputSize = CLASS_COUNT;
@@ -154,7 +190,7 @@ static void command(void)
 }
 void pneu_ai_validation_init(void)
 {
-    used = job = 0; dropping = validation = initialized = false;
+    used = job = 0; dropping = validation = initialized = live_ready = false;
 }
 bool pneu_ai_validation_poll(void)
 {
@@ -186,7 +222,7 @@ bool pneu_ai_validation_poll(void)
         }
     }
     if (validation && !job && board_millis()-last_command_ms > 60000U) {
-        validation = initialized = false; text("# PAI1,MODE,0,IDLE_TIMEOUT\r\n");
+        validation = initialized = live_ready = false; text("# PAI1,MODE,0,IDLE_TIMEOUT\r\n");
     }
     return validation;
 }
