@@ -1,4 +1,5 @@
-"""Prepare ignored vendor dependencies for the checked-in LEXIDE project.
+"""Legacy reference project only: prepare ignored vendor dependencies.
+Use generate_config.py for the active src/pneutouch-solist project.
 
 Vendor files retain their notices and stay in ignored vendor/, not in Git.
 Run again after changing config.py. Source/ and IDE metadata are never overwritten.
@@ -23,28 +24,8 @@ DRIVER_FILES = (
 )
 
 
-def header():
-    if config.SAMPLE_RATE_HZ not in (10, 40):
-        raise ValueError("HX710B pressure mode supports only 10 or 40 SPS")
-    if (config.CPU_HZ, config.UART_BAUD, config.UART_DIVISOR, config.UART_ADJUST) != (
-        48_000_000, 115_200, 0x19, 0x19
-    ):
-        raise ValueError("Changing clock/baud requires a verified ROHM UART configuration")
-    if not 1 <= config.CLOCK_HALF_US <= 10:
-        raise ValueError("SCK timing must leave margin below the 50 us high limit")
-    if not 400 <= config.SETTLE_MS < config.SENSOR_TIMEOUT_MS < 0x80000000:
-        raise ValueError("Use >=400 ms settling and a longer finite sensor timeout")
-    if not 0 < config.STACK_BYTES <= 8192 or config.STACK_BYTES % 8:
-        raise ValueError("Stack must fit the 16 KiB SRAM and be 8-byte aligned")
-    values = {key: getattr(config, key) for key in (
-        "CPU_HZ", "UART_BAUD", "UART_DIVISOR", "UART_ADJUST", "SAMPLE_RATE_HZ",
-        "SENSOR_TIMEOUT_MS", "SETTLE_MS", "CLOCK_HALF_US",
-    )}
-    values["HX_PULSES"] = 27 if config.SAMPLE_RATE_HZ == 40 else 25
-    return ("/* Generated from config.py. Edit the source configuration. */\n"
-            "#ifndef PNEU_CONFIG_H\n#define PNEU_CONFIG_H\n" +
-            "".join(f"#define PNEU_{key} {value}U\n" for key, value in values.items()) +
-            "#endif\n")
+# Kept as an import for callers of the legacy preparation helper.
+from tools.generate_config import header
 
 
 def prepare(reference_root, output):
@@ -94,9 +75,9 @@ def prepare(reference_root, output):
     (generated / "ML63Q25x7_lccarm.ld").write_bytes(linker)
     manifest = {
         "project": config.VENDOR_PROJECT,
-        "source_sha256": {str(path.relative_to(reference_root)): hashlib.sha256(path.read_bytes()).hexdigest()
+        "source_sha256": {path.relative_to(reference_root).as_posix(): hashlib.sha256(path.read_bytes()).hexdigest()
                           for path in required},
-        "generated_sha256": {str(path.relative_to(output)): hashlib.sha256(path.read_bytes()).hexdigest()
+        "generated_sha256": {path.relative_to(output).as_posix(): hashlib.sha256(path.read_bytes()).hexdigest()
                              for path in sorted(output.rglob("*")) if path.is_file()
                              and ("vendor" in path.parts or path.parent == generated)
                              and path.name != "vendor-manifest.json"},

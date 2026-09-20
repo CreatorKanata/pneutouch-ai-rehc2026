@@ -12,9 +12,9 @@
 | C / Python / JavaScriptの編集、Git | Mac | 利用可能 |
 | Cホストテスト、通信処理のテスト | Mac | 採用コードで実施。pySerialと疑似端末による受信も確認 |
 | Arm向けCオブジェクト生成 | MacのClang | Phase 0と必要な配布コードの9件で確認 |
-| 最終リンク、HEX生成 | Windows / LEXIDE-Ω | 新規プロジェクトでは未実施 |
-| SWD書き込み・停止・Run | Windows / MCU-LINK | 今回のファームウェアでは未実施 |
-| 圧力波形・CSV | Mac / 対応ブラウザーまたはPython | UI表示と通信処理は検証済み。実機UARTでは未確認 |
+| 最終リンク、HEX生成 | Windows / LEXIDE-Ω | PneutouchAiのDebugで成功、エラー・警告0 |
+| SWD書き込み・実行 | Windows / MCU-LINK | PneutouchAi WriteでHX710B取得ファームを書き込み、実行確認 |
+| 圧力波形・CSV | Mac / 対応ブラウザーまたはPython | COM7の実機UARTで約39.72 SPS、CSV保存を確認 |
 | デモ動画表示 | Macを第一候補 | 後続の実装 |
 
 MacのClangでCをコンパイルできても、Solist-AIライブラリーとの最終リンク、
@@ -23,26 +23,25 @@ Mac単独のビルド環境作成は後続の選択肢とし、まず配布資�
 
 ## LEXIDE-Ωの準備と取り込み方針
 
-参照: [資料D1 / D2 / D3 / D4](research-notes.md)。自作プロジェクトと準備スクリプトを作成済み。
-配線からCSV保存までの手順は[Phase 0の手順](phase0-bringup.md)にまとめた。
+現在のメインは **`src/pneutouch-solist` / PneutouchAi**。
+動作確認済み基準（`95a453e`）のプロジェクト、リンカー、起動コード、ドライバーを使い、
+`S_PneuTouch` へHX710B計測コードを移植している。旧 `pneutouch-solist-ai` は参考用。
 
-1. WindowsのLEXIDE-Ω、デバッグドライバー、ROHMのデバイスパックを確認する。
-   配布手順の対象は`ROHM.ML63Q25x7_DFP_1.0.1.pack`とCMSIS 5.9.0。
-   導入済みバージョンとの組み合わせはWindows上で記録する。
-2. Macで`references/`の資料から必要なROHM/CMSISファイルをローカル展開する。
-   `python3 tools/prepare_vendor.py`で著作権表示とハッシュを残し、`vendor/`へ展開する。
-3. `src/pneutouch-solist-ai/`全体をWindowsのローカルフォルダーへコピーする。
-   例: `C:\PneuTouch\PneuTouchSolistAI`。`.project`、`.cproject`、`.settings/`、
-   `generated/`、`vendor/`も含める。参照先だけMac側に残すコピーはしない。
-   `python3 tools/package_firmware.py`でこれらを含む`build/PneuTouchSolistAI.zip`を作れる。
-4. LEXIDEの既存プロジェクトのインポートから取り込み、MCUがML63Q2557であることを確認する。
-   デバイスファミリーはML63Q25x7。元のAIVibrationInferenceを上書きしない。
-5. Clean / Buildを実行し、エラー、リンカーマップ、ROM/RAM量、HEX出力を保存する。
-6. ソース変更時はGitのコミットを揃えてコピーし、IDEをRefreshして再ビルドする。
-   Windows側だけで変更したファイルを上書きしないよう、差分を先に確認する。
+1. WindowsのLEXIDE-Ω、CMSIS 5.9.0、ROHM ML63Q25x7デバイスパックを用意する。
+   この環境で確認したROHMパックは1.1.0、LAPISビルドツールはVer.20260317。
+2. `src/pneutouch-solist` を既存プロジェクトとして取り込み、**PneutouchAi** を選ぶ。
+3. 設定変更時はルートの `config.py` を編集し `python tools/generate_config.py` を実行。
+   ヘッダーはGit管理対象。`--check` で設定との一致を検査できる。
+4. IDEでRefreshし **Debug** 構成でビルド。更新されたELF/HEXとビルドログを確認する。
+5. **PneutouchAi Write** をDebug起動して書き込み、**PneutouchAi Debug** でデバッグする。
+   両方とも `Debug/PneutouchAi.elf` を使う。起動時に停止したらResumeする。
+6. CN9のUART Bへ115200 / 8N1で接続。現在は **COM7**。
+   COM6はCN9のA側、COM4/COM5はMCU-LINK側として区別する。
 
-共有フォルダーから直接ビルドする方法も考えられるが、初回はWindowsローカルの短い
-ASCIIパスを使い、UNCパス・日本語パス・ファイル同期の問題を切り分けやすくする。
+詳しい[配線・計測手順](phase0-bringup.md)と[実機接続記録](local-hardware.md)を参照。
+別PCへ渡す場合、`python tools/package_firmware.py` が `build/PneutouchAi.zip` を作る。
+launchには現在のPCのTCL・パックへの絶対パスがあるため、新環境では該当箇所を確認する。
+`prepare_vendor.py` は旧プロジェクト専用で、現在のプロジェクト準備には不要。
 
 ## 追加SDKを取り込む際の注意
 
@@ -57,7 +56,8 @@ ASCIIパスを使い、UNCパス・日本語パス・ファイル同期の問題
 
 配布パッケージはAIVibrationInference向け。D3 / D4にはAISignalInferenceからの移行がある。
 ガイド時点の名称はAISignalInference V2.0.25.1107とAIVibrationInference V1.2.25.0530。
-**現在の実機のソフトウェア種類・版は未確認**なので、先に表示・配布物と照合する。
+2026-09-20時点の本実機にはPneutouchAiのHX710B計測ファームウェアを書き込み済み。
+以下の再構成手順は配布資料の履歴であり、今回実行していない。
 
 移行ガイドでは専用の`ReconfigurationAIVibrationInferenceV1.2.25.0530.hex`を使い、
 JP8と電源再投入、完了表示の確認を経て対象ファームウェアへ進む。
@@ -92,7 +92,7 @@ FT2232HはA/Bの複数インターフェースを持つため、UARTのB側を�
 
 Macで`python3 tools/test.py`によりC/Python/JavaScriptのテストを実行できる。
 pySerialを導入したPythonでは、Macの疑似端末を通す受信テストも含める。
-`python3 tools/check_firmware.py`は準備済み依存物でArmオブジェクトを生成する。
+`python3 tools/check_firmware.py --cmsis-include <CMSISのCore/Include>` は現在の計測経路のArmオブジェクトを生成する。
 これらは最終リンク・書き込み・実機試験を置き換えるものではない。
 
 ## 実機での最初の確認

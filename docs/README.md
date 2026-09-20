@@ -10,6 +10,7 @@
 | [concept.md](concept.md) | ユーザーが記した構想の原文。変更せず保存 |
 | [phase0-bringup.md](phase0-bringup.md) | 作成済みのHX710B計測プロジェクト：配線、LEXIDE、波形、CSV |
 | [product-design.md](product-design.md) | 技術仮説、7区画、デモ体験、成功条件 |
+| [local-hardware.md](local-hardware.md) | 現在の実機、COM6/7とMCU-LINKの区別、受信記録 |
 | [hardware.md](hardware.md) | DT-EBML63Q2557、HX710B、配線、電圧、通信 |
 | [sensor-options.md](sensor-options.md) | HX711・内蔵ADC・高速センサーの比較 |
 | [mcu-adc-option.md](mcu-adc-option.md) | DTの12 bit ADC、CN6回路、差動増幅と高速取得案 |
@@ -37,14 +38,14 @@
 
 | 項目 | 状態 |
 |---|---|
-| STL | `3d-models/dino-air-7segments.stl` を登録済み |
+| STL・造形 | `3d-models/dino-air-7segments.stl` を登録済み。恐竜の人形も完成（ユーザー申告） |
 | コンセプト・調査整理 | 基準文書を作成済み。追加資料・内蔵ADC案の調査を反映 |
 | Solist-AI分類 | 公式の教師あり/4分類例を確認。DTでの4/7分類は未実装・未検証 |
-| MCU/PCアプリ | Phase 0のCソース、LEXIDE設定、波形画面、CSV収集CLIを作成済み |
+| MCU/PCアプリ | メインPneutouchAiへHX710B取得を移植。波形画面、CSV収集CLIを使用可能 |
 | Mac上の検証 | 採用コードのC/Python/JavaScriptテスト、疑似シリアル通信、9件のArmオブジェクト生成を確認 |
-| Windows/LEXIDE | 依存物を含むインポート用ZIPを生成。最終リンク・HEX生成は未確認 |
-| センサー/恐竜の実機 | 給電、通信、気密、波形、分類性能は未確認 |
+| Windows/LEXIDE | Debugビルド・HEX生成成功、PneutouchAi Writeで書き込み済み |
+| センサー/恐竜の実機 | 配線済み。COM7で約39.72 SPS・欠番なしのCSV取得。押している間に約239万～765万countsへ変化。気密と分類性能は未確認 |
 | デモ動画 | ユーザーが用意。ファイル名と部位の対応は受領後に確定 |
 
-次の作業は[Phase 0の手順](phase0-bringup.md)に従ったWindowsビルド、配線、実機計測。
+次の作業は[Phase 0の手順](phase0-bringup.md)に従った部位ラベルと押下時刻を付けた記録・気密評価。
 [実装プランのM1](implementation-plan.md)は、実測波形とCSVを取得できた時点で完了とする。

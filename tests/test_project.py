@@ -8,14 +8,30 @@ import xml.etree.ElementTree as ET
 import zipfile
 import config
 from tools.prepare_vendor import DRIVER_FILES, prepare
+from tools.generate_config import header
 
 ROOT = Path(__file__).resolve().parents[1]
 
 
 class ProjectTests(unittest.TestCase):
-    def test_debug_and_release_use_phase0_sources(self):
-        project = ROOT / "src/pneutouch-solist-ai"
+    def test_active_project_and_launches_match(self):
+        project = ROOT / config.FIRMWARE_DIR
         self.assertEqual(ET.parse(project / ".project").findtext("name"), config.PROJECT_NAME)
+        configs = ET.parse(project / ".cproject").findall(".//configuration")
+        debug = next(c for c in configs if c.get("name") == "Debug")
+        for name in ("PneutouchAi Debug.launch", "PneutouchAi Write.launch"):
+            attrs = {a.get("key"): a.get("value") for a in ET.parse(project / name).getroot()}
+            self.assertEqual(attrs["org.eclipse.cdt.launch.PROJECT_ATTR"], config.PROJECT_NAME)
+            self.assertEqual(attrs["org.eclipse.cdt.launch.PROGRAM_NAME"].replace(chr(92), "/"),
+                             "Debug/PneutouchAi.elf")
+            self.assertEqual(attrs["org.eclipse.cdt.launch.PROJECT_BUILD_CONFIG_ID_ATTR"], debug.get("id"))
+        for c in configs:
+            self.assertNotIn("AIVibrationInference", c.find(".//builder").get("buildPath"))
+        self.assertEqual((project / "S_PneuTouch/pneu_config.h").read_text(encoding="utf-8"), header())
+
+    def test_legacy_debug_and_release_use_phase0_sources(self):
+        project = ROOT / "src/pneutouch-solist-ai"
+        self.assertEqual(ET.parse(project / ".project").findtext("name"), config.LEGACY_PROJECT_NAME)
         configs = ET.parse(project / ".cproject").findall(".//configuration")
         self.assertEqual({c.get("name") for c in configs}, {"Debug", "Release"})
         option_ids = [o.get("id") for c in configs for o in c.findall(".//option")]
@@ -27,7 +43,7 @@ class ProjectTests(unittest.TestCase):
             self.assertFalse(any(".lib" in v or "AIVibration" in v for v in values))
             self.assertTrue(c.findall(".//option[@name='Generate HEX file'][@value='true']"))
 
-    def test_linker_entry_resolves_generated_layout_in_both_builds(self):
+    def test_legacy_linker_entry_resolves_generated_layout_in_both_builds(self):
         project = ROOT / "src/pneutouch-solist-ai"
         configs = ET.parse(project / ".cproject").findall(".//configuration")
         for c in configs:

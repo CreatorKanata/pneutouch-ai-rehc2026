@@ -14,12 +14,14 @@ pneutouch-ai-rehc2026/
 ├── 3d-models/
 │   └── dino-air-7segments.stl
 ├── src/
-│   ├── pneutouch-solist-ai/            # LEXIDE-Ωプロジェクト
-│   │   ├── .project / .cproject
-│   │   ├── .settings/
-│   │   ├── Source/                    # 自作のCソース
-│   │   ├── generated/                 # 設定ヘッダー・リンカー設定（Git除外）
-│   │   └── vendor/                    # ROHM/CMSISをローカル展開（Git除外）
+│   ├── pneutouch-solist/               # メイン: PneutouchAi / LEXIDE-Ω
+│   │   ├── .project / .cproject / .settings/
+│   │   ├── PneutouchAi Debug.launch / PneutouchAi Write.launch
+│   │   ├── S_System/main.c            # 計測アプリの入口
+│   │   ├── S_PneuTouch/               # HX710B、GPIO、取得状態、UART、生成設定
+│   │   ├── RTE/ / S_Driver/           # 動作確認済みの起動・ドライバー
+│   │   └── ML63Q25x7_lccarm.ld        # 動作確認済みのリンカー配置
+│   ├── pneutouch-solist-ai/            # 旧プロジェクト（移植時の参考用）
 │   ├── learning-tool/                 # 開発者向け波形・データ収集・学習制御
 │   │   └── capture.py                 # CLI受信。画面と独立して動作確認できる
 │   ├── demo-visualizer/               # 後続の来場者向けアプリ（READMEのみ）
@@ -35,14 +37,16 @@ pneutouch-ai-rehc2026/
 初期段階では別の`src/visualiser/`を作らない。
 発表用の`demo-visualizer`は、動画や大きな恐竜図が主役なので独立させる。
 
-## MCU: pneutouch-solist-ai
+## MCU: pneutouch-solist / PneutouchAi
 
-LEXIDEでフォルダーを選んで取り込めるプロジェクトを作成した。
-コピー元の参考デモをそのまま編集するのではなく、必要な起動・周辺回路のコードを利用して、
-PneuTouch用のアプリを組み立てる。
-
-`board.c`がハードウェア、`hx710b.c`が転送、`acquisition.c`が安定待ち・タイムアウト、
-`main.c`が連番付き送信を担当する。依存物と設定ヘッダーは`tools/prepare_vendor.py`で準備する。
+ユーザーがビルド・Debug・Writeを確認したAIVibrationInference由来のプロジェクトを基準にする。
+`S_System/main.c` が `S_PneuTouch/pressure_app.c` を起動する。
+同フォルダーの `board.c` がハードウェア、`hx710b.c` が転送、
+`acquisition.c` が安定待ち・タイムアウトを担当する。
+`pressure_app.c` はPNEU1送信とデバッガー用 `pneutouch_status` を更新する。
+設定ヘッダーは `tools/generate_config.py` で `config.py` から生成しGitへ保存する。
+元の振動デモ初期化は呼ばず、加速度センサー・旧UART等によるピン競合を避ける。
+配布SDKやドライバー、リンカー、Debug/Write構成を引き継ぎ、旧プロジェクトは参照用に保持。
 
 段階的なモジュール分割:
 

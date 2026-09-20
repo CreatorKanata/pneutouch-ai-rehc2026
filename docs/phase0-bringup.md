@@ -2,8 +2,10 @@
 # Phase 0：HX710Bの圧力値をPCで表示する
 
 作成日: 2026-09-20。MPS20N0040D＋HX710Bの4ピンモジュールを使用。
-ファームウェア、LEXIDE設定、PC波形画面、CSV収集を実装した。
-**Windowsでの最終ビルド・実機書き込み・圧力測定は未確認。**
+メインは `src/pneutouch-solist` の **PneutouchAi**。
+Windows/LEXIDEのDebugビルド（エラー・警告0）、PneutouchAi Writeによる書き込み、
+COM7から315サンプル／実効39.72 SPS・欠番0の受信を確認済み。
+現在のポート対応は[実機の接続記録](local-hardware.md)に保存している。
 単位は符号付き24 bitのADC counts。kPaへの換算、AI学習・部位判定は後続。
 
 ## 1. 配線とUSB
@@ -27,52 +29,47 @@
 MCU-LINKとCN9は別のUSB機器としてOSを選べる。同じシリアルポートを
 ブラウザー、CLI、別のシリアルモニターで同時に開かない。
 
-## 2. 依存物を準備する（Mac）
+## 2. プロジェクトと設定
 
-リポジトリ直下で実行する。Python 3.10以降、テストにはCコンパイラーとNode.js 20以降を使う。
-PC画面の通常起動にはPython標準ライブラリーのみでよく、Node.jsは不要。
+現在のメインは `src/pneutouch-solist`。プロジェクト名は **PneutouchAi**。
+旧 `src/pneutouch-solist-ai` は参考用で、現在のビルド・書き込みには使わない。
+必要なROHMコード、AIライブラリー、LEXIDE設定は新プロジェクト内にある。
+LEXIDE環境にはARM CMSIS 5.9.0とROHM ML63Q25x7デバイスパックが必要。
+このWindows環境のROHMパックは1.1.0、LAPISビルドツールはVer.20260317。
+
+計測設定の原本は `config.py`。変更したときのみ、以下でヘッダーを更新してビルドする。
+コミット済みヘッダーがあるので、初回ビルドのためのPython実行は不要。
 
 ```sh
-python3 tools/prepare_vendor.py
-python3 tools/test.py
-python3 tools/check_firmware.py
-python3 tools/package_firmware.py
+python tools/generate_config.py
+python tools/generate_config.py --check
 ```
 
-`check_firmware.py`はMacのClang等によるArmオブジェクトの検査で、HEXを作る処理ではない。
-`test.py`はC/Python/JavaScriptのホストテスト。pySerialがない場合のみ疑似端末試験をスキップする。
-各ソースの役割は[ファームウェアREADME](../src/pneutouch-solist-ai/README.md)を参照。
+`tools/prepare_vendor.py` は旧プロジェクト専用。現在のリンカーやDebug設定を上書きしない。
+別PCへ移すときは `python tools/package_firmware.py` で `build/PneutouchAi.zip` を作る。
+launchにはこのWindows環境の絶対パスが残るので、別PCではパック/TCLの場所を合わせる。
 
-準備元は`config.py`の`VENDOR_PROJECT`に固定したDT用AIVibrationInferenceパッケージと
-`ARM.CMSIS.5.9.0.pack`。大量のRB用サンプルから任意の`.cproject`を選ばない。
-別の場所の資料を使う場合は`--references /path/to/references`を指定する。
-不足ファイルはエラーで示し、元の`references/`は編集しない。
+## 3. Windowsでビルド・書き込み
 
-ベンダーコードは著作権表示を残して`src/pneutouch-solist-ai/vendor/`へ展開する。
-設定ヘッダー・リンカー・出典ハッシュは同じプロジェクトの`generated/`に保存する。
-両ディレクトリともGit管理外。設定変更後はprepareを再実行する。
-Phase 0ではAIライブラリーをリンクせず、後続の新Solist-AI SDK選定と分ける。
+1. LEXIDEの **PneutouchAi (in pneutouch-solist)** を選ぶ。
+   新規環境では `File > Import > General > Existing Projects into Workspace` から
+   `src/pneutouch-solist` を取り込む。
+2. ビルド構成を **Debug** にする。ソース変更後はRefreshし、Buildを実行。
+3. Consoleのエラー・警告と、`Debug/PneutouchAi.elf` / `.hex` の更新時刻を確認。
+4. Debugの起動履歴から **PneutouchAi Write** を選び、書き込みと実行を行う。
+   **WriteもDebugとして起動する。** 通常のRunやLocal C/C++ Applicationを選ばない。
+5. ソースレベルの確認には **PneutouchAi Debug** を選ぶ。
+   `main` で停止したらRun/Resumeして取得を開始する。
 
-## 3. WindowsでLEXIDEプロジェクトをビルドする
+どちらも同じ `Debug/PneutouchAi.elf` を使う。Releaseの実機確認は今回の対象外。
+元の動作確認済みAIVibrationInferenceベースはコミット `95a453e` に保存済み。
+現在のアプリはHX710B取得用で、元デモのLCD表示・AI推論・独自UART通信は起動しない。
 
-1. `build/PneuTouchSolistAI.zip`をWindowsへコピーして展開する。
-   例: `C:\PneuTouch\PneuTouchSolistAI`。このZIPはソース一式で、書き込み済みHEXではない。
-2. LEXIDE-Ω、ROHM ML63Q25x7デバイスパック、MCU-LINKドライバーを確認する。
-   配布ガイドの基準は`ROHM.ML63Q25x7_DFP_1.0.1.pack`とCMSIS 5.9.0。
-3. `File > Import > General > Existing Projects into Workspace`から展開先を選ぶ。
-   `.project`、`.cproject`、`.settings/`、`vendor/`、`generated/`を含める。
-   プロジェクト直下の`ML63Q25x7_lccarm.ld`も必要。生成したリンカースクリプトを読む入口になる。
-4. `PneuTouchSolistAI`を選び、MCUがML63Q25x7 / ML63Q2557であることを確認。
-   DebugでClean / Buildする。Releaseを使う場合もその構成でClean / Buildする。
-5. Consoleのエラー、HEX、map、ROM/RAM量を確認する。
-   古いHEXの更新時刻を取り違えず、ビルドログと生成物を保存する。
-6. プロジェクト用のLAPIS GDB Debugging (Arm)設定を作り、実際のプローブCMSIS-DAPを指定。
-   既存デモの書込設定ではなく今回の成果物を選び、配布ガイドに従って書き込む。
-7. Run/Resumeする。デバッガーで停止したままでは測定値は送られない。
-
-初回はWindowsローカルの短いASCIIパスを使う。共有フォルダーのUNCパスや同期の影響を避けられる。
-元のデモHEXは復元用に保持する。AISignal→AIVibrationの専用再構成HEXを通常のアプリHEXと混同しない。
-コード修正後はMac側で再度prepare/packageし、Windows側の編集差分を確認してコピー・Refreshする。
+デバッガーでは `pneutouch_status` を確認できる。
+`state` はSTARTING / SETTLING / STREAMING / SENSOR_TIMEOUT、
+`raw` は最新ADC生値、`samples` は取得数、`milliseconds` は最新取得時刻、`timeouts` は累計。
+`samples=0` のrawは未取得値。タイムアウト後のrawは前回値なので、stateと一緒に見る。
+SCK High中にブレークするとHX710Bがパワーダウンし得るため、通常は走らせたままUARTで観測する。
 
 ## 4. PCの波形画面
 
@@ -85,7 +82,7 @@ python3 tools/serve.py
 Chrome / Edgeで[計測画面](http://localhost:8000/learning-tool/)を開く。
 サーバーは127.0.0.1のみで待ち受ける。PC外への公開・データ送信は行わない。
 
-1. 「センサーに接続」でFT2232HのUART Bチャネルを選ぶ。
+1. 「センサーに接続」でFT2232HのUART Bチャネルを選ぶ。現在のWindowsでは **COM7**（COM6はA側）。
 2. 生値、MCU時刻による波形、受信サンプル/秒を確認する。
 3. 必要なら手動ラベルを選び「記録開始」。未指定は空欄、0は非接触、1～7は物理区画。
 4. 「記録停止」→「CSVを保存」。ダウンロードできたことを確認してから記録をクリアする。
@@ -113,7 +110,13 @@ python src/learning-tool/capture.py --list
 python src/learning-tool/capture.py --port /dev/cu.usbserial-実際の名前 --output captures/pressure-001.csv --duration 60
 ```
 
-WindowsではPython起動を`py`、ポートを`COM5`等へ読み替える。
+WindowsではPython起動を`py`、ポートを **COM7** へ読み替える。この環境では次のように実行できる。
+
+```powershell
+.venv\Scripts\python.exe src/learning-tool/capture.py --port COM7 --output captures/pressure-001.csv --duration 30
+```
+
+`.venv` はリポジトリ直下に作成済みで、pySerial 3.5を導入済み。
 ラベルを固定するなら`--label 7`等を指定する。省略は未指定、`--label 0`は非接触。
 出力CSVは既存ファイルへ上書きしない。受信できなかった場合は終了コード2で知らせる。
 CLIをCtrl+Cで止めるとCSVを閉じる。通信切断時も既に書き込んだ行を保持する。
@@ -137,7 +140,18 @@ PC受信時刻とMCU取得時刻を分けて保存し、実効サンプル周期
 - Mac Clangで9個のCソースをArm向けオブジェクトへコンパイル済み。
   Windowsの最終リンク・HEX生成の成功とは区別する。
 
-実機で残る確認: モジュール電源・配線、書き込み、約40 SPSの実受信、押下/解放時の変化、
+2026-09-20、新プロジェクトへ移植し、Windows Debugビルド（エラー・警告0）、書き込み、
+COM7から約40 SPSの連続受信を確認。最初の記録は
+`captures/pressure-bringup-20260920-2.csv`（315点、MCU時刻7906ms、欠番0）。
+Pythonは10件成功・POSIX専用1件スキップ、JavaScriptは7件成功。
+追加したCアプリ境界テストはWindows用ホストCコンパイラー未導入のため今回未実行。
+上のMacテスト結果は旧プロジェクト時点の履歴である。
+
+追加の30秒記録では1190点、39.72 SPS、欠番0。ユーザーが繰り返し押している間に
+2,388,304～7,647,159 countsの変化を確認した。個々の部位・押下時刻は未記録。
+10件の新プロジェクト計測・起動ソースをArm向けオブジェクトへコンパイルする検査も成功。
+
+実機で残る確認: 部位・押下時刻との対応と気密の評価、
 SCK幅、ノイズ・飽和、センサー未接続時のエラー、再接続後の回復。
 これらを満たし、実測CSVを保存できた時点で[実装プランM1](implementation-plan.md)の完了とする。
 

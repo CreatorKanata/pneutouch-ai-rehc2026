@@ -1,5 +1,8 @@
 <!-- Firmware entry point: import this complete folder into LEXIDE after preparation. -->
-# PneuTouchSolistAI — Phase 0
+# PneuTouchSolistAI — 旧プロジェクト（参考用）
+
+現在の開発・ビルド・書き込みには [PneutouchAi](../pneutouch-solist/README.md) を使う。
+以下は旧構成の手順を保存したもの。移植の実機確認が落ち着くまで参照用に保持する。
 
 DT-EBML63Q2557 / ML63Q2557でHX710Bを読み、CN9のUART Bから生値を送信する。
 既定値は40 SPS、115200 baud / 8N1。AIは後続段階で追加する。

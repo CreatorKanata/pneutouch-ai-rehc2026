@@ -1,6 +1,9 @@
 <!-- Hardware facts and Phase 0 wiring; component specifications are not module validation. -->
 # ボード・センサー・接続仕様
 
+現在のWindows実機では **CN9のUART B = COM7、SPI側A = COM6**。
+MCU-LINK側のCOM4/COM5と区別する。接続状態とUSB識別情報は[実機の接続記録](local-hardware.md)を参照。
+
 参照番号は[調査資料一覧](research-notes.md)に対応する。配線は採用方針、実機動作は未検証。
 
 ## DT-EBML63Q2557

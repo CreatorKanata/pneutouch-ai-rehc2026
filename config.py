@@ -1,6 +1,8 @@
-"""Phase 0 defaults; prepare_vendor.py generates the matching firmware header."""
+"""Phase 0 defaults; generate_config.py updates the tracked firmware header."""
 
-PROJECT_NAME = "PneuTouchSolistAI"
+PROJECT_NAME = "PneutouchAi"
+FIRMWARE_DIR = "src/pneutouch-solist"
+LEGACY_PROJECT_NAME = "PneuTouchSolistAI"
 CPU_HZ = 48_000_000
 UART_BAUD = 115_200
 # Vendor Uart1.c's 48 MHz / 115200 configuration (not a generic UART divisor).
@@ -10,7 +12,7 @@ SAMPLE_RATE_HZ = 40  # HX710B differential input supports 10 or 40 SPS.
 SENSOR_TIMEOUT_MS = 1000
 SETTLE_MS = 500
 CLOCK_HALF_US = 2
-STACK_BYTES = 2048
+STACK_BYTES = 2048  # Legacy prepare_vendor.py only; active linker is kept in the project.
 SERIAL_TIMEOUT_S = 0.1
 NO_DATA_WARNING_S = 3.0
 MAX_LINE_BYTES = 160
