@@ -7,6 +7,7 @@
 
 | 文書 | 内容 |
 |---|---|
+| [HTMLデモの起動・表示仕様](../src/demo-visualizer/README.md) | Web Serial、COM7、4:3のJPEG状態画像、5秒の部位動画、推定時の実測波形 |
 | [head-legs-waveform-analysis-20260920.md](head-legs-waveform-analysis-20260920.md) | 既存65イベントの詳細再検証。振幅逆転、形状の重なり、足の9件の除外、閾値感度 |
 | [pneumatic-filter-design-20260920.md](pneumatic-filter-design-20260920.md) | 穴・隔壁のRC的な作用、確認できていない点、頭側流路を調整する試験案 |
 | [live-pressure-demo-20260920.md](live-pressure-demo-20260920.md) | 実圧力→12特徴→Solist-AIのライブ推定とLCDの3秒表示 |

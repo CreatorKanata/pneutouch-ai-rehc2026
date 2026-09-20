@@ -1,0 +1,17 @@
+{
+  "images": {
+    "idle": "/images/demo/normal.jpg",
+    "pressed": "/images/demo/pressed.jpg",
+    "HEAD": "/images/demo/head.jpg",
+    "BACK": "/images/demo/back.jpg",
+    "LEGS": "/images/demo/legs.jpg",
+    "TAIL": "/images/demo/tail.jpg"
+  },
+  "videos": {
+    "static": "/videos/demo/static.mp4",
+    "head": "/videos/demo/head.mp4",
+    "back": "/videos/demo/back.mp4",
+    "legs": "/videos/demo/legs.mp4",
+    "tail": "/videos/demo/tail.mp4"
+  }
+}

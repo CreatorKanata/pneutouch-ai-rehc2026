@@ -28,6 +28,10 @@ LCDへ `HEAD / BACK / LEGS / TAIL` を3秒表示します。
 
 ## 最初に使う
 
+動画・部位画像・実測波形を表示する [HTMLデモ](src/demo-visualizer/README.md) を追加しました。
+`python tools/serve_demo.py` を起動し、Chrome / Edgeで
+[デモ画面](http://localhost:8001/demo-visualizer/)を開いて **COM7** に接続します。
+
 [配線・書き込み・波形表示の手順](docs/phase0-bringup.md)と
 [現在のUSB/COM接続記録](docs/local-hardware.md)を参照してください。
 
