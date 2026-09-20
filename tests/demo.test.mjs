@@ -36,6 +36,26 @@ test('new touch supersedes old image timer, duplicate/late results do not replay
   m.consume({type:'event',action:'INVALID',id:1,ms:300},4300); assert.equal(m.phase,'pressed');
   m.consume({type:'event',action:'TIMEOUT',id:2,ms:400},4400); assert.equal(m.phase,'idle');
 });
+
+test('waveform appears only on a new result for five seconds, independently of image and late features', () => {
+  const m=new DemoState();
+  assert.equal(m.traceDeadline,0);
+  m.consume(sample(0,1000),0); m.consume(start(1,1000),0);
+  assert.equal(m.traceDeadline,0);
+  m.consume(result(1),1000); assert.equal(m.traceDeadline,6000);
+  m.tick(4000); assert.equal(m.phase,'idle'); assert.equal(m.traceDeadline,6000);
+  m.consume(result(1),5000); // Duplicate result must not prolong the display.
+  assert.equal(m.tick(5999),false);
+  assert.equal(m.tick(6000),true); assert.equal(m.traceDeadline,0);
+  m.consume({type:'features',id:1,trigger:1000,end:1500,offset:0,values:[1,2,3,4,5,6]},6100);
+  assert.equal(m.traceDeadline,0); // Late samples/features cannot make it reappear.
+  m.consume(start(2,2000),6200); assert.equal(m.traceDeadline,0);
+  m.consume(result(2,'BACK'),6500); assert.equal(m.traceDeadline,11500);
+  m.consume(start(3,3000),8000); m.consume(result(3,'TAIL'),8500);
+  m.tick(11500); assert.equal(m.traceDeadline,13500); assert.equal(m.trace.part,'TAIL');
+  m.tick(13500); assert.equal(m.traceDeadline,0);
+  m.reset(); assert.equal(m.traceDeadline,0);
+});
 test('uint32 wrap remains continuous; a sample gap or MCU reboot clears stale state', () => {
   const m=new DemoState(); m.consume(sample(0xffffffff,0xfffffff0),0);
   assert.deepEqual(m.consume(sample(0,9),25),[]);

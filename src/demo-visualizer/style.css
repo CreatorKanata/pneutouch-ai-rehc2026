@@ -65,8 +65,8 @@ button:focus-visible, a:focus-visible, summary:focus-visible {
 .legend > span { display: flex; align-items: center; gap: 5px; }
 .dot { width: 6px; height: 6px; display: inline-block; border-radius: 50%; }
 .yellow { background: #e6b82b; }.red { background: #e8584d; }
-.waveform-card { margin-top: 10px; }
-.chart-stage { height: 144px; position: relative; margin: 0 4px; }
+.waveform-card { backdrop-filter: blur(16px); box-shadow: 0 12px 48px #061b1833; }
+.chart-stage { height: 160px; position: relative; margin: 0 4px; }
 canvas { display: block; width: 100%; height: 100%; }
 #chart-empty { position: absolute; inset: 0; display: flex; justify-content: center; align-items: center; gap: 10px; background: #fafdf7e8; color: #798e7b; }
 #chart-empty > span { font-size: 44px; color: #b0c4a7; }
@@ -81,10 +81,12 @@ canvas { display: block; width: 100%; height: 100%; }
 .device-help { font-size: 9px; color: #536b5b; line-height: 1.7; margin-top: 8px; }
 .device-help summary { cursor: pointer; }
 .device-help p { margin: 8px 0 0; }
-.view-tools {
+.result-dock {
   position: absolute; right: max(24px, env(safe-area-inset-right)); bottom: max(24px, env(safe-area-inset-bottom));
-  display: flex; align-items: center; gap: 8px; color: white;
+  width: 440px; max-width: calc(100% - 48px);
+  display: flex; flex-direction: column; gap: 12px;
 }
+.view-tools { display: flex; justify-content: flex-end; align-items: center; gap: 8px; color: white; }
 .glass-button, .video-label { background: rgb(17 37 27 / 65%); backdrop-filter: blur(12px); border: 1px solid #ffffff40; color: white; }
 .glass-button { min-height: 38px; }
 .glass-button:hover { background: #234733e6; }
@@ -103,6 +105,7 @@ canvas { display: block; width: 100%; height: 100%; }
   .status-stage { width: 152px; }.touch-result { min-height: 49px; padding-top: 7px; }
   .touch-result h2 { font-size: 14px; }.card-heading { padding: 9px 10px; }
   .chart-stage { height: 114px; }.legend { padding-bottom: 8px; }
-  .view-tools { right: 12px; bottom: max(12px, env(safe-area-inset-bottom)); gap: 6px; }
+  .result-dock { right: 12px; bottom: max(12px, env(safe-area-inset-bottom)); max-width: calc(100% - 24px); gap: 10px; }
+  .view-tools { gap: 6px; }
   .glass-button, .video-label { padding: 9px 10px; font-size: 10px; }
 }

@@ -5,7 +5,7 @@ export class DemoState {
   reset() {
     this.samples = []; this.events = new Map(); this.lastSample = null;
     this.phase = 'idle'; this.part = null; this.activeId = null; this.deadline = 0;
-    this.trace = null; this.lastResult = null;
+    this.trace = null; this.lastResult = null; this.traceDeadline = 0;
   }
   consume(p, now) {
     if (!p) return [];
@@ -40,7 +40,7 @@ export class DemoState {
       this.events.set(p.id, e); this.lastResult = e;
       while (this.events.size > 16) this.events.delete(this.events.keys().next().value);
       this.activeId = null; this.part = p.part; this.phase = p.part === 'UNKNOWN' ? 'unknown' : 'result';
-      this.deadline = now+3000; this.updateTrace();
+      this.deadline = now+3000; this.traceDeadline = now+5000; this.updateTrace();
       return ['result'];
     }
     if (p.type === 'features') {
@@ -66,8 +66,15 @@ export class DemoState {
       partial: !points.length || msDelta(points[0].ms,trigger) > -700};
   }
   tick(now) {
-    if (!this.deadline || now < this.deadline) return false;
-    this.phase = 'idle'; this.part = null; this.activeId = null; this.deadline = 0;
-    return true;
+    let changed = false;
+    if (this.deadline && now >= this.deadline) {
+      this.phase = 'idle'; this.part = null; this.activeId = null; this.deadline = 0;
+      changed = true;
+    }
+    if (this.traceDeadline && now >= this.traceDeadline) {
+      this.traceDeadline = 0;
+      changed = true;
+    }
+    return changed;
   }
 }

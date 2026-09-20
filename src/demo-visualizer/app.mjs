@@ -33,10 +33,11 @@ function render() {
   $('part-ja').textContent = phase === 'pressed' ? 'ぎゅっ。離してみよう' : phase === 'result' ? `${names[part]}にタッチ！` : phase === 'unknown' ? 'もう一度さわってみよう' : 'どこをさわる？';
   $('reset-count').textContent = ['result','unknown'].includes(phase) ? `${Math.max(0,(model.deadline-performance.now())/1000).toFixed(1)} s` : '';
   const trace = model.trace;
+  $('waveform-card').hidden = !trace || !model.traceDeadline;
   $('chart-empty').hidden = Boolean(trace?.points.length);
   $('trace-label').textContent = trace ? `${names[trace.part] ?? '判定なし'} · ${trace.part}` : 'タッチを待っています';
   $('trace-detail').textContent = trace ? `${trace.points.length} samples · ${trace.base === null ? '生値（基準区間なし）' : '直前の基準値からの変化'}${trace.partial ? ' · 接続直後のため一部のみ' : ''}` : '実際に受信したデータを表示します';
-  drawTrace($('chart'),trace);
+  if (!$('waveform-card').hidden) drawTrace($('chart'),trace);
 }
 function scheduleRender() { if (!raf) raf = requestAnimationFrame(() => { raf=0; render(); }); }
 function receive(line) {

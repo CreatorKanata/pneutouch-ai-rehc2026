@@ -13,7 +13,7 @@
       <button id="play-video" class="play-video" hidden>▶ 動画を再生</button>
     </section>
 
-    <aside class="hud" aria-label="恐竜のステータスと実測波形">
+    <aside class="hud" aria-label="恐竜のステータス">
       <header class="masthead">
         <a class="brand" href="./" aria-label="PneutouchAI">Pneutouch<span>AI</span><small>by Kanata the Kid Creator</small></a>
         <span id="connection" class="connection" data-state="off">未接続</span>
@@ -34,15 +34,6 @@
         <div class="legend"><span><i class="dot yellow"></i>押している</span><span><i class="dot red"></i>ここに触れた</span></div>
       </section>
 
-      <section class="card waveform-card" aria-label="推定したタッチの実測波形">
-        <div class="card-heading"><h2>このタッチの波形</h2><span id="trace-label" class="small-pill">タッチを待っています</span></div>
-        <div class="chart-stage">
-          <canvas id="chart" aria-label="実センサーの圧力波形"></canvas>
-          <div id="chart-empty"><span aria-hidden="true">∿</span><p>触れた場所がわかると、<br>圧力の波形がここに現れます。</p></div>
-        </div>
-        <div class="chart-foot"><span id="trace-detail">実際に受信したデータを表示します</span><span>ADC counts ／ 秒</span></div>
-      </section>
-
       <div class="connection-tools">
         <button id="connect" disabled>恐竜につなぐ ↗</button><button id="disconnect" class="subtle" hidden>切断</button>
         <span>約1秒、押して離してみよう。</span>
@@ -55,11 +46,21 @@
       </details>
     </aside>
 
-    <nav class="view-tools" aria-label="動画の表示設定">
-      <span id="video-label" class="video-label">いつもの恐竜</span>
-      <button id="sound" class="glass-button" aria-pressed="false" aria-label="動画の音をオンにする">音 OFF</button>
-      <button id="fullscreen" class="glass-button" aria-pressed="false" aria-label="ステータスと波形を含めて全画面にする">⛶ 全画面</button>
-    </nav>
+    <div class="result-dock">
+      <section id="waveform-card" class="card waveform-card" aria-label="推定したタッチの実測波形" hidden>
+        <div class="card-heading"><h2>このタッチの波形</h2><span id="trace-label" class="small-pill">タッチを待っています</span></div>
+        <div class="chart-stage">
+          <canvas id="chart" aria-label="実センサーの圧力波形"></canvas>
+          <div id="chart-empty"><span aria-hidden="true">∿</span><p>このタッチの波形データを<br>受信できませんでした。</p></div>
+        </div>
+        <div class="chart-foot"><span id="trace-detail">実際に受信したデータを表示します</span><span>ADC counts ／ 秒</span></div>
+      </section>
+      <nav class="view-tools" aria-label="動画の表示設定">
+        <span id="video-label" class="video-label">いつもの恐竜</span>
+        <button id="sound" class="glass-button" aria-pressed="false" aria-label="動画の音をオンにする">音 OFF</button>
+        <button id="fullscreen" class="glass-button" aria-pressed="false" aria-label="ステータスと波形を含めて全画面にする">⛶ 全画面</button>
+      </nav>
+    </div>
   </main>
   <script type="module" src="app.mjs"></script>
 </body>
