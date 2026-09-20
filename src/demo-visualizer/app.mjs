@@ -79,6 +79,22 @@ $('sound').onclick=() => {
   $('sound').setAttribute('aria-label',on?'動画の音をオフにする':'動画の音をオンにする'); playback.setMuted(!on);
 };
 $('play-video').onclick=() => { $('play-video').hidden=true; playback.showIdle(); };
+// Fullscreen the page so status and chart stay above both video elements.
+function fullscreenControls() {
+  const active = Boolean(document.fullscreenElement);
+  $('fullscreen').textContent = active ? '⛶ 全画面を終了' : '⛶ 全画面';
+  $('fullscreen').setAttribute('aria-pressed',String(active));
+  $('fullscreen').setAttribute('aria-label',active ? '全画面を終了する' : 'ステータスと波形を含めて全画面にする');
+  scheduleRender();
+}
+$('fullscreen').disabled = !document.fullscreenEnabled;
+$('fullscreen').onclick = async () => {
+  try {
+    if (document.fullscreenElement) await document.exitFullscreen();
+    else await document.documentElement.requestFullscreen();
+  } catch { notice('全画面にできませんでした。ブラウザーのF11キーでも表示できます。',true); }
+};
+document.addEventListener('fullscreenchange',fullscreenControls);
 $('status-image').onerror=() => {
   if (!imageFailed) { imageFailed=true; $('status-image').hidden=true; $('image-error').hidden=false; }
 };

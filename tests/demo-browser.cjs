@@ -27,6 +27,20 @@ fs.mkdirSync(out,{recursive:true});
     await page.goto('http://localhost:8001/demo-visualizer/');
     await page.waitForFunction(()=>!document.querySelector('#connect').disabled);
     await page.waitForFunction(()=>document.querySelector('#idle-video').currentTime>0);
+    const layout=await page.evaluate(()=>{
+      const rect=selector=>{const r=document.querySelector(selector).getBoundingClientRect();return {x:r.x,y:r.y,width:r.width,height:r.height,bottom:r.bottom};};
+      return {video:rect('#idle-video'),hud:rect('.hud'),chart:rect('#chart'),width:innerWidth,height:innerHeight};
+    });
+    assert.deepEqual(layout.video,{x:0,y:0,width:1440,height:900,bottom:900});
+    assert(layout.hud.x<=24 && layout.hud.y<=24 && layout.hud.width<=340,'status overlay stays in upper left');
+    assert(layout.chart.bottom<layout.height,'chart is visible without scrolling');
+    await page.locator('#fullscreen').click();
+    await page.waitForFunction(()=>document.fullscreenElement===document.documentElement);
+    assert.equal(await page.locator('.hud').isVisible(),true,'page fullscreen preserves the status overlay');
+    assert.equal(await page.locator('#chart').isVisible(),true);
+    assert.equal(await page.locator('#fullscreen').getAttribute('aria-pressed'),'true');
+    await page.locator('#fullscreen').click();
+    await page.waitForFunction(()=>!document.fullscreenElement);
     const media=await page.evaluate(async()=>{
       const manifest=await (await fetch('assets.json')).json();
       const result={images:{},videos:{}};
@@ -92,12 +106,13 @@ fs.mkdirSync(out,{recursive:true});
     await page.evaluate(()=>clearInterval(window.testStream));
     await page.locator('#disconnect').click();
     await page.waitForFunction(()=>document.querySelector('#connection').textContent==='未接続');
+    await page.locator('#chart-empty').waitFor({state:'visible'}); // Graph reset is rendered on the next animation frame.
     assert.equal(await page.locator('#chart-empty').isVisible(),true);
     await page.setViewportSize({width:390,height:844});
     await page.screenshot({path:path.join(out,'demo-mobile.png'),fullPage:true});
     assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'no horizontal overflow on mobile');
     assert.deepEqual(errors,[]);
-    fs.writeFileSync(path.join(out,'browser-check.json'),JSON.stringify({media,checks:['actual saved UART waveform','all four JPEG/video routes','pressed image','3-second image reset','5-second reaction','idle loop','disconnect','mobile width'],errors},null,2));
+    fs.writeFileSync(path.join(out,'browser-check.json'),JSON.stringify({media,checks:['viewport video with upper-left status and chart','page fullscreen enter/exit preserves overlays','actual saved UART waveform','all four JPEG/video routes','pressed image','3-second image reset','5-second reaction','idle loop','disconnect','mobile width'],errors},null,2));
     console.log(JSON.stringify({ok:true,media,output:out},null,2));
   } finally {await browser.close();}
 })().catch(error=>{console.error(error);process.exitCode=1;});

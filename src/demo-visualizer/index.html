@@ -6,36 +6,60 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <main>
-    <header class="masthead">
-      <a class="brand" href="./" aria-label="PneutouchAI"><span class="brand-mark" aria-hidden="true">p<span>•</span></span><span>Pneutouch<span class="brand-ai">AI</span><small>by Kanata the Kid Creator</small></span></a>
-      <div class="connection-tools"><span id="connection" class="connection" data-state="off">未接続</span><button id="connect" disabled>恐竜につなぐ <span aria-hidden="true">↗</span></button><button id="disconnect" class="subtle" hidden>切断</button></div>
-    </header>
-    <section class="intro"><div><p class="eyebrow">TOUCH BRINGS IT TO LIFE.</p><h1>さわると、うごく。</h1><p>恐竜の好きなところを、約1秒ぎゅっと押して離してみよう。</p></div><div class="legend"><span><i class="dot yellow"></i>押している</span><span><i class="dot red"></i>ここに触れた</span></div></section>
-    <p id="notice" class="notice" role="status">デモを準備しています…</p>
-    <div class="showcase">
-      <section class="card reaction-card" aria-label="恐竜のリアクション">
-        <div class="card-heading"><h2><span class="section-number">01</span> 恐竜のリアクション</h2><span id="video-label" class="small-pill">いつもの恐竜</span></div>
-        <div class="video-stage">
-          <video id="idle-video" muted autoplay loop playsinline preload="auto" aria-label="待機中の恐竜動画"></video>
-          <video id="reaction-video" muted playsinline preload="auto" aria-label="触れた部位のリアクション動画" hidden></video>
-          <button id="play-video" class="play-video" hidden>▶ 動画を再生</button>
-        </div>
-        <div class="card-foot"><span><i class="live-dot"></i> ひとつのタッチで、ひとつのリアクション。</span><button id="sound" class="icon-button" aria-pressed="false" aria-label="動画の音をオンにする">音 OFF</button></div>
-      </section>
-      <section class="card touch-card" aria-label="恐竜の触れた場所">
-        <div class="card-heading"><h2><span class="section-number">02</span> 触れたところ</h2><span id="phase-badge" class="small-pill">待機中</span></div>
-        <div class="status-stage" id="status-stage" data-phase="idle"><img id="status-image" src="/images/demo/normal.jpg" width="1024" height="768" alt="待機中の恐竜のサイドビュー"><p id="image-error" hidden>状態画像を読み込めません</p></div>
-        <div class="touch-result" aria-live="polite"><div><p id="part-en">READY TO PLAY</p><h3 id="part-ja">どこをさわる？</h3></div><span id="reset-count" aria-label="表示が戻るまでの時間"></span></div>
-      </section>
-    </div>
-    <section class="card waveform-card" aria-label="推定したタッチの実測波形">
-      <div class="card-heading"><div><h2><span class="section-number">03</span> このタッチの波形</h2><p class="chart-description">押して、離して。空気の変化が、形になる。</p></div><span id="trace-label" class="small-pill">タッチを待っています</span></div>
-      <div class="chart-stage"><canvas id="chart" aria-label="実センサーの圧力波形"></canvas><div id="chart-empty"><span class="wave-symbol" aria-hidden="true">∿</span><p>触れた場所がわかると、<br>そのときの圧力の波形がここに現れます。</p></div></div>
-      <div class="chart-foot"><span id="trace-detail">実際に受信したデータを表示します</span><span>圧力変化 · ADC counts <span class="axis-note">／ 時間 →</span></span></div>
+  <main class="demo">
+    <section class="video-stage" aria-label="恐竜のリアクション">
+      <video id="idle-video" muted autoplay loop playsinline preload="auto" aria-label="待機中の恐竜動画"></video>
+      <video id="reaction-video" muted playsinline preload="auto" aria-label="触れた部位のリアクション動画" hidden></video>
+      <button id="play-video" class="play-video" hidden>▶ 動画を再生</button>
     </section>
-    <footer><span>PneutouchAI <span class="footer-separator">/</span> Kanata the Kid Creator</span><span>ONE SENSOR. MANY REACTIONS.</span></footer>
-    <details class="device-help"><summary>接続について</summary><p>CN9のUSB SerialはCOM6 / COM7です。圧力データは <strong>COM7</strong>。MCU-LINKのCOM4 / COM5とは別です。計測画面など、COM7を使うほかのアプリは切断してください。</p><p>色の表示は3秒、リアクション動画は最大5秒。次のタッチが確定すると最新のリアクションに切り替わります。</p></details>
+
+    <aside class="hud" aria-label="恐竜のステータスと実測波形">
+      <header class="masthead">
+        <a class="brand" href="./" aria-label="PneutouchAI">Pneutouch<span>AI</span><small>by Kanata the Kid Creator</small></a>
+        <span id="connection" class="connection" data-state="off">未接続</span>
+      </header>
+
+      <section class="card touch-card" aria-label="恐竜の触れた場所">
+        <div class="card-heading"><h1>触れたところ</h1><span id="phase-badge" class="small-pill">待機中</span></div>
+        <div class="touch-body">
+          <div class="status-stage" id="status-stage" data-phase="idle">
+            <img id="status-image" src="/images/demo/normal.jpg" width="1024" height="768" alt="待機中の恐竜のサイドビュー">
+            <p id="image-error" hidden>状態画像を読み込めません</p>
+          </div>
+          <div class="touch-result" aria-live="polite">
+            <div><p id="part-en">READY TO PLAY</p><h2 id="part-ja">どこをさわる？</h2></div>
+            <span id="reset-count" aria-label="表示が戻るまでの時間"></span>
+          </div>
+        </div>
+        <div class="legend"><span><i class="dot yellow"></i>押している</span><span><i class="dot red"></i>ここに触れた</span></div>
+      </section>
+
+      <section class="card waveform-card" aria-label="推定したタッチの実測波形">
+        <div class="card-heading"><h2>このタッチの波形</h2><span id="trace-label" class="small-pill">タッチを待っています</span></div>
+        <div class="chart-stage">
+          <canvas id="chart" aria-label="実センサーの圧力波形"></canvas>
+          <div id="chart-empty"><span aria-hidden="true">∿</span><p>触れた場所がわかると、<br>圧力の波形がここに現れます。</p></div>
+        </div>
+        <div class="chart-foot"><span id="trace-detail">実際に受信したデータを表示します</span><span>ADC counts ／ 秒</span></div>
+      </section>
+
+      <div class="connection-tools">
+        <button id="connect" disabled>恐竜につなぐ ↗</button><button id="disconnect" class="subtle" hidden>切断</button>
+        <span>約1秒、押して離してみよう。</span>
+      </div>
+      <p id="notice" class="notice" role="status">デモを準備しています…</p>
+      <details class="device-help">
+        <summary>接続について</summary>
+        <p>CN9のUSB SerialはCOM6 / COM7です。圧力データは <strong>COM7</strong>。MCU-LINKのCOM4 / COM5とは別です。COM7を使うほかのアプリは切断してください。</p>
+        <p>色の表示は3秒、リアクション動画は最大5秒。次の推定が確定すると最新のリアクションに切り替わります。</p>
+      </details>
+    </aside>
+
+    <nav class="view-tools" aria-label="動画の表示設定">
+      <span id="video-label" class="video-label">いつもの恐竜</span>
+      <button id="sound" class="glass-button" aria-pressed="false" aria-label="動画の音をオンにする">音 OFF</button>
+      <button id="fullscreen" class="glass-button" aria-pressed="false" aria-label="ステータスと波形を含めて全画面にする">⛶ 全画面</button>
+    </nav>
   </main>
   <script type="module" src="app.mjs"></script>
 </body>
