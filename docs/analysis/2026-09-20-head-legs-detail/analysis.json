@@ -1,0 +1,6461 @@
+{
+  "source_extractor_sha256": "afb213b046406b6b89e3773c1da71311b28d254deffe0c69891fd339a18d6515",
+  "records": [
+    {
+      "cohort": "live",
+      "file": "pressure-head-20260920-200652.csv",
+      "sha256": "7de7e429eb9efcbdbdb759f3a36500f5aaecb44c5b1cd5466ab269b33deabb66",
+      "samples": 2441,
+      "sequence_gaps": 0,
+      "median_interval_ms": 24.99999999999991,
+      "valid_adopted": 2,
+      "replay_status_counts": {
+        "1": 2,
+        "2": 2
+      }
+    },
+    {
+      "cohort": "live",
+      "file": "pressure-head-supplement-20260920.csv",
+      "sha256": "a5f53929c56f36d26dda3a762d5d45121b6df3c35d04cad1e8021fe59d77e6a3",
+      "samples": 3817,
+      "sequence_gaps": 0,
+      "median_interval_ms": 25.000000000000355,
+      "valid_adopted": 13,
+      "replay_status_counts": {
+        "1": 13,
+        "2": 13
+      }
+    },
+    {
+      "cohort": "live",
+      "file": "pressure-legs-20260920.csv",
+      "sha256": "f7f822aa5bf4d1bc7d0d685493de9de4fd659a2a5e00bcc415a0a8cfea2d513e",
+      "samples": 4613,
+      "sequence_gaps": 0,
+      "median_interval_ms": 25.000000000000355,
+      "valid_adopted": 17,
+      "replay_status_counts": {
+        "1": 26,
+        "2": 17,
+        "3": 9
+      }
+    },
+    {
+      "cohort": "original",
+      "file": "pressure-zone03-right-hind-leg-20260920-171839.csv",
+      "sha256": "4bc8510a9971a9a36af9bf7daa2891fbc16e50e1506a91253d77fa0a72d70b64",
+      "samples": 2094,
+      "sequence_gaps": 0,
+      "median_interval_ms": 25.00000000000002,
+      "valid_adopted": 6,
+      "replay_status_counts": {
+        "1": 6,
+        "2": 6
+      }
+    },
+    {
+      "cohort": "original",
+      "file": "pressure-zone04-left-hind-leg-20260920-172018.csv",
+      "sha256": "c4c15b986eab4e07a609794ffbad7fef013c9041e483d3fe126eecde5fe73e07",
+      "samples": 2203,
+      "sequence_gaps": 0,
+      "median_interval_ms": 24.99999999999991,
+      "valid_adopted": 6,
+      "replay_status_counts": {
+        "1": 6,
+        "2": 6
+      }
+    },
+    {
+      "cohort": "original",
+      "file": "pressure-zone05-right-front-leg-20260920-173826.csv",
+      "sha256": "e8e8f443b72c4852a2f6a6e262015c5df930bd76496429d29b20bfd6b45dd3e4",
+      "samples": 2095,
+      "sequence_gaps": 0,
+      "median_interval_ms": 25.000000000000014,
+      "valid_adopted": 6,
+      "replay_status_counts": {
+        "1": 6,
+        "2": 6
+      }
+    },
+    {
+      "cohort": "original",
+      "file": "pressure-zone06-left-front-leg-20260920-174028.csv",
+      "sha256": "a8062e38ab9cea6b4a742de5158bcfb9f9aeb7b8741a73528c7da402f1941bca",
+      "samples": 2275,
+      "sequence_gaps": 0,
+      "median_interval_ms": 24.99999999999991,
+      "valid_adopted": 8,
+      "replay_status_counts": {
+        "1": 8,
+        "2": 8
+      }
+    },
+    {
+      "cohort": "original",
+      "file": "pressure-zone07-neck-head-20260920-174226.csv",
+      "sha256": "b097f06b47aba2f18c2dd90f8cfe74e6ddb0dc9a0201e114b7b1688acbe85a86",
+      "samples": 1980,
+      "sequence_gaps": 0,
+      "median_interval_ms": 25.000000000000135,
+      "valid_adopted": 7,
+      "replay_status_counts": {
+        "1": 7,
+        "2": 7
+      }
+    }
+  ],
+  "events": [
+    {
+      "key": "live:pressure-head-20260920-200652.csv:1",
+      "cohort": "live",
+      "file": "pressure-head-20260920-200652.csv",
+      "event": 1,
+      "label": 4,
+      "zone": null,
+      "rise_ms": 167.60622,
+      "decay_ms": 283.32599,
+      "width_ms": 283.6424,
+      "area_width_ms": 303.68643,
+      "slope_norm_s": 8.0228643,
+      "asymmetry": 1.6904265,
+      "release_rise_ms": 124.83929,
+      "recovery_ms": 140.57349,
+      "release_width_ms": 132.2337,
+      "release_area_width_ms": 146.75453,
+      "trough_peak_ratio": 2.231482,
+      "area_ratio": 1.0783495,
+      "peak_counts": 249393.0,
+      "trough_counts": 556516.0,
+      "baseline_counts": 3944709.0,
+      "baseline_sd": 416.14632042107496,
+      "peak_to_trough_ms": 705.0000000000001,
+      "pressure_onset_to_release_ms": 760.5291284034532,
+      "positive_area_counts_s": 75737.2821312372,
+      "negative_area_counts_s": 81671.25088382169,
+      "positive_tau_ms": 129.66688411332714,
+      "positive_tau_r2": 0.9572388293714442,
+      "negative_tau_ms": 61.19857823564274,
+      "negative_tau_r2": 0.9963830161450047,
+      "between_pulses_fraction": null,
+      "post_400_700_fraction": 0.007766173838667711,
+      "rebound_200_800_fraction": 0.009085093690028679,
+      "rise_sample_intervals": 6.704248800000024,
+      "recovery_sample_intervals": 5.62293960000002,
+      "trigger_s": 5.542,
+      "end_s": 6.751,
+      "peak_s": 5.668,
+      "trough_s": 6.373
+    },
+    {
+      "key": "live:pressure-head-20260920-200652.csv:2",
+      "cohort": "live",
+      "file": "pressure-head-20260920-200652.csv",
+      "event": 2,
+      "label": 4,
+      "zone": null,
+      "rise_ms": 252.95024,
+      "decay_ms": 230.12466,
+      "width_ms": 297.04822,
+      "area_width_ms": 316.88895,
+      "slope_norm_s": 4.6178007,
+      "asymmetry": 0.90976256,
+      "release_rise_ms": 114.05304,
+      "recovery_ms": 133.22003,
+      "release_width_ms": 139.04498,
+      "release_area_width_ms": 151.46115,
+      "trough_peak_ratio": 2.2626152,
+      "area_ratio": 1.0814461,
+      "peak_counts": 219368.5,
+      "trough_counts": 496346.5,
+      "baseline_counts": 3952233.5,
+      "baseline_sd": 779.2820028718744,
+      "peak_to_trough_ms": 477.9999999999998,
+      "pressure_onset_to_release_ms": 669.1338537423696,
+      "positive_area_counts_s": 69515.45980276068,
+      "negative_area_counts_s": 75177.21854327674,
+      "positive_tau_ms": 108.16898066691442,
+      "positive_tau_r2": 0.9632770148990649,
+      "negative_tau_ms": 58.22909297433132,
+      "negative_tau_r2": 0.9972037814760297,
+      "between_pulses_fraction": null,
+      "post_400_700_fraction": 0.008885929486759753,
+      "rebound_200_800_fraction": 0.011299565928237632,
+      "rise_sample_intervals": 10.118009600000036,
+      "recovery_sample_intervals": 5.3288012000000196,
+      "trigger_s": 10.882,
+      "end_s": 11.94,
+      "peak_s": 11.084,
+      "trough_s": 11.562
+    },
+    {
+      "key": "live:pressure-head-supplement-20260920.csv:1",
+      "cohort": "live",
+      "file": "pressure-head-supplement-20260920.csv",
+      "event": 1,
+      "label": 4,
+      "zone": null,
+      "rise_ms": 240.53217,
+      "decay_ms": 533.16113,
+      "width_ms": 307.6546,
+      "area_width_ms": 371.61353,
+      "slope_norm_s": 4.8567772,
+      "asymmetry": 2.2165897,
+      "release_rise_ms": 95.651123,
+      "recovery_ms": 138.73767,
+      "release_width_ms": 135.64417,
+      "release_area_width_ms": 144.77362,
+      "trough_peak_ratio": 2.1157534,
+      "area_ratio": 0.82425767,
+      "peak_counts": 171463.5,
+      "trough_counts": 362774.5,
+      "baseline_counts": 3952409.5,
+      "baseline_sd": 842.9497894299517,
+      "peak_to_trough_ms": 1260.0000000000016,
+      "pressure_onset_to_release_ms": 1427.8419737838171,
+      "positive_area_counts_s": 63718.16267843437,
+      "negative_area_counts_s": 52520.17780144081,
+      "positive_tau_ms": 230.3731410541618,
+      "positive_tau_r2": 0.96508459944351,
+      "negative_tau_ms": 59.76529127548356,
+      "negative_tau_r2": 0.9957723354885434,
+      "between_pulses_fraction": 0.04841263592543019,
+      "post_400_700_fraction": 0.023531146759212678,
+      "rebound_200_800_fraction": 0.02554892915571519,
+      "rise_sample_intervals": 9.621286799999863,
+      "recovery_sample_intervals": 5.5495067999999215,
+      "trigger_s": 17.782,
+      "end_s": 19.571,
+      "peak_s": 17.933,
+      "trough_s": 19.193
+    },
+    {
+      "key": "live:pressure-head-supplement-20260920.csv:2",
+      "cohort": "live",
+      "file": "pressure-head-supplement-20260920.csv",
+      "event": 2,
+      "label": 4,
+      "zone": null,
+      "rise_ms": 161.71378,
+      "decay_ms": 247.23077,
+      "width_ms": 238.85069,
+      "area_width_ms": 264.35092,
+      "slope_norm_s": 8.2719984,
+      "asymmetry": 1.5288171,
+      "release_rise_ms": 138.2229,
+      "recovery_ms": 145.72559,
+      "release_width_ms": 130.05701,
+      "release_area_width_ms": 146.26289,
+      "trough_peak_ratio": 1.891407,
+      "area_ratio": 1.0464978,
+      "peak_counts": 270266.0,
+      "trough_counts": 511183.0,
+      "baseline_counts": 3963146.0,
+      "baseline_sd": 596.8407576565126,
+      "peak_to_trough_ms": 1411.0000000000014,
+      "pressure_onset_to_release_ms": 1464.7313557988716,
+      "positive_area_counts_s": 71445.06551970751,
+      "negative_area_counts_s": 74767.0901507441,
+      "positive_tau_ms": 110.021211798068,
+      "positive_tau_r2": 0.9916465814497619,
+      "negative_tau_ms": 63.17243138501659,
+      "negative_tau_r2": 0.9982198438364185,
+      "between_pulses_fraction": -0.017016568861788015,
+      "post_400_700_fraction": -0.006844906814193742,
+      "rebound_200_800_fraction": -0.006013502013955863,
+      "rise_sample_intervals": 6.468551199999909,
+      "recovery_sample_intervals": 5.829023599999918,
+      "trigger_s": 22.996,
+      "end_s": 24.935,
+      "peak_s": 23.122,
+      "trough_s": 24.533
+    },
+    {
+      "key": "live:pressure-head-supplement-20260920.csv:3",
+      "cohort": "live",
+      "file": "pressure-head-supplement-20260920.csv",
+      "event": 3,
+      "label": 4,
+      "zone": null,
+      "rise_ms": 131.13811,
+      "decay_ms": 279.27295,
+      "width_ms": 213.85063,
+      "area_width_ms": 238.11423,
+      "slope_norm_s": 9.0052576,
+      "asymmetry": 2.1296093,
+      "release_rise_ms": 109.98401,
+      "recovery_ms": 147.74023,
+      "release_width_ms": 129.65161,
+      "release_area_width_ms": 147.54301,
+      "trough_peak_ratio": 1.9000223,
+      "area_ratio": 1.1773131,
+      "peak_counts": 293970.5,
+      "trough_counts": 558550.5,
+      "baseline_counts": 3963147.5,
+      "baseline_sd": 1573.9031251954486,
+      "peak_to_trough_ms": 1436.0,
+      "pressure_onset_to_release_ms": 1485.3960377501955,
+      "positive_area_counts_s": 69998.55794687348,
+      "negative_area_counts_s": 82410.21006421208,
+      "positive_tau_ms": 126.08791436985236,
+      "positive_tau_r2": 0.9984317328829273,
+      "negative_tau_ms": 64.78200996698266,
+      "negative_tau_r2": 0.9995076681194911,
+      "between_pulses_fraction": -0.01410005425714485,
+      "post_400_700_fraction": -0.011129700895442757,
+      "rebound_200_800_fraction": -0.008612471029924778,
+      "rise_sample_intervals": 5.245524399999926,
+      "recovery_sample_intervals": 5.909609199999916,
+      "trigger_s": 27.731,
+      "end_s": 29.696,
+      "peak_s": 27.832,
+      "trough_s": 29.268
+    },
+    {
+      "key": "live:pressure-head-supplement-20260920.csv:4",
+      "cohort": "live",
+      "file": "pressure-head-supplement-20260920.csv",
+      "event": 4,
+      "label": 4,
+      "zone": null,
+      "rise_ms": 123.02953,
+      "decay_ms": 210.96298,
+      "width_ms": 206.60864,
+      "area_width_ms": 220.57149,
+      "slope_norm_s": 8.772583,
+      "asymmetry": 1.7147346,
+      "release_rise_ms": 90.158813,
+      "recovery_ms": 145.14001,
+      "release_width_ms": 122.6554,
+      "release_area_width_ms": 136.87495,
+      "trough_peak_ratio": 1.7921987,
+      "area_ratio": 1.1121434,
+      "peak_counts": 294052.5,
+      "trough_counts": 527000.5,
+      "baseline_counts": 3963077.5,
+      "baseline_sd": 894.8277990764481,
+      "peak_to_trough_ms": 1057.9999999999998,
+      "pressure_onset_to_release_ms": 1106.6503369131055,
+      "positive_area_counts_s": 64859.59730410347,
+      "negative_area_counts_s": 72133.1670274626,
+      "positive_tau_ms": 90.56889862374827,
+      "positive_tau_r2": 0.9886003921876447,
+      "negative_tau_ms": 63.06410205034625,
+      "negative_tau_r2": 0.9994373459789193,
+      "between_pulses_fraction": -0.02484080223769565,
+      "post_400_700_fraction": -0.008733388298493076,
+      "rebound_200_800_fraction": -0.007315932337825106,
+      "rise_sample_intervals": 4.92118119999993,
+      "recovery_sample_intervals": 5.805600399999917,
+      "trigger_s": 32.92,
+      "end_s": 34.481,
+      "peak_s": 33.02,
+      "trough_s": 34.078
+    },
+    {
+      "key": "live:pressure-head-supplement-20260920.csv:5",
+      "cohort": "live",
+      "file": "pressure-head-supplement-20260920.csv",
+      "event": 5,
+      "label": 4,
+      "zone": null,
+      "rise_ms": 154.43636,
+      "decay_ms": 201.37248,
+      "width_ms": 199.62018,
+      "area_width_ms": 217.58461,
+      "slope_norm_s": 7.3069968,
+      "asymmetry": 1.3039188,
+      "release_rise_ms": 137.77588,
+      "recovery_ms": 140.4801,
+      "release_width_ms": 122.64246,
+      "release_area_width_ms": 143.95753,
+      "trough_peak_ratio": 1.6908898,
+      "area_ratio": 1.1187203,
+      "peak_counts": 299548.5,
+      "trough_counts": 506503.5,
+      "baseline_counts": 3961392.5,
+      "baseline_sd": 842.6998338673149,
+      "peak_to_trough_ms": 1159.000000000006,
+      "pressure_onset_to_release_ms": 1193.423261652356,
+      "positive_area_counts_s": 65177.15035918412,
+      "negative_area_counts_s": 72914.99199379419,
+      "positive_tau_ms": 90.36966382924719,
+      "positive_tau_r2": 0.9964777488393476,
+      "negative_tau_ms": 60.93638470150236,
+      "negative_tau_r2": 0.9995786312778976,
+      "between_pulses_fraction": -0.01508103028391062,
+      "post_400_700_fraction": -0.007769936436766972,
+      "rebound_200_800_fraction": -0.005894332418236004,
+      "rise_sample_intervals": 6.177454399999912,
+      "recovery_sample_intervals": 5.61920399999992,
+      "trigger_s": 38.308,
+      "end_s": 39.996,
+      "peak_s": 38.434,
+      "trough_s": 39.593
+    },
+    {
+      "key": "live:pressure-head-supplement-20260920.csv:6",
+      "cohort": "live",
+      "file": "pressure-head-supplement-20260920.csv",
+      "event": 6,
+      "label": 4,
+      "zone": null,
+      "rise_ms": 168.33069,
+      "decay_ms": 249.21458,
+      "width_ms": 229.97505,
+      "area_width_ms": 253.26297,
+      "slope_norm_s": 7.4998631,
+      "asymmetry": 1.4805059,
+      "release_rise_ms": 113.72986,
+      "recovery_ms": 157.95105,
+      "release_width_ms": 129.4137,
+      "release_area_width_ms": 147.58849,
+      "trough_peak_ratio": 2.0986428,
+      "area_ratio": 1.2229799,
+      "peak_counts": 246804.5,
+      "trough_counts": 517954.5,
+      "baseline_counts": 3961555.5,
+      "baseline_sd": 818.0814430727542,
+      "peak_to_trough_ms": 1108.000000000004,
+      "pressure_onset_to_release_ms": 1171.2714455662265,
+      "positive_area_counts_s": 62506.43411750658,
+      "negative_area_counts_s": 76444.13089053448,
+      "positive_tau_ms": 119.22753675926843,
+      "positive_tau_r2": 0.9847508577579974,
+      "negative_tau_ms": 68.23862491600894,
+      "negative_tau_r2": 0.9993677090717907,
+      "between_pulses_fraction": -0.10066874793611948,
+      "post_400_700_fraction": -0.028399212672155567,
+      "rebound_200_800_fraction": -0.02689715023230805,
+      "rise_sample_intervals": 6.733227599999904,
+      "recovery_sample_intervals": 6.3180419999999105,
+      "trigger_s": 43.622,
+      "end_s": 45.284,
+      "peak_s": 43.748,
+      "trough_s": 44.856
+    },
+    {
+      "key": "live:pressure-head-supplement-20260920.csv:7",
+      "cohort": "live",
+      "file": "pressure-head-supplement-20260920.csv",
+      "event": 7,
+      "label": 4,
+      "zone": null,
+      "rise_ms": 209.0257,
+      "decay_ms": 298.25226,
+      "width_ms": 276.24319,
+      "area_width_ms": 300.85046,
+      "slope_norm_s": 5.7771101,
+      "asymmetry": 1.4268689,
+      "release_rise_ms": 103.79712,
+      "recovery_ms": 132.72217,
+      "release_width_ms": 122.74829,
+      "release_area_width_ms": 134.71481,
+      "trough_peak_ratio": 2.1942923,
+      "area_ratio": 0.9825601,
+      "peak_counts": 203652.0,
+      "trough_counts": 446872.0,
+      "baseline_counts": 3949810.0,
+      "baseline_sd": 1432.892441008745,
+      "peak_to_trough_ms": 856.0000000000016,
+      "pressure_onset_to_release_ms": 978.0050870252169,
+      "positive_area_counts_s": 61268.7892497345,
+      "negative_area_counts_s": 60200.271631233016,
+      "positive_tau_ms": 134.15575994115628,
+      "positive_tau_r2": 0.9908678396202765,
+      "negative_tau_ms": 60.72867704990231,
+      "negative_tau_r2": 0.9944824477706334,
+      "between_pulses_fraction": 0.029982519199418616,
+      "post_400_700_fraction": 0.018512012388334914,
+      "rebound_200_800_fraction": 0.02024517087667162,
+      "rise_sample_intervals": 8.361027999999882,
+      "recovery_sample_intervals": 5.308886799999925,
+      "trigger_s": 48.659,
+      "end_s": 49.994,
+      "peak_s": 48.785,
+      "trough_s": 49.641
+    },
+    {
+      "key": "live:pressure-head-supplement-20260920.csv:8",
+      "cohort": "live",
+      "file": "pressure-head-supplement-20260920.csv",
+      "event": 8,
+      "label": 4,
+      "zone": null,
+      "rise_ms": 221.39832,
+      "decay_ms": 226.29634,
+      "width_ms": 205.35991,
+      "area_width_ms": 236.59863,
+      "slope_norm_s": 7.6324811,
+      "asymmetry": 1.0221231,
+      "release_rise_ms": 127.82941,
+      "recovery_ms": 146.26025,
+      "release_width_ms": 118.85919,
+      "release_area_width_ms": 135.89209,
+      "trough_peak_ratio": 2.1004341,
+      "area_ratio": 1.2063991,
+      "peak_counts": 249631.5,
+      "trough_counts": 524334.5,
+      "baseline_counts": 3959359.5,
+      "baseline_sd": 1029.8643053820247,
+      "peak_to_trough_ms": 932.0000000000022,
+      "pressure_onset_to_release_ms": 1040.1353227553186,
+      "positive_area_counts_s": 59062.47024319509,
+      "negative_area_counts_s": 71252.91204236531,
+      "positive_tau_ms": 106.72888360984986,
+      "positive_tau_r2": 0.9771802354580706,
+      "negative_tau_ms": 62.836709743813884,
+      "negative_tau_r2": 0.9990635893278922,
+      "between_pulses_fraction": -0.02187824853834552,
+      "post_400_700_fraction": -0.01443448790800529,
+      "rebound_200_800_fraction": -0.012719933553866854,
+      "rise_sample_intervals": 8.855932799999875,
+      "recovery_sample_intervals": 5.8504099999999175,
+      "trigger_s": 52.89,
+      "end_s": 54.351,
+      "peak_s": 53.016,
+      "trough_s": 53.948
+    },
+    {
+      "key": "live:pressure-head-supplement-20260920.csv:9",
+      "cohort": "live",
+      "file": "pressure-head-supplement-20260920.csv",
+      "event": 9,
+      "label": 4,
+      "zone": null,
+      "rise_ms": 157.94943,
+      "decay_ms": 250.83282,
+      "width_ms": 213.64758,
+      "area_width_ms": 239.4238,
+      "slope_norm_s": 8.3129311,
+      "asymmetry": 1.5880578,
+      "release_rise_ms": 110.9754,
+      "recovery_ms": 145.28687,
+      "release_width_ms": 121.82788,
+      "release_area_width_ms": 136.26363,
+      "trough_peak_ratio": 2.1055355,
+      "area_ratio": 1.1983265,
+      "peak_counts": 285430.0,
+      "trough_counts": 600983.0,
+      "baseline_counts": 3956149.0,
+      "baseline_sd": 626.633263959072,
+      "peak_to_trough_ms": 956.9999999999936,
+      "pressure_onset_to_release_ms": 1030.2009656554603,
+      "positive_area_counts_s": 68338.73585926683,
+      "negative_area_counts_s": 81892.10923813381,
+      "positive_tau_ms": 115.94994871761804,
+      "positive_tau_r2": 0.9968011269442986,
+      "negative_tau_ms": 63.08555659942287,
+      "negative_tau_r2": 0.9965388540001835,
+      "between_pulses_fraction": -0.045266790456504225,
+      "post_400_700_fraction": -0.010534407795228816,
+      "rebound_200_800_fraction": -0.009421231548978923,
+      "rise_sample_intervals": 6.317977199999911,
+      "recovery_sample_intervals": 5.8114747999999175,
+      "trigger_s": 57.952,
+      "end_s": 59.438,
+      "peak_s": 58.078,
+      "trough_s": 59.035
+    },
+    {
+      "key": "live:pressure-head-supplement-20260920.csv:10",
+      "cohort": "live",
+      "file": "pressure-head-supplement-20260920.csv",
+      "event": 10,
+      "label": 4,
+      "zone": null,
+      "rise_ms": 195.89046,
+      "decay_ms": 318.65427,
+      "width_ms": 258.11331,
+      "area_width_ms": 301.75836,
+      "slope_norm_s": 8.1809092,
+      "asymmetry": 1.6266962,
+      "release_rise_ms": 102.08392,
+      "recovery_ms": 139.59991,
+      "release_width_ms": 124.03931,
+      "release_area_width_ms": 135.47862,
+      "trough_peak_ratio": 2.4721596,
+      "area_ratio": 1.1099105,
+      "peak_counts": 244985.0,
+      "trough_counts": 605642.0,
+      "baseline_counts": 3951624.0,
+      "baseline_sd": 322.81215900272406,
+      "peak_to_trough_ms": 655.0000000000011,
+      "pressure_onset_to_release_ms": 774.8844881057337,
+      "positive_area_counts_s": 73926.26376515429,
+      "negative_area_counts_s": 82051.54836447876,
+      "positive_tau_ms": 167.38883652634115,
+      "positive_tau_r2": 0.9798669158014187,
+      "negative_tau_ms": 60.7264038681551,
+      "negative_tau_r2": 0.9950491015886943,
+      "between_pulses_fraction": null,
+      "post_400_700_fraction": 0.000566341171847395,
+      "rebound_200_800_fraction": 0.002095297221791091,
+      "rise_sample_intervals": 7.8356183999998885,
+      "recovery_sample_intervals": 5.58399639999992,
+      "trigger_s": 62.888,
+      "end_s": 64.097,
+      "peak_s": 63.039,
+      "trough_s": 63.694
+    },
+    {
+      "key": "live:pressure-head-supplement-20260920.csv:11",
+      "cohort": "live",
+      "file": "pressure-head-supplement-20260920.csv",
+      "event": 11,
+      "label": 4,
+      "zone": null,
+      "rise_ms": 182.01129,
+      "decay_ms": 350.09698,
+      "width_ms": 274.44376,
+      "area_width_ms": 305.4191,
+      "slope_norm_s": 7.0038981,
+      "asymmetry": 1.9234905,
+      "release_rise_ms": 87.94043,
+      "recovery_ms": 134.67346,
+      "release_width_ms": 119.73889,
+      "release_area_width_ms": 131.99181,
+      "trough_peak_ratio": 2.4692719,
+      "area_ratio": 1.0671358,
+      "peak_counts": 239341.0,
+      "trough_counts": 590998.0,
+      "baseline_counts": 3954755.0,
+      "baseline_sd": 1678.926272204947,
+      "peak_to_trough_ms": 1033.0000000000014,
+      "pressure_onset_to_release_ms": 1165.2295565094591,
+      "positive_area_counts_s": 73099.32325314858,
+      "negative_area_counts_s": 78006.90446388412,
+      "positive_tau_ms": 149.8047462277715,
+      "positive_tau_r2": 0.9906222797360714,
+      "negative_tau_ms": 58.549434450999904,
+      "negative_tau_r2": 0.9989469036417109,
+      "between_pulses_fraction": 0.0018530047087628111,
+      "post_400_700_fraction": 0.005688682533612635,
+      "rebound_200_800_fraction": 0.007370583318386865,
+      "rise_sample_intervals": 7.280451599999896,
+      "recovery_sample_intervals": 5.386938399999924,
+      "trigger_s": 67.295,
+      "end_s": 68.882,
+      "peak_s": 67.446,
+      "trough_s": 68.479
+    },
+    {
+      "key": "live:pressure-head-supplement-20260920.csv:12",
+      "cohort": "live",
+      "file": "pressure-head-supplement-20260920.csv",
+      "event": 12,
+      "label": 4,
+      "zone": null,
+      "rise_ms": 170.64011,
+      "decay_ms": 777.28424,
+      "width_ms": 303.65622,
+      "area_width_ms": 398.78915,
+      "slope_norm_s": 6.5045877,
+      "asymmetry": 4.5551085,
+      "release_rise_ms": 102.54517,
+      "recovery_ms": 154.12634,
+      "release_width_ms": 130.79114,
+      "release_area_width_ms": 146.83215,
+      "trough_peak_ratio": 1.6499904,
+      "area_ratio": 0.6075182,
+      "peak_counts": 135502.0,
+      "trough_counts": 223577.0,
+      "baseline_counts": 3961247.0,
+      "baseline_sd": 608.6155169727436,
+      "peak_to_trough_ms": 1108.9999999999945,
+      "pressure_onset_to_release_ms": 1195.1909154172286,
+      "positive_area_counts_s": 54036.72519512571,
+      "negative_area_counts_s": 32828.29855308171,
+      "positive_tau_ms": 388.0856707651953,
+      "positive_tau_r2": 0.860562265150272,
+      "negative_tau_ms": 65.28234549505123,
+      "negative_tau_r2": 0.99838321445213,
+      "between_pulses_fraction": null,
+      "post_400_700_fraction": -0.010705484016692236,
+      "rebound_200_800_fraction": -0.00778702639359147,
+      "rise_sample_intervals": 6.825604399999903,
+      "recovery_sample_intervals": 6.165053599999912,
+      "trigger_s": 71.93,
+      "end_s": 73.491,
+      "peak_s": 72.03,
+      "trough_s": 73.139
+    },
+    {
+      "key": "live:pressure-head-supplement-20260920.csv:13",
+      "cohort": "live",
+      "file": "pressure-head-supplement-20260920.csv",
+      "event": 13,
+      "label": 4,
+      "zone": null,
+      "rise_ms": 206.31917,
+      "decay_ms": 277.60291,
+      "width_ms": 236.6039,
+      "area_width_ms": 275.67374,
+      "slope_norm_s": 6.573771,
+      "asymmetry": 1.3455023,
+      "release_rise_ms": 117.93903,
+      "recovery_ms": 138.1911,
+      "release_width_ms": 129.89661,
+      "release_area_width_ms": 144.5909,
+      "trough_peak_ratio": 1.9364747,
+      "area_ratio": 1.0156811,
+      "peak_counts": 226311.5,
+      "trough_counts": 438246.5,
+      "baseline_counts": 3960869.5,
+      "baseline_sd": 1321.0252561930827,
+      "peak_to_trough_ms": 755.999999999986,
+      "pressure_onset_to_release_ms": 867.1351835612313,
+      "positive_area_counts_s": 62388.13687264923,
+      "negative_area_counts_s": 63366.457273849286,
+      "positive_tau_ms": 133.73493543302305,
+      "positive_tau_r2": 0.9895036682204952,
+      "negative_tau_ms": 61.37889249983107,
+      "negative_tau_r2": 0.9958537093526505,
+      "between_pulses_fraction": -0.044801081694920496,
+      "post_400_700_fraction": 0.001712506545973556,
+      "rebound_200_800_fraction": 0.0036794361164321906,
+      "rise_sample_intervals": 8.252766799999883,
+      "recovery_sample_intervals": 5.527643999999921,
+      "trigger_s": 76.035,
+      "end_s": 77.32,
+      "peak_s": 76.186,
+      "trough_s": 76.942
+    },
+    {
+      "key": "live:pressure-legs-20260920.csv:1",
+      "cohort": "live",
+      "file": "pressure-legs-20260920.csv",
+      "event": 1,
+      "label": 3,
+      "zone": null,
+      "rise_ms": 177.68697,
+      "decay_ms": 180.23317,
+      "width_ms": 175.18544,
+      "area_width_ms": 204.13564,
+      "slope_norm_s": 6.7462397,
+      "asymmetry": 1.0143297,
+      "release_rise_ms": 221.52979,
+      "recovery_ms": 159.22235,
+      "release_width_ms": 143.60913,
+      "release_area_width_ms": 183.57071,
+      "trough_peak_ratio": 1.3063642,
+      "area_ratio": 1.1747591,
+      "peak_counts": 217075.0,
+      "trough_counts": 283579.0,
+      "baseline_counts": 3932147.0,
+      "baseline_sd": 901.4186541224893,
+      "peak_to_trough_ms": 679.9999999999999,
+      "pressure_onset_to_release_ms": 631.6215245723857,
+      "positive_area_counts_s": 44312.75103151979,
+      "negative_area_counts_s": 52056.79855760778,
+      "positive_tau_ms": 101.09474355985155,
+      "positive_tau_r2": 0.951934420268327,
+      "negative_tau_ms": 68.97156420258659,
+      "negative_tau_r2": 0.9983161369191584,
+      "between_pulses_fraction": null,
+      "post_400_700_fraction": -0.00045842604706272324,
+      "rebound_200_800_fraction": 0.006146435384848666,
+      "rise_sample_intervals": 7.107478799999899,
+      "recovery_sample_intervals": 6.3688939999999095,
+      "trigger_s": 1.159,
+      "end_s": 2.317,
+      "peak_s": 1.26,
+      "trough_s": 1.94
+    },
+    {
+      "key": "live:pressure-legs-20260920.csv:3",
+      "cohort": "live",
+      "file": "pressure-legs-20260920.csv",
+      "event": 3,
+      "label": 3,
+      "zone": null,
+      "rise_ms": 181.74405,
+      "decay_ms": 185.64606,
+      "width_ms": 209.19502,
+      "area_width_ms": 223.6694,
+      "slope_norm_s": 5.5429797,
+      "asymmetry": 1.0214698,
+      "release_rise_ms": 168.60352,
+      "recovery_ms": 141.91382,
+      "release_width_ms": 112.56787,
+      "release_area_width_ms": 140.46489,
+      "trough_peak_ratio": 1.9599731,
+      "area_ratio": 1.2308675,
+      "peak_counts": 144103.0,
+      "trough_counts": 282438.0,
+      "baseline_counts": 3933252.0,
+      "baseline_sd": 1056.2425514530269,
+      "peak_to_trough_ms": 907.0,
+      "pressure_onset_to_release_ms": 938.2287550809591,
+      "positive_area_counts_s": 32231.430095015316,
+      "negative_area_counts_s": 39672.62612167738,
+      "positive_tau_ms": 88.9947477454291,
+      "positive_tau_r2": 0.996564720437723,
+      "negative_tau_ms": 61.64879189400363,
+      "negative_tau_r2": 0.9989622488240835,
+      "between_pulses_fraction": -0.04948196775917226,
+      "post_400_700_fraction": -0.0070829704218270916,
+      "rebound_200_800_fraction": -0.0032785956563918454,
+      "rise_sample_intervals": 7.269761999999896,
+      "recovery_sample_intervals": 5.676552799999919,
+      "trigger_s": 7.002,
+      "end_s": 8.388,
+      "peak_s": 7.128,
+      "trough_s": 8.035
+    },
+    {
+      "key": "live:pressure-legs-20260920.csv:4",
+      "cohort": "live",
+      "file": "pressure-legs-20260920.csv",
+      "event": 4,
+      "label": 3,
+      "zone": null,
+      "rise_ms": 222.83266,
+      "decay_ms": 302.08347,
+      "width_ms": 324.47809,
+      "area_width_ms": 335.93857,
+      "slope_norm_s": 6.8224001,
+      "asymmetry": 1.3556517,
+      "release_rise_ms": 70.686707,
+      "recovery_ms": 133.35962,
+      "release_width_ms": 115.83508,
+      "release_area_width_ms": 126.50883,
+      "trough_peak_ratio": 2.2413583,
+      "area_ratio": 0.84405798,
+      "peak_counts": 118322.0,
+      "trough_counts": 265202.0,
+      "baseline_counts": 3932010.0,
+      "baseline_sd": 745.3051371753718,
+      "peak_to_trough_ms": 705.0000000000001,
+      "pressure_onset_to_release_ms": 904.7571158309129,
+      "positive_area_counts_s": 39748.92112120978,
+      "negative_area_counts_s": 33550.39494619936,
+      "positive_tau_ms": 203.79163388694403,
+      "positive_tau_r2": 0.9052073231652923,
+      "negative_tau_ms": 55.79310517746522,
+      "negative_tau_r2": 0.9991153603475647,
+      "between_pulses_fraction": 0.11808454894271564,
+      "post_400_700_fraction": -0.009639821720801502,
+      "rebound_200_800_fraction": 0.0017910875483593638,
+      "rise_sample_intervals": 8.913306399999874,
+      "recovery_sample_intervals": 5.334384799999924,
+      "trigger_s": 9.924,
+      "end_s": 11.083,
+      "peak_s": 10.025,
+      "trough_s": 10.73
+    },
+    {
+      "key": "live:pressure-legs-20260920.csv:5",
+      "cohort": "live",
+      "file": "pressure-legs-20260920.csv",
+      "event": 5,
+      "label": 3,
+      "zone": null,
+      "rise_ms": 176.02322,
+      "decay_ms": 273.91293,
+      "width_ms": 323.66699,
+      "area_width_ms": 317.90082,
+      "slope_norm_s": 6.5424652,
+      "asymmetry": 1.5561181,
+      "release_rise_ms": 85.186829,
+      "recovery_ms": 134.22443,
+      "release_width_ms": 116.93304,
+      "release_area_width_ms": 128.23959,
+      "trough_peak_ratio": 2.229188,
+      "area_ratio": 0.89924324,
+      "peak_counts": 125414.5,
+      "trough_counts": 279572.5,
+      "baseline_counts": 3929478.5,
+      "baseline_sd": 2124.2720988611604,
+      "peak_to_trough_ms": 805.9999999999992,
+      "pressure_onset_to_release_ms": 942.8108216079831,
+      "positive_area_counts_s": 39869.36591570104,
+      "negative_area_counts_s": 35852.262911914666,
+      "positive_tau_ms": 181.65929436224098,
+      "positive_tau_r2": 0.87194676619191,
+      "negative_tau_ms": 58.15889571218105,
+      "negative_tau_r2": 0.9988814660329456,
+      "between_pulses_fraction": 0.10330942594357112,
+      "post_400_700_fraction": -0.005529871500236969,
+      "rebound_200_800_fraction": 0.00025574761466167097,
+      "rise_sample_intervals": 7.0409287999999,
+      "recovery_sample_intervals": 5.368977199999924,
+      "trigger_s": 12.518,
+      "end_s": 13.803,
+      "peak_s": 12.644,
+      "trough_s": 13.45
+    },
+    {
+      "key": "live:pressure-legs-20260920.csv:6",
+      "cohort": "live",
+      "file": "pressure-legs-20260920.csv",
+      "event": 6,
+      "label": 3,
+      "zone": null,
+      "rise_ms": 231.57777,
+      "decay_ms": 222.98615,
+      "width_ms": 197.46213,
+      "area_width_ms": 249.36221,
+      "slope_norm_s": 9.4174747,
+      "asymmetry": 0.96289963,
+      "release_rise_ms": 112.36359,
+      "recovery_ms": 152.34143,
+      "release_width_ms": 132.414,
+      "release_area_width_ms": 148.1602,
+      "trough_peak_ratio": 3.0376937,
+      "area_ratio": 1.8048657,
+      "peak_counts": 104261.5,
+      "trough_counts": 316714.5,
+      "baseline_counts": 3928162.5,
+      "baseline_sd": 1458.3552687874108,
+      "peak_to_trough_ms": 931.9999999999986,
+      "pressure_onset_to_release_ms": 1064.278375271911,
+      "positive_area_counts_s": 25998.878132631948,
+      "negative_area_counts_s": 46924.484082395895,
+      "positive_tau_ms": 134.50194357326762,
+      "positive_tau_r2": 0.8724615076470958,
+      "negative_tau_ms": 63.398727284341554,
+      "negative_tau_r2": 0.9989386508229595,
+      "between_pulses_fraction": -0.1558341286093141,
+      "post_400_700_fraction": -0.0021107337996839424,
+      "rebound_200_800_fraction": 0.0028369398938160395,
+      "rise_sample_intervals": 9.263110799999868,
+      "recovery_sample_intervals": 6.093657199999914,
+      "trigger_s": 16.598,
+      "end_s": 18.034,
+      "peak_s": 16.724,
+      "trough_s": 17.656
+    },
+    {
+      "key": "live:pressure-legs-20260920.csv:10",
+      "cohort": "live",
+      "file": "pressure-legs-20260920.csv",
+      "event": 10,
+      "label": 3,
+      "zone": null,
+      "rise_ms": 167.09592,
+      "decay_ms": 338.62961,
+      "width_ms": 331.36868,
+      "area_width_ms": 335.1871,
+      "slope_norm_s": 6.9923816,
+      "asymmetry": 2.0265582,
+      "release_rise_ms": 129.94855,
+      "recovery_ms": 134.15112,
+      "release_width_ms": 133.00934,
+      "release_area_width_ms": 149.75844,
+      "trough_peak_ratio": 2.1215942,
+      "area_ratio": 0.94790828,
+      "peak_counts": 122991.0,
+      "trough_counts": 260937.0,
+      "baseline_counts": 3927607.0,
+      "baseline_sd": 1050.922274718735,
+      "peak_to_trough_ms": 855.9999999999981,
+      "pressure_onset_to_release_ms": 923.9980722370831,
+      "positive_area_counts_s": 41225.00359140968,
+      "negative_area_counts_s": 39077.515885846624,
+      "positive_tau_ms": 152.33902650062015,
+      "positive_tau_r2": 0.9383604646138274,
+      "negative_tau_ms": 57.55799566390049,
+      "negative_tau_r2": 0.9988564337957452,
+      "between_pulses_fraction": 0.09995853355123546,
+      "post_400_700_fraction": 0.010107803799384526,
+      "rebound_200_800_fraction": 0.01588506037855881,
+      "rise_sample_intervals": 6.683836799999905,
+      "recovery_sample_intervals": 5.366044799999924,
+      "trigger_s": 30.827,
+      "end_s": 32.137,
+      "peak_s": 30.928,
+      "trough_s": 31.784
+    },
+    {
+      "key": "live:pressure-legs-20260920.csv:12",
+      "cohort": "live",
+      "file": "pressure-legs-20260920.csv",
+      "event": 12,
+      "label": 3,
+      "zone": null,
+      "rise_ms": 186.26834,
+      "decay_ms": 131.12549,
+      "width_ms": 159.84821,
+      "area_width_ms": 191.95284,
+      "slope_norm_s": 9.6029024,
+      "asymmetry": 0.70396012,
+      "release_rise_ms": 297.35632,
+      "recovery_ms": 151.42847,
+      "release_width_ms": 126.08527,
+      "release_area_width_ms": 168.91245,
+      "trough_peak_ratio": 2.1012897,
+      "area_ratio": 1.8490688,
+      "peak_counts": 114128.0,
+      "trough_counts": 239816.0,
+      "baseline_counts": 3930959.0,
+      "baseline_sd": 735.6409518236461,
+      "peak_to_trough_ms": 754.9999999999955,
+      "pressure_onset_to_release_ms": 657.0542442921621,
+      "positive_area_counts_s": 21907.193179852904,
+      "negative_area_counts_s": 40507.90491436202,
+      "positive_tau_ms": 63.09670642631373,
+      "positive_tau_r2": 0.9900169326517481,
+      "negative_tau_ms": 65.65180679959656,
+      "negative_tau_r2": 0.9986551996118608,
+      "between_pulses_fraction": -0.22815610542548717,
+      "post_400_700_fraction": -0.008245905193982052,
+      "rebound_200_800_fraction": 0.002068252326783868,
+      "rise_sample_intervals": 7.450733599999894,
+      "recovery_sample_intervals": 6.0571387999999144,
+      "trigger_s": 37.476,
+      "end_s": 38.635,
+      "peak_s": 37.527,
+      "trough_s": 38.282
+    },
+    {
+      "key": "live:pressure-legs-20260920.csv:13",
+      "cohort": "live",
+      "file": "pressure-legs-20260920.csv",
+      "event": 13,
+      "label": 3,
+      "zone": null,
+      "rise_ms": 141.64935,
+      "decay_ms": 293.79901,
+      "width_ms": 209.26851,
+      "area_width_ms": 248.77414,
+      "slope_norm_s": 8.0114546,
+      "asymmetry": 2.0741289,
+      "release_rise_ms": 80.34314,
+      "recovery_ms": 134.86383,
+      "release_width_ms": 115.0592,
+      "release_area_width_ms": 127.19551,
+      "trough_peak_ratio": 1.8758924,
+      "area_ratio": 0.95912337,
+      "peak_counts": 147364.0,
+      "trough_counts": 276439.0,
+      "baseline_counts": 3930277.0,
+      "baseline_sd": 969.3181314718095,
+      "peak_to_trough_ms": 604.9999999999968,
+      "pressure_onset_to_release_ms": 731.8058111602354,
+      "positive_area_counts_s": 36660.3566286848,
+      "negative_area_counts_s": 35161.801833200494,
+      "positive_tau_ms": 166.2262282144581,
+      "positive_tau_r2": 0.9075270251391924,
+      "negative_tau_ms": 57.70742343559364,
+      "negative_tau_r2": 0.9988195860000744,
+      "between_pulses_fraction": null,
+      "post_400_700_fraction": 0.01946541551662392,
+      "rebound_200_800_fraction": 0.027282691660728046,
+      "rise_sample_intervals": 5.6659739999999195,
+      "recovery_sample_intervals": 5.394553199999923,
+      "trigger_s": 40.901,
+      "end_s": 41.984,
+      "peak_s": 41.027,
+      "trough_s": 41.632
+    },
+    {
+      "key": "live:pressure-legs-20260920.csv:16",
+      "cohort": "live",
+      "file": "pressure-legs-20260920.csv",
+      "event": 16,
+      "label": 3,
+      "zone": null,
+      "rise_ms": 160.22644,
+      "decay_ms": 249.38158,
+      "width_ms": 267.08231,
+      "area_width_ms": 258.12375,
+      "slope_norm_s": 6.377739,
+      "asymmetry": 1.5564321,
+      "release_rise_ms": 80.32959,
+      "recovery_ms": 132.91748,
+      "release_width_ms": 119.38696,
+      "release_area_width_ms": 129.3354,
+      "trough_peak_ratio": 1.6597332,
+      "area_ratio": 0.8316254,
+      "peak_counts": 151872.0,
+      "trough_counts": 252067.0,
+      "baseline_counts": 3931354.0,
+      "baseline_sd": 759.4181061839388,
+      "peak_to_trough_ms": 756.0000000000002,
+      "pressure_onset_to_release_ms": 862.4204319709179,
+      "positive_area_counts_s": 39201.77101855218,
+      "negative_area_counts_s": 32601.184561256647,
+      "positive_tau_ms": 121.63160274221826,
+      "positive_tau_r2": 0.9220393643388438,
+      "negative_tau_ms": 56.04813095848717,
+      "negative_tau_r2": 0.9994697656060783,
+      "between_pulses_fraction": -0.09482327222924568,
+      "post_400_700_fraction": -0.01291918418515712,
+      "rebound_200_800_fraction": -0.001015602994441954,
+      "rise_sample_intervals": 6.409057599999909,
+      "recovery_sample_intervals": 5.316699199999925,
+      "trigger_s": 50.724,
+      "end_s": 51.933,
+      "peak_s": 50.825,
+      "trough_s": 51.581
+    },
+    {
+      "key": "live:pressure-legs-20260920.csv:19",
+      "cohort": "live",
+      "file": "pressure-legs-20260920.csv",
+      "event": 19,
+      "label": 3,
+      "zone": null,
+      "rise_ms": 142.44855,
+      "decay_ms": 172.94983,
+      "width_ms": 215.38422,
+      "area_width_ms": 221.67186,
+      "slope_norm_s": 8.3495426,
+      "asymmetry": 1.2141213,
+      "release_rise_ms": 118.15155,
+      "recovery_ms": 141.9566,
+      "release_width_ms": 107.56891,
+      "release_area_width_ms": 127.59303,
+      "trough_peak_ratio": 2.9374058,
+      "area_ratio": 1.6907537,
+      "peak_counts": 124356.5,
+      "trough_counts": 365285.5,
+      "baseline_counts": 3936021.5,
+      "baseline_sd": 1495.4491457418403,
+      "peak_to_trough_ms": 830.9999999999959,
+      "pressure_onset_to_release_ms": 921.345433082756,
+      "positive_area_counts_s": 27566.33547434146,
+      "negative_area_counts_s": 46607.88666594723,
+      "positive_tau_ms": 74.08711570476308,
+      "positive_tau_r2": 0.9654677069126659,
+      "negative_tau_ms": 62.26521852226693,
+      "negative_tau_r2": 0.9994153485635693,
+      "between_pulses_fraction": -0.22827918122494603,
+      "post_400_700_fraction": -0.0065606217602395935,
+      "rebound_200_800_fraction": 0.0006556515383172888,
+      "rise_sample_intervals": 5.6979419999999195,
+      "recovery_sample_intervals": 5.67826399999992,
+      "trigger_s": 60.925,
+      "end_s": 62.235,
+      "peak_s": 61.026,
+      "trough_s": 61.857
+    },
+    {
+      "key": "live:pressure-legs-20260920.csv:20",
+      "cohort": "live",
+      "file": "pressure-legs-20260920.csv",
+      "event": 20,
+      "label": 3,
+      "zone": null,
+      "rise_ms": 267.16809,
+      "decay_ms": 189.2522,
+      "width_ms": 219.5085,
+      "area_width_ms": 255.92665,
+      "slope_norm_s": 8.0416155,
+      "asymmetry": 0.70836377,
+      "release_rise_ms": 89.813965,
+      "recovery_ms": 153.13611,
+      "release_width_ms": 116.38806,
+      "release_area_width_ms": 133.59483,
+      "trough_peak_ratio": 3.326638,
+      "area_ratio": 1.7365196,
+      "peak_counts": 128123.5,
+      "trough_counts": 426220.5,
+      "baseline_counts": 3936276.5,
+      "baseline_sd": 1294.886562599211,
+      "peak_to_trough_ms": 603.9999999999992,
+      "pressure_onset_to_release_ms": 819.6580505517943,
+      "positive_area_counts_s": 32790.21672259319,
+      "negative_area_counts_s": 56940.84818714987,
+      "positive_tau_ms": 99.40272446975489,
+      "positive_tau_r2": 0.9405032322010107,
+      "negative_tau_ms": 65.66729995509375,
+      "negative_tau_r2": 0.9997485035939154,
+      "between_pulses_fraction": -0.14713538109714455,
+      "post_400_700_fraction": -0.019049998768243197,
+      "rebound_200_800_fraction": -0.014078393695282137,
+      "rise_sample_intervals": 10.686723599999848,
+      "recovery_sample_intervals": 6.125444399999913,
+      "trigger_s": 64.879,
+      "end_s": 66.037,
+      "peak_s": 65.005,
+      "trough_s": 65.609
+    },
+    {
+      "key": "live:pressure-legs-20260920.csv:21",
+      "cohort": "live",
+      "file": "pressure-legs-20260920.csv",
+      "event": 21,
+      "label": 3,
+      "zone": null,
+      "rise_ms": 157.30849,
+      "decay_ms": 397.00681,
+      "width_ms": 256.78201,
+      "area_width_ms": 295.36581,
+      "slope_norm_s": 6.866725,
+      "asymmetry": 2.523747,
+      "release_rise_ms": 95.489746,
+      "recovery_ms": 139.07928,
+      "release_width_ms": 131.86176,
+      "release_area_width_ms": 143.06416,
+      "trough_peak_ratio": 2.0190251,
+      "area_ratio": 0.97794032,
+      "peak_counts": 131195.0,
+      "trough_counts": 264886.0,
+      "baseline_counts": 3928959.0,
+      "baseline_sd": 1422.3045480838482,
+      "peak_to_trough_ms": 756.0000000000002,
+      "pressure_onset_to_release_ms": 826.1467140873435,
+      "positive_area_counts_s": 38750.515596673584,
+      "negative_area_counts_s": 37895.69165542197,
+      "positive_tau_ms": 184.6950606453318,
+      "positive_tau_r2": 0.9952021581742234,
+      "negative_tau_ms": 59.9594929674098,
+      "negative_tau_r2": 0.9987715359700977,
+      "between_pulses_fraction": null,
+      "post_400_700_fraction": 0.010398813074303662,
+      "rebound_200_800_fraction": 0.015025331652106944,
+      "rise_sample_intervals": 6.292339599999911,
+      "recovery_sample_intervals": 5.563171199999921,
+      "trigger_s": 68.581,
+      "end_s": 69.764,
+      "peak_s": 68.656,
+      "trough_s": 69.412
+    },
+    {
+      "key": "live:pressure-legs-20260920.csv:22",
+      "cohort": "live",
+      "file": "pressure-legs-20260920.csv",
+      "event": 22,
+      "label": 3,
+      "zone": null,
+      "rise_ms": 238.53711,
+      "decay_ms": 234.70528,
+      "width_ms": 288.04752,
+      "area_width_ms": 299.56006,
+      "slope_norm_s": 5.2132878,
+      "asymmetry": 0.98393613,
+      "release_rise_ms": 96.25647,
+      "recovery_ms": 129.0932,
+      "release_width_ms": 131.05084,
+      "release_area_width_ms": 140.37656,
+      "trough_peak_ratio": 2.4918025,
+      "area_ratio": 1.1676812,
+      "peak_counts": 109697.5,
+      "trough_counts": 273344.5,
+      "baseline_counts": 3934327.5,
+      "baseline_sd": 1532.5113506920593,
+      "peak_to_trough_ms": 655.0000000000011,
+      "pressure_onset_to_release_ms": 811.3860103289596,
+      "positive_area_counts_s": 32860.98843068119,
+      "negative_area_counts_s": 38371.15954854078,
+      "positive_tau_ms": 113.03366267621121,
+      "positive_tau_r2": 0.9332274086297546,
+      "negative_tau_ms": 56.81961171130423,
+      "negative_tau_r2": 0.993819696640882,
+      "between_pulses_fraction": null,
+      "post_400_700_fraction": -0.007126538123137652,
+      "rebound_200_800_fraction": -0.0036858250303188835,
+      "rise_sample_intervals": 9.541484399999865,
+      "recovery_sample_intervals": 5.163727999999926,
+      "trigger_s": 72.534,
+      "end_s": 73.643,
+      "peak_s": 72.635,
+      "trough_s": 73.29
+    },
+    {
+      "key": "live:pressure-legs-20260920.csv:23",
+      "cohort": "live",
+      "file": "pressure-legs-20260920.csv",
+      "event": 23,
+      "label": 3,
+      "zone": null,
+      "rise_ms": 204.44827,
+      "decay_ms": 259.91626,
+      "width_ms": 273.61526,
+      "area_width_ms": 302.14432,
+      "slope_norm_s": 5.9487329,
+      "asymmetry": 1.2713057,
+      "release_rise_ms": 94.47113,
+      "recovery_ms": 137.29303,
+      "release_width_ms": 139.26843,
+      "release_area_width_ms": 148.99821,
+      "trough_peak_ratio": 2.0990021,
+      "area_ratio": 1.0350933,
+      "peak_counts": 133719.5,
+      "trough_counts": 280677.5,
+      "baseline_counts": 3936098.5,
+      "baseline_sd": 1856.452932341674,
+      "peak_to_trough_ms": 580.0000000000125,
+      "pressure_onset_to_release_ms": 688.1100285646937,
+      "positive_area_counts_s": 40402.59201453431,
+      "negative_area_counts_s": 41820.44715741516,
+      "positive_tau_ms": 133.78737423654206,
+      "positive_tau_r2": 0.9766464713899062,
+      "negative_tau_ms": 56.01346393946881,
+      "negative_tau_r2": 0.9991578706175063,
+      "between_pulses_fraction": null,
+      "post_400_700_fraction": -0.0065751618850816325,
+      "rebound_200_800_fraction": -0.0025634402472588646,
+      "rise_sample_intervals": 8.177930799999885,
+      "recovery_sample_intervals": 5.491721199999922,
+      "trigger_s": 77.622,
+      "end_s": 78.654,
+      "peak_s": 77.722,
+      "trough_s": 78.302
+    },
+    {
+      "key": "live:pressure-legs-20260920.csv:24",
+      "cohort": "live",
+      "file": "pressure-legs-20260920.csv",
+      "event": 24,
+      "label": 3,
+      "zone": null,
+      "rise_ms": 220.4883,
+      "decay_ms": 228.47205,
+      "width_ms": 303.74219,
+      "area_width_ms": 326.54135,
+      "slope_norm_s": 5.0084748,
+      "asymmetry": 1.0362093,
+      "release_rise_ms": 153.99634,
+      "recovery_ms": 153.79785,
+      "release_width_ms": 147.85468,
+      "release_area_width_ms": 167.45171,
+      "trough_peak_ratio": 2.0444677,
+      "area_ratio": 1.0484111,
+      "peak_counts": 123303.0,
+      "trough_counts": 252089.0,
+      "baseline_counts": 3937066.0,
+      "baseline_sd": 1147.2154810670922,
+      "peak_to_trough_ms": 628.9999999999907,
+      "pressure_onset_to_release_ms": 711.0406893799421,
+      "positive_area_counts_s": 40263.528886727814,
+      "negative_area_counts_s": 42212.731984520426,
+      "positive_tau_ms": 123.14448168691207,
+      "positive_tau_r2": 0.9192875962130823,
+      "negative_tau_ms": 63.516128839991765,
+      "negative_tau_r2": 0.997111853959433,
+      "between_pulses_fraction": null,
+      "post_400_700_fraction": -0.015101809281642594,
+      "rebound_200_800_fraction": -0.011944194312326203,
+      "rise_sample_intervals": 8.819531999999874,
+      "recovery_sample_intervals": 6.151913999999913,
+      "trigger_s": 82.432,
+      "end_s": 83.565,
+      "peak_s": 82.558,
+      "trough_s": 83.187
+    },
+    {
+      "key": "live:pressure-legs-20260920.csv:25",
+      "cohort": "live",
+      "file": "pressure-legs-20260920.csv",
+      "event": 25,
+      "label": 3,
+      "zone": null,
+      "rise_ms": 209.44266,
+      "decay_ms": 146.50232,
+      "width_ms": 189.7001,
+      "area_width_ms": 197.94514,
+      "slope_norm_s": 8.1363373,
+      "asymmetry": 0.69948655,
+      "release_rise_ms": 82.208405,
+      "recovery_ms": 140.78754,
+      "release_width_ms": 114.17609,
+      "release_area_width_ms": 128.05405,
+      "trough_peak_ratio": 3.2700133,
+      "area_ratio": 2.1154265,
+      "peak_counts": 120201.5,
+      "trough_counts": 393060.5,
+      "baseline_counts": 3939582.5,
+      "baseline_sd": 617.368091174139,
+      "peak_to_trough_ms": 427.99999999999727,
+      "pressure_onset_to_release_ms": 561.8399770732623,
+      "positive_area_counts_s": 23793.302647336463,
+      "negative_area_counts_s": 50332.98745321235,
+      "positive_tau_ms": 96.79628555648667,
+      "positive_tau_r2": 0.9376948726506498,
+      "negative_tau_ms": 61.16465817492405,
+      "negative_tau_r2": 0.9996401793705771,
+      "between_pulses_fraction": null,
+      "post_400_700_fraction": -0.017502394669522886,
+      "rebound_200_800_fraction": -0.015350054253734476,
+      "rise_sample_intervals": 8.37770639999988,
+      "recovery_sample_intervals": 5.63150159999992,
+      "trigger_s": 87.544,
+      "end_s": 88.476,
+      "peak_s": 87.645,
+      "trough_s": 88.073
+    },
+    {
+      "key": "live:pressure-legs-20260920.csv:26",
+      "cohort": "live",
+      "file": "pressure-legs-20260920.csv",
+      "event": 26,
+      "label": 3,
+      "zone": null,
+      "rise_ms": 131.34796,
+      "decay_ms": 188.33661,
+      "width_ms": 249.94934,
+      "area_width_ms": 220.44252,
+      "slope_norm_s": 9.2548418,
+      "asymmetry": 1.4338754,
+      "release_rise_ms": 91.017731,
+      "recovery_ms": 135.79382,
+      "release_width_ms": 111.38528,
+      "release_area_width_ms": 127.13202,
+      "trough_peak_ratio": 2.9585145,
+      "area_ratio": 1.706213,
+      "peak_counts": 144050.0,
+      "trough_counts": 426174.0,
+      "baseline_counts": 3935230.0,
+      "baseline_sd": 679.1078412152226,
+      "peak_to_trough_ms": 429.00000000000205,
+      "pressure_onset_to_release_ms": 474.0034495868173,
+      "positive_area_counts_s": 31754.747997464063,
+      "negative_area_counts_s": 54180.35868210701,
+      "positive_tau_ms": 152.899219460339,
+      "positive_tau_r2": 0.6551707494194753,
+      "negative_tau_ms": 59.30116947818176,
+      "negative_tau_r2": 0.9999293548683261,
+      "between_pulses_fraction": null,
+      "post_400_700_fraction": 0.004697611773594823,
+      "rebound_200_800_fraction": 0.012774125122602505,
+      "rise_sample_intervals": 5.253918399999925,
+      "recovery_sample_intervals": 5.4317527999999236,
+      "trigger_s": 92.305,
+      "end_s": 93.186,
+      "peak_s": 92.38,
+      "trough_s": 92.809
+    },
+    {
+      "key": "original:pressure-zone03-right-hind-leg-20260920-171839.csv:1",
+      "cohort": "original",
+      "file": "pressure-zone03-right-hind-leg-20260920-171839.csv",
+      "event": 1,
+      "label": 3,
+      "zone": 3,
+      "rise_ms": 153.79257,
+      "decay_ms": 284.20609,
+      "width_ms": 237.82549,
+      "area_width_ms": 272.53561,
+      "slope_norm_s": 7.9903798,
+      "asymmetry": 1.8479831,
+      "release_rise_ms": 224.49109,
+      "recovery_ms": 179.22461,
+      "release_width_ms": 184.26556,
+      "release_area_width_ms": 210.9138,
+      "trough_peak_ratio": 1.590822,
+      "area_ratio": 1.2311282,
+      "peak_counts": 411635.0,
+      "trough_counts": 654838.0,
+      "baseline_counts": 3933698.0,
+      "baseline_sd": 703.2705738192094,
+      "peak_to_trough_ms": 831.0000000000005,
+      "pressure_onset_to_release_ms": 789.9981706921309,
+      "positive_area_counts_s": 112185.20797035901,
+      "negative_area_counts_s": 138114.37017593405,
+      "positive_tau_ms": 137.23024388187082,
+      "positive_tau_r2": 0.9808489344786756,
+      "negative_tau_ms": 78.62085775908642,
+      "negative_tau_r2": 0.9958329542575888,
+      "between_pulses_fraction": null,
+      "post_400_700_fraction": -0.015527504512566466,
+      "rebound_200_800_fraction": -0.0051921238535332405,
+      "rise_sample_intervals": 6.151702799999995,
+      "recovery_sample_intervals": 7.168984399999994,
+      "trigger_s": 3.575,
+      "end_s": 5.086,
+      "peak_s": 3.752,
+      "trough_s": 4.583
+    },
+    {
+      "key": "original:pressure-zone03-right-hind-leg-20260920-171839.csv:2",
+      "cohort": "original",
+      "file": "pressure-zone03-right-hind-leg-20260920-171839.csv",
+      "event": 2,
+      "label": 3,
+      "zone": 3,
+      "rise_ms": 144.32384,
+      "decay_ms": 285.24701,
+      "width_ms": 204.63303,
+      "area_width_ms": 239.16963,
+      "slope_norm_s": 8.0959597,
+      "asymmetry": 1.9764372,
+      "release_rise_ms": 228.71033,
+      "recovery_ms": 178.11053,
+      "release_width_ms": 153.55231,
+      "release_area_width_ms": 194.75717,
+      "trough_peak_ratio": 1.5089865,
+      "area_ratio": 1.2287761,
+      "peak_counts": 486814.5,
+      "trough_counts": 734596.5,
+      "baseline_counts": 3927027.5,
+      "baseline_sd": 1473.7389185334016,
+      "peak_to_trough_ms": 856.0000000000016,
+      "pressure_onset_to_release_ms": 780.443229156555,
+      "positive_area_counts_s": 116431.24326932183,
+      "negative_area_counts_s": 143067.9403353663,
+      "positive_tau_ms": 134.17842026458612,
+      "positive_tau_r2": 0.9980765574105099,
+      "negative_tau_ms": 76.90793755929244,
+      "negative_tau_r2": 0.9987311119808594,
+      "between_pulses_fraction": 0.05801696539441615,
+      "post_400_700_fraction": -0.007340764623844519,
+      "rebound_200_800_fraction": 0.0038027679140861686,
+      "rise_sample_intervals": 5.772953599999995,
+      "recovery_sample_intervals": 7.124421199999994,
+      "trigger_s": 9.039,
+      "end_s": 10.525,
+      "peak_s": 9.165,
+      "trough_s": 10.021
+    },
+    {
+      "key": "original:pressure-zone03-right-hind-leg-20260920-171839.csv:3",
+      "cohort": "original",
+      "file": "pressure-zone03-right-hind-leg-20260920-171839.csv",
+      "event": 3,
+      "label": 3,
+      "zone": 3,
+      "rise_ms": 125.60875,
+      "decay_ms": 340.98343,
+      "width_ms": 177.83502,
+      "area_width_ms": 224.25682,
+      "slope_norm_s": 8.897418,
+      "asymmetry": 2.7146471,
+      "release_rise_ms": 259.09009,
+      "recovery_ms": 177.91064,
+      "release_width_ms": 177.55841,
+      "release_area_width_ms": 212.09877,
+      "trough_peak_ratio": 1.2527066,
+      "area_ratio": 1.1847913,
+      "peak_counts": 486172.5,
+      "trough_counts": 609031.5,
+      "baseline_counts": 3929368.5,
+      "baseline_sd": 1394.530444271476,
+      "peak_to_trough_ms": 882.0000000000015,
+      "pressure_onset_to_release_ms": 718.0156679490715,
+      "positive_area_counts_s": 109027.50231888537,
+      "negative_area_counts_s": 129174.82444559601,
+      "positive_tau_ms": 156.45181422531533,
+      "positive_tau_r2": 0.9942170981421349,
+      "negative_tau_ms": 78.23527691355058,
+      "negative_tau_r2": 0.9961705809247245,
+      "between_pulses_fraction": null,
+      "post_400_700_fraction": -0.016775815372439686,
+      "rebound_200_800_fraction": -0.0036147555586205312,
+      "rise_sample_intervals": 5.024349999999996,
+      "recovery_sample_intervals": 7.116425599999994,
+      "trigger_s": 14.478,
+      "end_s": 15.938,
+      "peak_s": 14.578,
+      "trough_s": 15.46
+    },
+    {
+      "key": "original:pressure-zone03-right-hind-leg-20260920-171839.csv:4",
+      "cohort": "original",
+      "file": "pressure-zone03-right-hind-leg-20260920-171839.csv",
+      "event": 4,
+      "label": 3,
+      "zone": 3,
+      "rise_ms": 154.8486,
+      "decay_ms": 298.87933,
+      "width_ms": 314.99454,
+      "area_width_ms": 302.8754,
+      "slope_norm_s": 7.4421368,
+      "asymmetry": 1.9301391,
+      "release_rise_ms": 236.68103,
+      "recovery_ms": 178.5033,
+      "release_width_ms": 173.41064,
+      "release_area_width_ms": 214.30695,
+      "trough_peak_ratio": 1.6597763,
+      "area_ratio": 1.1744156,
+      "peak_counts": 357069.5,
+      "trough_counts": 592655.5,
+      "baseline_counts": 3930826.5,
+      "baseline_sd": 943.115818709452,
+      "peak_to_trough_ms": 806.0000000000009,
+      "pressure_onset_to_release_ms": 735.1270192679458,
+      "positive_area_counts_s": 108147.55436834114,
+      "negative_area_counts_s": 127010.20096155873,
+      "positive_tau_ms": 147.05739917136472,
+      "positive_tau_r2": 0.891041075343328,
+      "negative_tau_ms": 78.89197528569983,
+      "negative_tau_r2": 0.9973736416555703,
+      "between_pulses_fraction": null,
+      "post_400_700_fraction": -0.021384261177024428,
+      "rebound_200_800_fraction": -0.01730094464659486,
+      "rise_sample_intervals": 6.193943999999995,
+      "recovery_sample_intervals": 7.140131999999994,
+      "trigger_s": 19.816,
+      "end_s": 21.251,
+      "peak_s": 19.967,
+      "trough_s": 20.773
+    },
+    {
+      "key": "original:pressure-zone03-right-hind-leg-20260920-171839.csv:5",
+      "cohort": "original",
+      "file": "pressure-zone03-right-hind-leg-20260920-171839.csv",
+      "event": 5,
+      "label": 3,
+      "zone": 3,
+      "rise_ms": 176.04936,
+      "decay_ms": 238.47079,
+      "width_ms": 286.96304,
+      "area_width_ms": 281.35284,
+      "slope_norm_s": 6.0495157,
+      "asymmetry": 1.3545678,
+      "release_rise_ms": 92.916138,
+      "recovery_ms": 172.42847,
+      "release_width_ms": 159.88501,
+      "release_area_width_ms": 171.12968,
+      "trough_peak_ratio": 1.8239102,
+      "area_ratio": 1.1093729,
+      "peak_counts": 383634.0,
+      "trough_counts": 699714.0,
+      "baseline_counts": 3929658.0,
+      "baseline_sd": 1558.478360452913,
+      "peak_to_trough_ms": 1032.0,
+      "pressure_onset_to_release_ms": 1114.1306871028505,
+      "positive_area_counts_s": 107936.5087755117,
+      "negative_area_counts_s": 119741.83678510996,
+      "positive_tau_ms": 144.9564560716757,
+      "positive_tau_r2": 0.8527600654138177,
+      "negative_tau_ms": 73.36087667049152,
+      "negative_tau_r2": 0.9975411329150012,
+      "between_pulses_fraction": -0.04675810798834305,
+      "post_400_700_fraction": -0.009329526063505946,
+      "rebound_200_800_fraction": -0.0036543502059412846,
+      "rise_sample_intervals": 7.041974399999995,
+      "recovery_sample_intervals": 6.897138799999994,
+      "trigger_s": 25.255,
+      "end_s": 26.917,
+      "peak_s": 25.406,
+      "trough_s": 26.438
+    },
+    {
+      "key": "original:pressure-zone03-right-hind-leg-20260920-171839.csv:6",
+      "cohort": "original",
+      "file": "pressure-zone03-right-hind-leg-20260920-171839.csv",
+      "event": 6,
+      "label": 3,
+      "zone": 3,
+      "rise_ms": 144.55475,
+      "decay_ms": 285.32651,
+      "width_ms": 220.20789,
+      "area_width_ms": 247.83115,
+      "slope_norm_s": 6.8390174,
+      "asymmetry": 1.9738301,
+      "release_rise_ms": 258.79297,
+      "recovery_ms": 176.86938,
+      "release_width_ms": 165.45056,
+      "release_area_width_ms": 207.49661,
+      "trough_peak_ratio": 1.5014514,
+      "area_ratio": 1.25709,
+      "peak_counts": 447672.5,
+      "trough_counts": 672158.5,
+      "baseline_counts": 3925690.5,
+      "baseline_sd": 1277.3260537153387,
+      "peak_to_trough_ms": 1158.0000000000014,
+      "pressure_onset_to_release_ms": 1052.203003009101,
+      "positive_area_counts_s": 110947.17962702342,
+      "negative_area_counts_s": 139470.6064880929,
+      "positive_tau_ms": 149.3041839220099,
+      "positive_tau_r2": 0.9562364403826343,
+      "negative_tau_ms": 75.72915858210867,
+      "negative_tau_r2": 0.9995562907922899,
+      "between_pulses_fraction": -0.07509842574649996,
+      "post_400_700_fraction": 0.0034270190736262356,
+      "rebound_200_800_fraction": 0.013970663169475652,
+      "rise_sample_intervals": 5.7821899999999955,
+      "recovery_sample_intervals": 7.074775199999994,
+      "trigger_s": 30.29,
+      "end_s": 32.053,
+      "peak_s": 30.416,
+      "trough_s": 31.574
+    },
+    {
+      "key": "original:pressure-zone04-left-hind-leg-20260920-172018.csv:1",
+      "cohort": "original",
+      "file": "pressure-zone04-left-hind-leg-20260920-172018.csv",
+      "event": 1,
+      "label": 3,
+      "zone": 4,
+      "rise_ms": 112.68055,
+      "decay_ms": 421.96719,
+      "width_ms": 340.02173,
+      "area_width_ms": 379.728,
+      "slope_norm_s": 8.7209682,
+      "asymmetry": 3.7448094,
+      "release_rise_ms": 177.08588,
+      "recovery_ms": 167.99316,
+      "release_width_ms": 152.14844,
+      "release_area_width_ms": 183.25926,
+      "trough_peak_ratio": 2.420645,
+      "area_ratio": 1.1682193,
+      "peak_counts": 309378.5,
+      "trough_counts": 748895.5,
+      "baseline_counts": 3941891.5,
+      "baseline_sd": 2073.6356303603584,
+      "peak_to_trough_ms": 1007.0000000000001,
+      "pressure_onset_to_release_ms": 937.3738648904335,
+      "positive_area_counts_s": 117479.68061835205,
+      "negative_area_counts_s": 137242.03050733494,
+      "positive_tau_ms": 223.97217920630888,
+      "positive_tau_r2": 0.9726654912194604,
+      "negative_tau_ms": 74.62672114457416,
+      "negative_tau_r2": 0.9954632236696952,
+      "between_pulses_fraction": null,
+      "post_400_700_fraction": -0.014191566113029122,
+      "rebound_200_800_fraction": -0.0027861030010195016,
+      "rise_sample_intervals": 4.507222000000016,
+      "recovery_sample_intervals": 6.719726400000024,
+      "trigger_s": 2.291,
+      "end_s": 3.852,
+      "peak_s": 2.392,
+      "trough_s": 3.399
+    },
+    {
+      "key": "original:pressure-zone04-left-hind-leg-20260920-172018.csv:2",
+      "cohort": "original",
+      "file": "pressure-zone04-left-hind-leg-20260920-172018.csv",
+      "event": 2,
+      "label": 3,
+      "zone": 4,
+      "rise_ms": 200.38716,
+      "decay_ms": 320.33649,
+      "width_ms": 360.60406,
+      "area_width_ms": 366.565,
+      "slope_norm_s": 5.3129354,
+      "asymmetry": 1.5985879,
+      "release_rise_ms": 240.22241,
+      "recovery_ms": 168.79907,
+      "release_width_ms": 156.67694,
+      "release_area_width_ms": 192.7608,
+      "trough_peak_ratio": 2.4602127,
+      "area_ratio": 1.2937202,
+      "peak_counts": 246297.0,
+      "trough_counts": 605943.0,
+      "baseline_counts": 3938353.0,
+      "baseline_sd": 1491.6562095536626,
+      "peak_to_trough_ms": 881.0000000000002,
+      "pressure_onset_to_release_ms": 882.8338236528506,
+      "positive_area_counts_s": 90283.87363309343,
+      "negative_area_counts_s": 116802.07191984543,
+      "positive_tau_ms": 147.22197874280886,
+      "positive_tau_r2": 0.9660370040742032,
+      "negative_tau_ms": 77.17403264615322,
+      "negative_tau_r2": 0.9960096725137972,
+      "between_pulses_fraction": null,
+      "post_400_700_fraction": -0.008183112933064661,
+      "rebound_200_800_fraction": -0.0029936809237832603,
+      "rise_sample_intervals": 8.015486400000029,
+      "recovery_sample_intervals": 6.751962800000024,
+      "trigger_s": 7.427,
+      "end_s": 8.938,
+      "peak_s": 7.629,
+      "trough_s": 8.51
+    },
+    {
+      "key": "original:pressure-zone04-left-hind-leg-20260920-172018.csv:3",
+      "cohort": "original",
+      "file": "pressure-zone04-left-hind-leg-20260920-172018.csv",
+      "event": 3,
+      "label": 3,
+      "zone": 4,
+      "rise_ms": 118.68645,
+      "decay_ms": 287.52719,
+      "width_ms": 296.83508,
+      "area_width_ms": 293.87982,
+      "slope_norm_s": 8.3842268,
+      "asymmetry": 2.4225781,
+      "release_rise_ms": 169.01813,
+      "recovery_ms": 169.28326,
+      "release_width_ms": 170.229,
+      "release_area_width_ms": 189.14098,
+      "trough_peak_ratio": 2.2956672,
+      "area_ratio": 1.4774908,
+      "peak_counts": 261402.0,
+      "trough_counts": 600092.0,
+      "baseline_counts": 3941788.0,
+      "baseline_sd": 3462.5008664258844,
+      "peak_to_trough_ms": 831.0000000000013,
+      "pressure_onset_to_release_ms": 786.3728602415794,
+      "positive_area_counts_s": 76820.77435725123,
+      "negative_area_counts_s": 113501.98325776978,
+      "positive_tau_ms": 144.15658632187018,
+      "positive_tau_r2": 0.9121261513581272,
+      "negative_tau_ms": 75.18654891323335,
+      "negative_tau_r2": 0.9937947316044352,
+      "between_pulses_fraction": -0.015914185813421473,
+      "post_400_700_fraction": -0.017322343907267553,
+      "rebound_200_800_fraction": -0.014141165021363391,
+      "rise_sample_intervals": 4.747458000000017,
+      "recovery_sample_intervals": 6.771330400000025,
+      "trigger_s": 13.192,
+      "end_s": 14.577,
+      "peak_s": 13.293,
+      "trough_s": 14.124
+    },
+    {
+      "key": "original:pressure-zone04-left-hind-leg-20260920-172018.csv:4",
+      "cohort": "original",
+      "file": "pressure-zone04-left-hind-leg-20260920-172018.csv",
+      "event": 4,
+      "label": 3,
+      "zone": 4,
+      "rise_ms": 124.62296,
+      "decay_ms": 283.02557,
+      "width_ms": 289.7049,
+      "area_width_ms": 281.75751,
+      "slope_norm_s": 8.5825815,
+      "asymmetry": 2.271055,
+      "release_rise_ms": 128.19769,
+      "recovery_ms": 167.08868,
+      "release_width_ms": 160.73682,
+      "release_area_width_ms": 176.78911,
+      "trough_peak_ratio": 2.1976707,
+      "area_ratio": 1.3789314,
+      "peak_counts": 315471.5,
+      "trough_counts": 693302.5,
+      "baseline_counts": 3935053.5,
+      "baseline_sd": 1098.6173071183614,
+      "peak_to_trough_ms": 754.999999999999,
+      "pressure_onset_to_release_ms": 762.4140318335293,
+      "positive_area_counts_s": 88886.46556662844,
+      "negative_area_counts_s": 122568.32937978969,
+      "positive_tau_ms": 132.19852059746623,
+      "positive_tau_r2": 0.9523061280066042,
+      "negative_tau_ms": 72.59324362911298,
+      "negative_tau_r2": 0.9989963413191444,
+      "between_pulses_fraction": null,
+      "post_400_700_fraction": -0.00690174923644441,
+      "rebound_200_800_fraction": -0.002418136383468976,
+      "rise_sample_intervals": 4.9849184000000175,
+      "recovery_sample_intervals": 6.6835472000000244,
+      "trigger_s": 18.353,
+      "end_s": 19.662,
+      "peak_s": 18.454,
+      "trough_s": 19.209
+    },
+    {
+      "key": "original:pressure-zone04-left-hind-leg-20260920-172018.csv:5",
+      "cohort": "original",
+      "file": "pressure-zone04-left-hind-leg-20260920-172018.csv",
+      "event": 5,
+      "label": 3,
+      "zone": 4,
+      "rise_ms": 143.96112,
+      "decay_ms": 332.75153,
+      "width_ms": 285.34766,
+      "area_width_ms": 297.13174,
+      "slope_norm_s": 6.2696738,
+      "asymmetry": 2.3113985,
+      "release_rise_ms": 195.67853,
+      "recovery_ms": 175.52216,
+      "release_width_ms": 149.18726,
+      "release_area_width_ms": 185.41934,
+      "trough_peak_ratio": 1.831033,
+      "area_ratio": 1.1426209,
+      "peak_counts": 332961.5,
+      "trough_counts": 609663.5,
+      "baseline_counts": 3938478.5,
+      "baseline_sd": 2203.430980879592,
+      "peak_to_trough_ms": 780.9999999999989,
+      "pressure_onset_to_release_ms": 765.1178830530014,
+      "positive_area_counts_s": 98933.43076077552,
+      "negative_area_counts_s": 113043.4098667398,
+      "positive_tau_ms": 148.79421716905037,
+      "positive_tau_r2": 0.9744120094167814,
+      "negative_tau_ms": 75.96844230739146,
+      "negative_tau_r2": 0.9956254636337313,
+      "between_pulses_fraction": null,
+      "post_400_700_fraction": -0.007648481498400347,
+      "rebound_200_800_fraction": -0.0004879741037473951,
+      "rise_sample_intervals": 5.75844480000002,
+      "recovery_sample_intervals": 7.020886400000025,
+      "trigger_s": 23.614,
+      "end_s": 24.999,
+      "peak_s": 23.765,
+      "trough_s": 24.546
+    },
+    {
+      "key": "original:pressure-zone04-left-hind-leg-20260920-172018.csv:6",
+      "cohort": "original",
+      "file": "pressure-zone04-left-hind-leg-20260920-172018.csv",
+      "event": 6,
+      "label": 3,
+      "zone": 4,
+      "rise_ms": 161.2104,
+      "decay_ms": 277.53613,
+      "width_ms": 279.10452,
+      "area_width_ms": 282.73132,
+      "slope_norm_s": 7.3479495,
+      "asymmetry": 1.721577,
+      "release_rise_ms": 165.26855,
+      "recovery_ms": 149.8728,
+      "release_width_ms": 145.60114,
+      "release_area_width_ms": 169.87787,
+      "trough_peak_ratio": 2.116152,
+      "area_ratio": 1.2714806,
+      "peak_counts": 349365.5,
+      "trough_counts": 739310.5,
+      "baseline_counts": 3935946.5,
+      "baseline_sd": 3262.6116701195074,
+      "peak_to_trough_ms": 780.9999999999989,
+      "pressure_onset_to_release_ms": 794.7801680894919,
+      "positive_area_counts_s": 98776.57176871694,
+      "negative_area_counts_s": 125592.4911110206,
+      "positive_tau_ms": 137.25637919697343,
+      "positive_tau_r2": 0.9729272490966808,
+      "negative_tau_ms": 64.55897988880524,
+      "negative_tau_r2": 0.9972362252915198,
+      "between_pulses_fraction": -0.029927110719289683,
+      "post_400_700_fraction": 0.004732111879920548,
+      "rebound_200_800_fraction": 0.008340879779199672,
+      "rise_sample_intervals": 6.448416000000023,
+      "recovery_sample_intervals": 5.994912000000022,
+      "trigger_s": 28.901,
+      "end_s": 30.261,
+      "peak_s": 29.027,
+      "trough_s": 29.808
+    },
+    {
+      "key": "original:pressure-zone05-right-front-leg-20260920-173826.csv:1",
+      "cohort": "original",
+      "file": "pressure-zone05-right-front-leg-20260920-173826.csv",
+      "event": 1,
+      "label": 3,
+      "zone": 5,
+      "rise_ms": 323.79932,
+      "decay_ms": 432.11224,
+      "width_ms": 370.19345,
+      "area_width_ms": 420.52808,
+      "slope_norm_s": 3.6017599,
+      "asymmetry": 1.3345064,
+      "release_rise_ms": 143.96375,
+      "recovery_ms": 166.00818,
+      "release_width_ms": 162.62158,
+      "release_area_width_ms": 182.78096,
+      "trough_peak_ratio": 3.309835,
+      "area_ratio": 1.4386075,
+      "peak_counts": 214795.0,
+      "trough_counts": 710936.0,
+      "baseline_counts": 3947173.0,
+      "baseline_sd": 2623.515006151099,
+      "peak_to_trough_ms": 855.9999999999999,
+      "pressure_onset_to_release_ms": 1042.540184965458,
+      "positive_area_counts_s": 90327.32685355988,
+      "negative_area_counts_s": 129945.56056956203,
+      "positive_tau_ms": 294.57341441712873,
+      "positive_tau_r2": 0.7703715405516498,
+      "negative_tau_ms": 73.72959794193247,
+      "negative_tau_r2": 0.9951071796475771,
+      "between_pulses_fraction": null,
+      "post_400_700_fraction": -0.007665246942059482,
+      "rebound_200_800_fraction": -0.0025234338955967906,
+      "rise_sample_intervals": 12.951972799999993,
+      "recovery_sample_intervals": 6.640327199999996,
+      "trigger_s": 4.33,
+      "end_s": 5.89,
+      "peak_s": 4.556,
+      "trough_s": 5.412
+    },
+    {
+      "key": "original:pressure-zone05-right-front-leg-20260920-173826.csv:2",
+      "cohort": "original",
+      "file": "pressure-zone05-right-front-leg-20260920-173826.csv",
+      "event": 2,
+      "label": 3,
+      "zone": 5,
+      "rise_ms": 162.95465,
+      "decay_ms": 342.20844,
+      "width_ms": 298.74652,
+      "area_width_ms": 326.63144,
+      "slope_norm_s": 6.8478131,
+      "asymmetry": 2.1000226,
+      "release_rise_ms": 124.85413,
+      "recovery_ms": 175.32648,
+      "release_width_ms": 174.45245,
+      "release_area_width_ms": 185.77116,
+      "trough_peak_ratio": 1.9412204,
+      "area_ratio": 1.1040663,
+      "peak_counts": 281135.0,
+      "trough_counts": 545745.0,
+      "baseline_counts": 3948229.0,
+      "baseline_sd": 1383.0612522589158,
+      "peak_to_trough_ms": 730.0000000000005,
+      "pressure_onset_to_release_ms": 793.8483792221244,
+      "positive_area_counts_s": 91827.53223797471,
+      "negative_area_counts_s": 101383.67126281469,
+      "positive_tau_ms": 176.26922339577342,
+      "positive_tau_r2": 0.96262064186407,
+      "negative_tau_ms": 74.51526528159437,
+      "negative_tau_r2": 0.9988518097071637,
+      "between_pulses_fraction": null,
+      "post_400_700_fraction": -0.007350502524072598,
+      "rebound_200_800_fraction": -0.0020632346608764167,
+      "rise_sample_intervals": 6.518185999999996,
+      "recovery_sample_intervals": 7.013059199999996,
+      "trigger_s": 8.961,
+      "end_s": 10.295,
+      "peak_s": 9.112,
+      "trough_s": 9.842
+    },
+    {
+      "key": "original:pressure-zone05-right-front-leg-20260920-173826.csv:3",
+      "cohort": "original",
+      "file": "pressure-zone05-right-front-leg-20260920-173826.csv",
+      "event": 3,
+      "label": 3,
+      "zone": 5,
+      "rise_ms": 155.47485,
+      "decay_ms": 323.9469,
+      "width_ms": 296.17737,
+      "area_width_ms": 308.71198,
+      "slope_norm_s": 8.1302519,
+      "asymmetry": 2.0835967,
+      "release_rise_ms": 156.90015,
+      "recovery_ms": 188.93597,
+      "release_width_ms": 222.09967,
+      "release_area_width_ms": 223.44576,
+      "trough_peak_ratio": 1.979304,
+      "area_ratio": 1.4326203,
+      "peak_counts": 213954.0,
+      "trough_counts": 423480.0,
+      "baseline_counts": 3950740.0,
+      "baseline_sd": 1292.1947405480337,
+      "peak_to_trough_ms": 754.999999999999,
+      "pressure_onset_to_release_ms": 764.4722090334657,
+      "positive_area_counts_s": 66050.16026905274,
+      "negative_area_counts_s": 94624.80194865089,
+      "positive_tau_ms": 146.61589306070385,
+      "positive_tau_r2": 0.9203137854119201,
+      "negative_tau_ms": 81.9926684355433,
+      "negative_tau_r2": 0.9972380970379271,
+      "between_pulses_fraction": null,
+      "post_400_700_fraction": -0.01742231038065552,
+      "rebound_200_800_fraction": -0.0018773023519410598,
+      "rise_sample_intervals": 6.218993999999997,
+      "recovery_sample_intervals": 7.5574387999999955,
+      "trigger_s": 13.114,
+      "end_s": 14.448,
+      "peak_s": 13.24,
+      "trough_s": 13.995
+    },
+    {
+      "key": "original:pressure-zone05-right-front-leg-20260920-173826.csv:4",
+      "cohort": "original",
+      "file": "pressure-zone05-right-front-leg-20260920-173826.csv",
+      "event": 4,
+      "label": 3,
+      "zone": 5,
+      "rise_ms": 186.96712,
+      "decay_ms": 261.01764,
+      "width_ms": 305.04681,
+      "area_width_ms": 313.87177,
+      "slope_norm_s": 6.0856133,
+      "asymmetry": 1.3960618,
+      "release_rise_ms": 192.44281,
+      "recovery_ms": 194.0014,
+      "release_width_ms": 201.60455,
+      "release_area_width_ms": 223.96176,
+      "trough_peak_ratio": 1.8499631,
+      "area_ratio": 1.3200326,
+      "peak_counts": 209418.5,
+      "trough_counts": 387416.5,
+      "baseline_counts": 3950818.5,
+      "baseline_sd": 708.3218548089561,
+      "peak_to_trough_ms": 628.9999999999977,
+      "pressure_onset_to_release_ms": 648.5723270544134,
+      "positive_area_counts_s": 65730.56192145991,
+      "negative_area_counts_s": 86766.48522171497,
+      "positive_tau_ms": 130.53588647057975,
+      "positive_tau_r2": 0.9934778503351678,
+      "negative_tau_ms": 83.8523897807497,
+      "negative_tau_r2": 0.9983724473721667,
+      "between_pulses_fraction": null,
+      "post_400_700_fraction": -0.017365032206940075,
+      "rebound_200_800_fraction": -0.010935259597874638,
+      "rise_sample_intervals": 7.4786847999999955,
+      "recovery_sample_intervals": 7.760055999999995,
+      "trigger_s": 18.752,
+      "end_s": 20.01,
+      "peak_s": 18.928,
+      "trough_s": 19.557
+    },
+    {
+      "key": "original:pressure-zone05-right-front-leg-20260920-173826.csv:5",
+      "cohort": "original",
+      "file": "pressure-zone05-right-front-leg-20260920-173826.csv",
+      "event": 5,
+      "label": 3,
+      "zone": 5,
+      "rise_ms": 237.3699,
+      "decay_ms": 319.83594,
+      "width_ms": 368.02014,
+      "area_width_ms": 382.56055,
+      "slope_norm_s": 4.6215806,
+      "asymmetry": 1.3474157,
+      "release_rise_ms": 137.66486,
+      "recovery_ms": 183.22565,
+      "release_width_ms": 193.81519,
+      "release_area_width_ms": 208.98209,
+      "trough_peak_ratio": 2.3714442,
+      "area_ratio": 1.2954534,
+      "peak_counts": 196409.0,
+      "trough_counts": 465773.0,
+      "baseline_counts": 3950761.0,
+      "baseline_sd": 777.9148668074162,
+      "peak_to_trough_ms": 603.9999999999992,
+      "pressure_onset_to_release_ms": 759.5454408783802,
+      "positive_area_counts_s": 75138.34693342922,
+      "negative_area_counts_s": 97338.2156582811,
+      "positive_tau_ms": 183.50942987717013,
+      "positive_tau_r2": 0.9371146241100858,
+      "negative_tau_ms": 77.51977400314573,
+      "negative_tau_r2": 0.9983050410705014,
+      "between_pulses_fraction": null,
+      "post_400_700_fraction": -0.003905335861031017,
+      "rebound_200_800_fraction": 0.000264077136287419,
+      "rise_sample_intervals": 9.494795999999994,
+      "recovery_sample_intervals": 7.329025999999996,
+      "trigger_s": 24.113,
+      "end_s": 25.397,
+      "peak_s": 24.314,
+      "trough_s": 24.918
+    },
+    {
+      "key": "original:pressure-zone05-right-front-leg-20260920-173826.csv:6",
+      "cohort": "original",
+      "file": "pressure-zone05-right-front-leg-20260920-173826.csv",
+      "event": 6,
+      "label": 3,
+      "zone": 5,
+      "rise_ms": 204.47963,
+      "decay_ms": 332.25024,
+      "width_ms": 385.33063,
+      "area_width_ms": 381.06412,
+      "slope_norm_s": 5.2381697,
+      "asymmetry": 1.6248574,
+      "release_rise_ms": 180.50909,
+      "recovery_ms": 176.07904,
+      "release_width_ms": 203.57928,
+      "release_area_width_ms": 221.18912,
+      "trough_peak_ratio": 2.215204,
+      "area_ratio": 1.2858177,
+      "peak_counts": 185057.0,
+      "trough_counts": 409939.0,
+      "baseline_counts": 3949609.0,
+      "baseline_sd": 591.0981390598349,
+      "peak_to_trough_ms": 678.9999999999985,
+      "pressure_onset_to_release_ms": 736.8102297963013,
+      "positive_area_counts_s": 70518.57274588627,
+      "negative_area_counts_s": 90674.05246142035,
+      "positive_tau_ms": 150.00576451522002,
+      "positive_tau_r2": 0.9655415126349005,
+      "negative_tau_ms": 76.90683644051977,
+      "negative_tau_r2": 0.9983455472824795,
+      "between_pulses_fraction": null,
+      "post_400_700_fraction": -0.01152366571611874,
+      "rebound_200_800_fraction": -0.0036639597598667117,
+      "rise_sample_intervals": 8.179185199999996,
+      "recovery_sample_intervals": 7.043161599999996,
+      "trigger_s": 29.323,
+      "end_s": 30.632,
+      "peak_s": 29.5,
+      "trough_s": 30.179
+    },
+    {
+      "key": "original:pressure-zone06-left-front-leg-20260920-174028.csv:1",
+      "cohort": "original",
+      "file": "pressure-zone06-left-front-leg-20260920-174028.csv",
+      "event": 1,
+      "label": 3,
+      "zone": 6,
+      "rise_ms": 187.30673,
+      "decay_ms": 264.77744,
+      "width_ms": 259.47031,
+      "area_width_ms": 299.87006,
+      "slope_norm_s": 6.8503575,
+      "asymmetry": 1.4136034,
+      "release_rise_ms": 238.1416,
+      "recovery_ms": 167.79816,
+      "release_width_ms": 158.02539,
+      "release_area_width_ms": 193.07841,
+      "trough_peak_ratio": 1.9729081,
+      "area_ratio": 1.2703035,
+      "peak_counts": 259893.0,
+      "trough_counts": 512745.0,
+      "baseline_counts": 3964178.0,
+      "baseline_sd": 2721.0414821351033,
+      "peak_to_trough_ms": 679.9999999999999,
+      "pressure_onset_to_release_ms": 627.5390194103079,
+      "positive_area_counts_s": 77934.11435673898,
+      "negative_area_counts_s": 98999.99800708634,
+      "positive_tau_ms": 194.66122585769045,
+      "positive_tau_r2": 0.9123608677182508,
+      "negative_tau_ms": 75.25387209803853,
+      "negative_tau_r2": 0.9959644356319459,
+      "between_pulses_fraction": null,
+      "post_400_700_fraction": -0.0036694653287696615,
+      "rebound_200_800_fraction": 0.002422256677295732,
+      "rise_sample_intervals": 7.492269200000026,
+      "recovery_sample_intervals": 6.711926400000023,
+      "trigger_s": 1.158,
+      "end_s": 2.392,
+      "peak_s": 1.284,
+      "trough_s": 1.964
+    },
+    {
+      "key": "original:pressure-zone06-left-front-leg-20260920-174028.csv:2",
+      "cohort": "original",
+      "file": "pressure-zone06-left-front-leg-20260920-174028.csv",
+      "event": 2,
+      "label": 3,
+      "zone": 6,
+      "rise_ms": 221.92294,
+      "decay_ms": 273.6369,
+      "width_ms": 335.70401,
+      "area_width_ms": 345.32373,
+      "slope_norm_s": 5.4128366,
+      "asymmetry": 1.2330266,
+      "release_rise_ms": 167.76117,
+      "recovery_ms": 185.02948,
+      "release_width_ms": 177.09735,
+      "release_area_width_ms": 205.85364,
+      "trough_peak_ratio": 2.0609193,
+      "area_ratio": 1.2285507,
+      "peak_counts": 233415.5,
+      "trough_counts": 481050.5,
+      "baseline_counts": 3961668.5,
+      "baseline_sd": 2150.2839719441713,
+      "peak_to_trough_ms": 554.0000000000002,
+      "pressure_onset_to_release_ms": 628.957052480982,
+      "positive_area_counts_s": 80603.91750782977,
+      "negative_area_counts_s": 99025.9903366683,
+      "positive_tau_ms": 197.21671525598947,
+      "positive_tau_r2": 0.9013889424257966,
+      "negative_tau_ms": 79.54047687364631,
+      "negative_tau_r2": 0.9984249595119927,
+      "between_pulses_fraction": null,
+      "post_400_700_fraction": -0.011919746471524299,
+      "rebound_200_800_fraction": -0.0076073094196971005,
+      "rise_sample_intervals": 8.876917600000032,
+      "recovery_sample_intervals": 7.401179200000026,
+      "trigger_s": 5.186,
+      "end_s": 6.394,
+      "peak_s": 5.362,
+      "trough_s": 5.916
+    },
+    {
+      "key": "original:pressure-zone06-left-front-leg-20260920-174028.csv:3",
+      "cohort": "original",
+      "file": "pressure-zone06-left-front-leg-20260920-174028.csv",
+      "event": 3,
+      "label": 3,
+      "zone": 6,
+      "rise_ms": 206.35516,
+      "decay_ms": 136.52365,
+      "width_ms": 272.25076,
+      "area_width_ms": 275.63602,
+      "slope_norm_s": 6.3571973,
+      "asymmetry": 0.66159552,
+      "release_rise_ms": 98.635834,
+      "recovery_ms": 177.92145,
+      "release_width_ms": 176.20938,
+      "release_area_width_ms": 188.88206,
+      "trough_peak_ratio": 1.6311517,
+      "area_ratio": 1.1177614,
+      "peak_counts": 286113.5,
+      "trough_counts": 466694.5,
+      "baseline_counts": 3957866.5,
+      "baseline_sd": 775.9135261097077,
+      "peak_to_trough_ms": 378.0000000000001,
+      "pressure_onset_to_release_ms": 499.09261167167784,
+      "positive_area_counts_s": 78863.18524381363,
+      "negative_area_counts_s": 88150.23010044017,
+      "positive_tau_ms": 68.11705283517959,
+      "positive_tau_r2": 0.9554381983396641,
+      "negative_tau_ms": 80.08248602432755,
+      "negative_tau_r2": 0.9955071512622581,
+      "between_pulses_fraction": null,
+      "post_400_700_fraction": -0.01136075098378061,
+      "rebound_200_800_fraction": -0.004787928719965631,
+      "rise_sample_intervals": 8.25420640000003,
+      "recovery_sample_intervals": 7.116858000000025,
+      "trigger_s": 9.541,
+      "end_s": 10.573,
+      "peak_s": 9.717,
+      "trough_s": 10.095
+    },
+    {
+      "key": "original:pressure-zone06-left-front-leg-20260920-174028.csv:4",
+      "cohort": "original",
+      "file": "pressure-zone06-left-front-leg-20260920-174028.csv",
+      "event": 4,
+      "label": 3,
+      "zone": 6,
+      "rise_ms": 232.37753,
+      "decay_ms": 288.61896,
+      "width_ms": 350.16122,
+      "area_width_ms": 374.83356,
+      "slope_norm_s": 5.8026443,
+      "asymmetry": 1.2420261,
+      "release_rise_ms": 97.707703,
+      "recovery_ms": 178.34521,
+      "release_width_ms": 151.00842,
+      "release_area_width_ms": 165.21194,
+      "trough_peak_ratio": 3.0903184,
+      "area_ratio": 1.3620912,
+      "peak_counts": 203004.0,
+      "trough_counts": 627347.0,
+      "baseline_counts": 3955180.0,
+      "baseline_sd": 808.5835702016212,
+      "peak_to_trough_ms": 528.9999999999999,
+      "pressure_onset_to_release_ms": 696.2419178328752,
+      "positive_area_counts_s": 76092.70186658877,
+      "negative_area_counts_s": 103645.22093052675,
+      "positive_tau_ms": 149.13627516795813,
+      "positive_tau_r2": 0.9654365694621447,
+      "negative_tau_ms": 79.0161883845016,
+      "negative_tau_r2": 0.9998130946140571,
+      "between_pulses_fraction": null,
+      "post_400_700_fraction": -0.010754016517174706,
+      "rebound_200_800_fraction": -0.0056906305441804935,
+      "rise_sample_intervals": 9.295101200000033,
+      "recovery_sample_intervals": 7.133808400000025,
+      "trigger_s": 13.595,
+      "end_s": 14.803,
+      "peak_s": 13.796,
+      "trough_s": 14.325
+    },
+    {
+      "key": "original:pressure-zone06-left-front-leg-20260920-174028.csv:5",
+      "cohort": "original",
+      "file": "pressure-zone06-left-front-leg-20260920-174028.csv",
+      "event": 5,
+      "label": 3,
+      "zone": 6,
+      "rise_ms": 244.34827,
+      "decay_ms": 250.49161,
+      "width_ms": 372.97412,
+      "area_width_ms": 354.22556,
+      "slope_norm_s": 5.5068789,
+      "asymmetry": 1.0251417,
+      "release_rise_ms": 116.34845,
+      "recovery_ms": 178.0069,
+      "release_width_ms": 178.50897,
+      "release_area_width_ms": 186.05978,
+      "trough_peak_ratio": 2.4446235,
+      "area_ratio": 1.284058,
+      "peak_counts": 197927.0,
+      "trough_counts": 483857.0,
+      "baseline_counts": 3953376.0,
+      "baseline_sd": 722.9970885141931,
+      "peak_to_trough_ms": 528.9999999999999,
+      "pressure_onset_to_release_ms": 677.5848192206695,
+      "positive_area_counts_s": 70110.81027241348,
+      "negative_area_counts_s": 90026.32809350545,
+      "positive_tau_ms": 155.20052819214322,
+      "positive_tau_r2": 0.7818511839832377,
+      "negative_tau_ms": 76.10423226573937,
+      "negative_tau_r2": 0.9973639383398032,
+      "between_pulses_fraction": null,
+      "post_400_700_fraction": -0.010631240221801069,
+      "rebound_200_800_fraction": -0.0045901991704160525,
+      "rise_sample_intervals": 9.773930800000036,
+      "recovery_sample_intervals": 7.120276000000025,
+      "trigger_s": 18.705,
+      "end_s": 19.838,
+      "peak_s": 18.856,
+      "trough_s": 19.385
+    },
+    {
+      "key": "original:pressure-zone06-left-front-leg-20260920-174028.csv:6",
+      "cohort": "original",
+      "file": "pressure-zone06-left-front-leg-20260920-174028.csv",
+      "event": 6,
+      "label": 3,
+      "zone": 6,
+      "rise_ms": 276.65009,
+      "decay_ms": 198.95386,
+      "width_ms": 438.24268,
+      "area_width_ms": 398.70453,
+      "slope_norm_s": 5.5279131,
+      "asymmetry": 0.7191534,
+      "release_rise_ms": 105.54041,
+      "recovery_ms": 181.21252,
+      "release_width_ms": 152.85498,
+      "release_area_width_ms": 168.22466,
+      "trough_peak_ratio": 3.3744979,
+      "area_ratio": 1.4237956,
+      "peak_counts": 161688.5,
+      "trough_counts": 545617.5,
+      "baseline_counts": 3957473.5,
+      "baseline_sd": 2874.564452225763,
+      "peak_to_trough_ms": 553.9999999999985,
+      "pressure_onset_to_release_ms": 748.5244430537889,
+      "positive_area_counts_s": 64465.936922546214,
+      "negative_area_counts_s": 91786.31951986294,
+      "positive_tau_ms": 156.6944363028319,
+      "positive_tau_r2": 0.9099338513447902,
+      "negative_tau_ms": 77.89859131473824,
+      "negative_tau_r2": 0.9995986392810399,
+      "between_pulses_fraction": null,
+      "post_400_700_fraction": -0.017492107566197932,
+      "rebound_200_800_fraction": -0.013710154091465174,
+      "rise_sample_intervals": 11.06600360000004,
+      "recovery_sample_intervals": 7.248500800000026,
+      "trigger_s": 24.495,
+      "end_s": 25.729,
+      "peak_s": 24.722,
+      "trough_s": 25.276
+    },
+    {
+      "key": "original:pressure-zone06-left-front-leg-20260920-174028.csv:7",
+      "cohort": "original",
+      "file": "pressure-zone06-left-front-leg-20260920-174028.csv",
+      "event": 7,
+      "label": 3,
+      "zone": 6,
+      "rise_ms": 209.38785,
+      "decay_ms": 237.89525,
+      "width_ms": 271.98917,
+      "area_width_ms": 286.6528,
+      "slope_norm_s": 6.6132154,
+      "asymmetry": 1.1361464,
+      "release_rise_ms": 166.99213,
+      "recovery_ms": 172.68823,
+      "release_width_ms": 161.43591,
+      "release_area_width_ms": 186.97383,
+      "trough_peak_ratio": 1.6564901,
+      "area_ratio": 1.080472,
+      "peak_counts": 254998.5,
+      "trough_counts": 422402.5,
+      "baseline_counts": 3950131.5,
+      "baseline_sd": 633.9410777035985,
+      "peak_to_trough_ms": 754.999999999999,
+      "pressure_onset_to_release_ms": 813.8764682290046,
+      "positive_area_counts_s": 73096.03583216835,
+      "negative_area_counts_s": 78978.21542115026,
+      "positive_tau_ms": 95.72109096037428,
+      "positive_tau_r2": 0.9460425446698336,
+      "negative_tau_ms": 75.61374068287047,
+      "negative_tau_r2": 0.9983023204818586,
+      "between_pulses_fraction": null,
+      "post_400_700_fraction": -0.01424470735850285,
+      "rebound_200_800_fraction": -0.0074088103171737855,
+      "rise_sample_intervals": 8.37551400000003,
+      "recovery_sample_intervals": 6.907529200000025,
+      "trigger_s": 30.563,
+      "end_s": 31.872,
+      "peak_s": 30.689,
+      "trough_s": 31.444
+    },
+    {
+      "key": "original:pressure-zone06-left-front-leg-20260920-174028.csv:8",
+      "cohort": "original",
+      "file": "pressure-zone06-left-front-leg-20260920-174028.csv",
+      "event": 8,
+      "label": 3,
+      "zone": 6,
+      "rise_ms": 127.74233,
+      "decay_ms": 227.00049,
+      "width_ms": 283.6109,
+      "area_width_ms": 279.02161,
+      "slope_norm_s": 7.782496,
+      "asymmetry": 1.7770185,
+      "release_rise_ms": 96.083008,
+      "recovery_ms": 173.01367,
+      "release_width_ms": 142.32697,
+      "release_area_width_ms": 158.72957,
+      "trough_peak_ratio": 2.4393888,
+      "area_ratio": 1.3877172,
+      "peak_counts": 328177.5,
+      "trough_counts": 800552.5,
+      "baseline_counts": 3952890.5,
+      "baseline_sd": 2886.6220825560104,
+      "peak_to_trough_ms": 478.9999999999992,
+      "pressure_onset_to_release_ms": 541.009617601354,
+      "positive_area_counts_s": 91568.61438101032,
+      "negative_area_counts_s": 127071.35275647226,
+      "positive_tau_ms": 113.04038131292079,
+      "positive_tau_r2": 0.9312032676413585,
+      "negative_tau_ms": 75.50606682144432,
+      "negative_tau_r2": 0.9988765473924891,
+      "between_pulses_fraction": null,
+      "post_400_700_fraction": -0.009602743105542735,
+      "rebound_200_800_fraction": 0.007922653417483551,
+      "rise_sample_intervals": 5.109693200000018,
+      "recovery_sample_intervals": 6.920546800000024,
+      "trigger_s": 36.629,
+      "end_s": 37.737,
+      "peak_s": 36.78,
+      "trough_s": 37.259
+    },
+    {
+      "key": "original:pressure-zone07-neck-head-20260920-174226.csv:1",
+      "cohort": "original",
+      "file": "pressure-zone07-neck-head-20260920-174226.csv",
+      "event": 1,
+      "label": 4,
+      "zone": 7,
+      "rise_ms": 205.66919,
+      "decay_ms": 231.16945,
+      "width_ms": 203.83002,
+      "area_width_ms": 236.80768,
+      "slope_norm_s": 7.1382732,
+      "asymmetry": 1.1239867,
+      "release_rise_ms": 184.64551,
+      "recovery_ms": 177.07983,
+      "release_width_ms": 141.17017,
+      "release_area_width_ms": 170.78368,
+      "trough_peak_ratio": 1.4611393,
+      "area_ratio": 1.0537611,
+      "peak_counts": 287520.5,
+      "trough_counts": 420107.5,
+      "baseline_counts": 3960728.5,
+      "baseline_sd": 1583.7200912724445,
+      "peak_to_trough_ms": 1033.0,
+      "pressure_onset_to_release_ms": 1051.452758713512,
+      "positive_area_counts_s": 68087.05361803663,
+      "negative_area_counts_s": 71747.50437943601,
+      "positive_tau_ms": 117.86357371566092,
+      "positive_tau_r2": 0.9863619314301594,
+      "negative_tau_ms": 76.0673441091126,
+      "negative_tau_r2": 0.9993650336114799,
+      "between_pulses_fraction": -0.017918722317191296,
+      "post_400_700_fraction": -0.01725153680903102,
+      "rebound_200_800_fraction": -0.008244318418500027,
+      "rise_sample_intervals": 8.226767599999954,
+      "recovery_sample_intervals": 7.083193199999961,
+      "trigger_s": 0.957,
+      "end_s": 2.569,
+      "peak_s": 1.108,
+      "trough_s": 2.141
+    },
+    {
+      "key": "original:pressure-zone07-neck-head-20260920-174226.csv:2",
+      "cohort": "original",
+      "file": "pressure-zone07-neck-head-20260920-174226.csv",
+      "event": 2,
+      "label": 4,
+      "zone": 7,
+      "rise_ms": 225.06863,
+      "decay_ms": 404.65924,
+      "width_ms": 368.77432,
+      "area_width_ms": 388.06543,
+      "slope_norm_s": 4.5989833,
+      "asymmetry": 1.797937,
+      "release_rise_ms": 138.86316,
+      "recovery_ms": 157.60693,
+      "release_width_ms": 161.87714,
+      "release_area_width_ms": 177.62389,
+      "trough_peak_ratio": 1.9922928,
+      "area_ratio": 0.91190493,
+      "peak_counts": 157774.0,
+      "trough_counts": 314332.0,
+      "baseline_counts": 3956790.0,
+      "baseline_sd": 647.0156025939405,
+      "peak_to_trough_ms": 830.9999999999995,
+      "pressure_onset_to_release_ms": 925.3611387921294,
+      "positive_area_counts_s": 61226.63253637242,
+      "negative_area_counts_s": 55832.87323647869,
+      "positive_tau_ms": 186.42129135819448,
+      "positive_tau_r2": 0.9877991756834963,
+      "negative_tau_ms": 69.61934506676218,
+      "negative_tau_r2": 0.9965988438797235,
+      "between_pulses_fraction": null,
+      "post_400_700_fraction": -0.005309672575493428,
+      "rebound_200_800_fraction": 0.00045175165112047136,
+      "rise_sample_intervals": 9.002745199999952,
+      "recovery_sample_intervals": 6.304277199999966,
+      "trigger_s": 5.061,
+      "end_s": 6.421,
+      "peak_s": 5.213,
+      "trough_s": 6.044
+    },
+    {
+      "key": "original:pressure-zone07-neck-head-20260920-174226.csv:3",
+      "cohort": "original",
+      "file": "pressure-zone07-neck-head-20260920-174226.csv",
+      "event": 3,
+      "label": 4,
+      "zone": 7,
+      "rise_ms": 273.62741,
+      "decay_ms": 347.57828,
+      "width_ms": 417.55594,
+      "area_width_ms": 438.55518,
+      "slope_norm_s": 5.1342649,
+      "asymmetry": 1.2702612,
+      "release_rise_ms": 175.07581,
+      "recovery_ms": 157.28491,
+      "release_width_ms": 131.89642,
+      "release_area_width_ms": 163.50945,
+      "trough_peak_ratio": 2.3462822,
+      "area_ratio": 0.87478,
+      "peak_counts": 152832.0,
+      "trough_counts": 358587.0,
+      "baseline_counts": 3958375.0,
+      "baseline_sd": 1167.1209191853259,
+      "peak_to_trough_ms": 654.9999999999993,
+      "pressure_onset_to_release_ms": 855.1001915119034,
+      "positive_area_counts_s": 67025.26726944954,
+      "negative_area_counts_s": 58632.362257000874,
+      "positive_tau_ms": 165.0837207623365,
+      "positive_tau_r2": 0.9898082496356498,
+      "negative_tau_ms": 67.33897947206374,
+      "negative_tau_r2": 0.9997030665345741,
+      "between_pulses_fraction": null,
+      "post_400_700_fraction": -0.003777326004567929,
+      "rebound_200_800_fraction": -0.002080387744117885,
+      "rise_sample_intervals": 10.94509639999994,
+      "recovery_sample_intervals": 6.291396399999966,
+      "trigger_s": 9.947,
+      "end_s": 11.257,
+      "peak_s": 10.199,
+      "trough_s": 10.854
+    },
+    {
+      "key": "original:pressure-zone07-neck-head-20260920-174226.csv:4",
+      "cohort": "original",
+      "file": "pressure-zone07-neck-head-20260920-174226.csv",
+      "event": 4,
+      "label": 4,
+      "zone": 7,
+      "rise_ms": 233.0361,
+      "decay_ms": 330.89001,
+      "width_ms": 367.06833,
+      "area_width_ms": 409.69183,
+      "slope_norm_s": 5.1260228,
+      "asymmetry": 1.4199088,
+      "release_rise_ms": 158.42834,
+      "recovery_ms": 189.06854,
+      "release_width_ms": 159.77692,
+      "release_area_width_ms": 186.22594,
+      "trough_peak_ratio": 2.1065812,
+      "area_ratio": 0.95754915,
+      "peak_counts": 199983.5,
+      "trough_counts": 421281.5,
+      "baseline_counts": 3967791.5,
+      "baseline_sd": 976.9329506163665,
+      "peak_to_trough_ms": 654.9999999999993,
+      "pressure_onset_to_release_ms": 768.3800289154306,
+      "positive_area_counts_s": 81931.60338576384,
+      "negative_area_counts_s": 78453.53342357739,
+      "positive_tau_ms": 257.3087832364835,
+      "positive_tau_r2": 0.8590809777906953,
+      "negative_tau_ms": 81.82431919770566,
+      "negative_tau_r2": 0.9989716031394921,
+      "between_pulses_fraction": null,
+      "post_400_700_fraction": -0.0368886362206743,
+      "rebound_200_800_fraction": -0.034234828730907954,
+      "rise_sample_intervals": 9.32144399999995,
+      "recovery_sample_intervals": 7.56274159999996,
+      "trigger_s": 14.631,
+      "end_s": 15.94,
+      "peak_s": 14.832,
+      "trough_s": 15.487
+    },
+    {
+      "key": "original:pressure-zone07-neck-head-20260920-174226.csv:5",
+      "cohort": "original",
+      "file": "pressure-zone07-neck-head-20260920-174226.csv",
+      "event": 5,
+      "label": 4,
+      "zone": 7,
+      "rise_ms": 225.1438,
+      "decay_ms": 242.75354,
+      "width_ms": 378.93866,
+      "area_width_ms": 383.25327,
+      "slope_norm_s": 5.4511256,
+      "asymmetry": 1.0782155,
+      "release_rise_ms": 176.73444,
+      "recovery_ms": 165.60242,
+      "release_width_ms": 168.71484,
+      "release_area_width_ms": 190.03767,
+      "trough_peak_ratio": 1.8609962,
+      "area_ratio": 0.92278248,
+      "peak_counts": 201235.5,
+      "trough_counts": 374498.5,
+      "baseline_counts": 3956536.5,
+      "baseline_sd": 633.2453000220372,
+      "peak_to_trough_ms": 780.9999999999989,
+      "pressure_onset_to_release_ms": 847.197520980096,
+      "positive_area_counts_s": 77124.14868268925,
+      "negative_area_counts_s": 71168.82821071216,
+      "positive_tau_ms": 133.06789429190832,
+      "positive_tau_r2": 0.9023098002317127,
+      "negative_tau_ms": 71.80180253320765,
+      "negative_tau_r2": 0.9995707746641714,
+      "between_pulses_fraction": null,
+      "post_400_700_fraction": -0.0204153020639602,
+      "rebound_200_800_fraction": -0.012158927205315908,
+      "rise_sample_intervals": 9.005751999999951,
+      "recovery_sample_intervals": 6.624096799999964,
+      "trigger_s": 18.987,
+      "end_s": 20.347,
+      "peak_s": 19.138,
+      "trough_s": 19.919
+    },
+    {
+      "key": "original:pressure-zone07-neck-head-20260920-174226.csv:6",
+      "cohort": "original",
+      "file": "pressure-zone07-neck-head-20260920-174226.csv",
+      "event": 6,
+      "label": 4,
+      "zone": 7,
+      "rise_ms": 202.31757,
+      "decay_ms": 259.24097,
+      "width_ms": 318.64563,
+      "area_width_ms": 333.60461,
+      "slope_norm_s": 5.4523859,
+      "asymmetry": 1.2813567,
+      "release_rise_ms": 130.5166,
+      "recovery_ms": 156.64136,
+      "release_width_ms": 148.88013,
+      "release_area_width_ms": 162.89241,
+      "trough_peak_ratio": 1.8213161,
+      "area_ratio": 0.88931203,
+      "peak_counts": 233644.5,
+      "trough_counts": 425540.5,
+      "baseline_counts": 3952543.5,
+      "baseline_sd": 1169.3483484402755,
+      "peak_to_trough_ms": 830.0000000000018,
+      "pressure_onset_to_release_ms": 945.2310610756598,
+      "positive_area_counts_s": 77944.88277400113,
+      "negative_area_counts_s": 69317.32299508393,
+      "positive_tau_ms": 125.67983345702316,
+      "positive_tau_r2": 0.9759747651349369,
+      "negative_tau_ms": 68.75368304291054,
+      "negative_tau_r2": 0.9982465555639393,
+      "between_pulses_fraction": -0.02999214618790513,
+      "post_400_700_fraction": -0.007387075965742391,
+      "rebound_200_800_fraction": -0.0012936489006334297,
+      "rise_sample_intervals": 8.092702799999955,
+      "recovery_sample_intervals": 6.265654399999966,
+      "trigger_s": 23.947,
+      "end_s": 25.357,
+      "peak_s": 24.124,
+      "trough_s": 24.954
+    },
+    {
+      "key": "original:pressure-zone07-neck-head-20260920-174226.csv:7",
+      "cohort": "original",
+      "file": "pressure-zone07-neck-head-20260920-174226.csv",
+      "event": 7,
+      "label": 4,
+      "zone": 7,
+      "rise_ms": 229.06163,
+      "decay_ms": 355.71121,
+      "width_ms": 326.65884,
+      "area_width_ms": 352.23056,
+      "slope_norm_s": 5.1794014,
+      "asymmetry": 1.5529062,
+      "release_rise_ms": 172.68311,
+      "recovery_ms": 163.4361,
+      "release_width_ms": 158.56299,
+      "release_area_width_ms": 183.14435,
+      "trough_peak_ratio": 1.6677125,
+      "area_ratio": 0.86713684,
+      "peak_counts": 254987.0,
+      "trough_counts": 425245.0,
+      "baseline_counts": 3953191.0,
+      "baseline_sd": 553.7379705239654,
+      "peak_to_trough_ms": 779.9999999999976,
+      "pressure_onset_to_release_ms": 846.4068883629956,
+      "positive_area_counts_s": 89814.22648539448,
+      "negative_area_counts_s": 77881.20963647666,
+      "positive_tau_ms": 161.8442035210492,
+      "positive_tau_r2": 0.9925887558237549,
+      "negative_tau_ms": 71.85710335095102,
+      "negative_tau_r2": 0.9957963805504507,
+      "between_pulses_fraction": null,
+      "post_400_700_fraction": -0.0019247727780455973,
+      "rebound_200_800_fraction": 0.0010088302037648885,
+      "rise_sample_intervals": 9.16246519999995,
+      "recovery_sample_intervals": 6.537443999999965,
+      "trigger_s": 28.731,
+      "end_s": 30.091,
+      "peak_s": 28.908,
+      "trough_s": 29.688
+    }
+  ],
+  "rejects": [
+    {
+      "cohort": "live",
+      "file": "pressure-legs-20260920.csv",
+      "event": 2,
+      "status": 3,
+      "reason": "AMPLITUDE",
+      "peak_counts": 89808.0,
+      "trough_counts": 372390.0
+    },
+    {
+      "cohort": "live",
+      "file": "pressure-legs-20260920.csv",
+      "event": 7,
+      "status": 3,
+      "reason": "AMPLITUDE",
+      "peak_counts": 65816.5,
+      "trough_counts": 268904.5
+    },
+    {
+      "cohort": "live",
+      "file": "pressure-legs-20260920.csv",
+      "event": 8,
+      "status": 3,
+      "reason": "AMPLITUDE",
+      "peak_counts": 75800.0,
+      "trough_counts": 199831.0
+    },
+    {
+      "cohort": "live",
+      "file": "pressure-legs-20260920.csv",
+      "event": 9,
+      "status": 3,
+      "reason": "AMPLITUDE",
+      "peak_counts": 71972.5,
+      "trough_counts": 321181.5
+    },
+    {
+      "cohort": "live",
+      "file": "pressure-legs-20260920.csv",
+      "event": 11,
+      "status": 3,
+      "reason": "AMPLITUDE",
+      "peak_counts": 87351.0,
+      "trough_counts": 342197.0
+    },
+    {
+      "cohort": "live",
+      "file": "pressure-legs-20260920.csv",
+      "event": 14,
+      "status": 3,
+      "reason": "AMPLITUDE",
+      "peak_counts": 96952.0,
+      "trough_counts": 273817.0
+    },
+    {
+      "cohort": "live",
+      "file": "pressure-legs-20260920.csv",
+      "event": 15,
+      "status": 3,
+      "reason": "AMPLITUDE",
+      "peak_counts": 87574.5,
+      "trough_counts": 315768.5
+    },
+    {
+      "cohort": "live",
+      "file": "pressure-legs-20260920.csv",
+      "event": 17,
+      "status": 3,
+      "reason": "AMPLITUDE",
+      "peak_counts": 78827.0,
+      "trough_counts": 265525.0
+    },
+    {
+      "cohort": "live",
+      "file": "pressure-legs-20260920.csv",
+      "event": 18,
+      "status": 3,
+      "reason": "AMPLITUDE",
+      "peak_counts": 86009.0,
+      "trough_counts": 279712.0
+    }
+  ],
+  "comparisons": {
+    "original": {
+      "rise_ms": {
+        "head": {
+          "n": 7,
+          "q": [
+            202.31757,
+            215.36891,
+            225.1438,
+            231.048865,
+            273.62741
+          ]
+        },
+        "legs": {
+          "n": 26,
+          "q": [
+            112.68055,
+            144.3815675,
+            169.502005,
+            208.62967749999999,
+            323.79932
+          ]
+        },
+        "auc_head_greater": 0.7912087912087912
+      },
+      "decay_ms": {
+        "head": {
+          "n": 7,
+          "q": [
+            231.16945,
+            250.997255,
+            330.89001,
+            351.644745,
+            404.65924
+          ]
+        },
+        "legs": {
+          "n": 26,
+          "q": [
+            136.52365,
+            261.95759,
+            285.28675999999996,
+            323.0442975,
+            432.11224
+          ]
+        },
+        "auc_head_greater": 0.5824175824175825
+      },
+      "width_ms": {
+        "head": {
+          "n": 7,
+          "q": [
+            203.83002,
+            322.652235,
+            367.06833,
+            373.85649,
+            417.55594
+          ]
+        },
+        "legs": {
+          "n": 26,
+          "q": [
+            177.83502,
+            273.9642,
+            296.506225,
+            347.6263475,
+            438.24268
+          ]
+        },
+        "auc_head_greater": 0.6978021978021978
+      },
+      "area_width_ms": {
+        "head": {
+          "n": 7,
+          "q": [
+            236.80768,
+            342.91758500000003,
+            383.25327,
+            398.87863,
+            438.55518
+          ]
+        },
+        "legs": {
+          "n": 26,
+          "q": [
+            224.25682,
+            281.4540075,
+            301.37273000000005,
+            363.48014,
+            420.52808
+          ]
+        },
+        "auc_head_greater": 0.7417582417582418
+      },
+      "slope_norm_s": {
+        "head": {
+          "n": 7,
+          "q": [
+            4.5989833,
+            5.13014385,
+            5.1794014,
+            5.45175575,
+            7.1382732
+          ]
+        },
+        "legs": {
+          "n": 26,
+          "q": [
+            3.6017599,
+            5.5965959000000005,
+            6.7261164,
+            7.93840885,
+            8.897418
+          ]
+        },
+        "auc_head_greater": 0.1813186813186813
+      },
+      "asymmetry": {
+        "head": {
+          "n": 7,
+          "q": [
+            1.0782155,
+            1.19712395,
+            1.2813567,
+            1.4864074999999999,
+            1.797937
+          ]
+        },
+        "legs": {
+          "n": 26,
+          "q": [
+            0.66159552,
+            1.337733725,
+            1.6732171999999998,
+            2.0568068250000002,
+            3.7448094
+          ]
+        },
+        "auc_head_greater": 0.3021978021978022
+      },
+      "release_rise_ms": {
+        "head": {
+          "n": 7,
+          "q": [
+            130.5166,
+            148.64575,
+            172.68311,
+            175.905125,
+            184.64551
+          ]
+        },
+        "legs": {
+          "n": 26,
+          "q": [
+            92.916138,
+            125.69002,
+            167.37664999999998,
+            217.28795000000002,
+            259.09009
+          ]
+        },
+        "auc_head_greater": 0.4945054945054945
+      },
+      "recovery_ms": {
+        "head": {
+          "n": 7,
+          "q": [
+            156.64136,
+            157.44592,
+            163.4361,
+            171.34112499999998,
+            189.06854
+          ]
+        },
+        "legs": {
+          "n": 26,
+          "q": [
+            149.8728,
+            170.06956250000002,
+            176.47421,
+            178.4637775,
+            194.0014
+          ]
+        },
+        "auc_head_greater": 0.24175824175824176
+      },
+      "release_width_ms": {
+        "head": {
+          "n": 7,
+          "q": [
+            131.89642,
+            145.02515,
+            158.56299,
+            160.82702999999998,
+            168.71484
+          ]
+        },
+        "legs": {
+          "n": 26,
+          "q": [
+            142.32697,
+            154.3334675,
+            164.03607,
+            177.44314500000002,
+            222.09967
+          ]
+        },
+        "auc_head_greater": 0.25274725274725274
+      },
+      "release_area_width_ms": {
+        "head": {
+          "n": 7,
+          "q": [
+            162.89241,
+            167.146565,
+            177.62389,
+            184.685145,
+            190.03767
+          ]
+        },
+        "legs": {
+          "n": 26,
+          "q": [
+            158.72957,
+            182.900535,
+            189.01152000000002,
+            208.61072000000001,
+            223.96176
+          ]
+        },
+        "auc_head_greater": 0.24175824175824176
+      },
+      "trough_peak_ratio": {
+        "head": {
+          "n": 7,
+          "q": [
+            1.4611393,
+            1.7445143,
+            1.8609962,
+            2.049437,
+            2.3462822
+          ]
+        },
+        "legs": {
+          "n": 26,
+          "q": [
+            1.2527066,
+            1.7008097750000002,
+            2.02011165,
+            2.4083448,
+            3.3744979
+          ]
+        },
+        "auc_head_greater": 0.38461538461538464
+      },
+      "area_ratio": {
+        "head": {
+          "n": 7,
+          "q": [
+            0.86713684,
+            0.882046015,
+            0.91190493,
+            0.940165815,
+            1.0537611
+          ]
+        },
+        "legs": {
+          "n": 26,
+          "q": [
+            1.080472,
+            1.177009525,
+            1.27089205,
+            1.35157655,
+            1.4774908
+          ]
+        },
+        "auc_head_greater": 0.0
+      },
+      "peak_counts": {
+        "head": {
+          "n": 7,
+          "q": [
+            152832.0,
+            178878.75,
+            201235.5,
+            244315.75,
+            287520.5
+          ]
+        },
+        "legs": {
+          "n": 26,
+          "q": [
+            161688.5,
+            214164.25,
+            271268.5,
+            345264.5,
+            486814.5
+          ]
+        },
+        "auc_head_greater": 0.23076923076923078
+      },
+      "trough_counts": {
+        "head": {
+          "n": 7,
+          "q": [
+            314332.0,
+            366542.75,
+            420107.5,
+            423263.25,
+            425540.5
+          ]
+        },
+        "legs": {
+          "n": 26,
+          "q": [
+            387416.5,
+            481752.125,
+            603017.5,
+            688016.5,
+            800552.5
+          ]
+        },
+        "auc_head_greater": 0.06593406593406594
+      },
+      "positive_area_counts_s": {
+        "head": {
+          "n": 7,
+          "q": [
+            61226.63253637242,
+            67556.16044374308,
+            77124.14868268925,
+            79938.2430798825,
+            89814.22648539448
+          ]
+        },
+        "legs": {
+          "n": 26,
+          "q": [
+            64465.936922546214,
+            75376.9356667191,
+            89585.16959986094,
+            105685.73927182765,
+            117479.68061835205
+          ]
+        },
+        "auc_head_greater": 0.27472527472527475
+      },
+      "negative_area_counts_s": {
+        "head": {
+          "n": 7,
+          "q": [
+            55832.87323647869,
+            63974.8426260424,
+            71168.82821071216,
+            74814.35700795634,
+            78453.53342357739
+          ]
+        },
+        "legs": {
+          "n": 26,
+          "q": [
+            78978.21542115026,
+            95303.15537605844,
+            113272.6965622548,
+            127056.06480774388,
+            143067.9403353663
+          ]
+        },
+        "auc_head_greater": 0.0
+      },
+      "peak_to_trough_ms": {
+        "head": {
+          "n": 7,
+          "q": [
+            654.9999999999993,
+            717.4999999999984,
+            780.9999999999989,
+            830.5000000000007,
+            1033.0
+          ]
+        },
+        "legs": {
+          "n": 26,
+          "q": [
+            378.0000000000001,
+            610.2499999999989,
+            754.999999999999,
+            849.7500000000002,
+            1158.0000000000014
+          ]
+        },
+        "auc_head_greater": 0.5714285714285714
+      },
+      "pressure_onset_to_release_ms": {
+        "head": {
+          "n": 7,
+          "q": [
+            768.3800289154306,
+            846.8022046715457,
+            855.1001915119034,
+            935.2960999338945,
+            1051.452758713512
+          ]
+        },
+        "legs": {
+          "n": 26,
+          "q": [
+            499.09261167167784,
+            701.6853553619243,
+            763.4431204334975,
+            794.5472208726501,
+            1114.1306871028505
+          ]
+        },
+        "auc_head_greater": 0.8076923076923077
+      },
+      "positive_tau_ms": {
+        "head": {
+          "n": 7,
+          "q": [
+            117.86357371566092,
+            129.37386387446574,
+            161.8442035210492,
+            175.7525060602655,
+            257.3087832364835
+          ]
+        },
+        "legs": {
+          "n": 26,
+          "q": [
+            68.11705283517959,
+            137.23677771064646,
+            148.0080979559296,
+            156.63378078345275,
+            294.57341441712873
+          ]
+        },
+        "auc_head_greater": 0.5384615384615384
+      },
+      "negative_tau_ms": {
+        "head": {
+          "n": 7,
+          "q": [
+            67.33897947206374,
+            69.18651405483635,
+            71.80180253320765,
+            73.96222373003181,
+            81.82431919770566
+          ]
+        },
+        "legs": {
+          "n": 26,
+          "q": [
+            64.55897988880524,
+            75.20337970943464,
+            76.50553435312958,
+            78.52446254770246,
+            83.8523897807497
+          ]
+        },
+        "auc_head_greater": 0.22527472527472528
+      },
+      "between_pulses_fraction": {
+        "head": {
+          "n": 2,
+          "q": [
+            -0.02999214618790513,
+            -0.02697379022022667,
+            -0.023955434252548213,
+            -0.020937078284869754,
+            -0.017918722317191296
+          ]
+        },
+        "legs": {
+          "n": 5,
+          "q": [
+            -0.07509842574649996,
+            -0.04675810798834305,
+            -0.029927110719289683,
+            -0.015914185813421473,
+            0.05801696539441615
+          ]
+        },
+        "auc_head_greater": 0.5
+      },
+      "post_400_700_fraction": {
+        "head": {
+          "n": 7,
+          "q": [
+            -0.0368886362206743,
+            -0.01883341943649561,
+            -0.007387075965742391,
+            -0.004543499290030679,
+            -0.0019247727780455973
+          ]
+        },
+        "legs": {
+          "n": 26,
+          "q": [
+            -0.021384261177024428,
+            -0.015206805224050561,
+            -0.010692628369487887,
+            -0.007424997267654535,
+            0.004732111879920548
+          ]
+        },
+        "auc_head_greater": 0.5164835164835165
+      },
+      "rebound_200_800_fraction": {
+        "head": {
+          "n": 7,
+          "q": [
+            -0.034234828730907954,
+            -0.010201622811907968,
+            -0.002080387744117885,
+            -0.00042094862475647917,
+            0.0010088302037648885
+          ]
+        },
+        "legs": {
+          "n": 26,
+          "q": [
+            -0.01730094464659486,
+            -0.00556600387151868,
+            -0.0033042182412018955,
+            -0.0008353061657958113,
+            0.013970663169475652
+          ]
+        },
+        "auc_head_greater": 0.46703296703296704
+      }
+    },
+    "live": {
+      "rise_ms": {
+        "head": {
+          "n": 15,
+          "q": [
+            123.02953,
+            159.83160500000002,
+            170.64011,
+            207.672435,
+            252.95024
+          ]
+        },
+        "legs": {
+          "n": 17,
+          "q": [
+            131.34796,
+            160.22644,
+            181.74405,
+            220.4883,
+            267.16809
+          ]
+        },
+        "auc_head_greater": 0.4549019607843137
+      },
+      "decay_ms": {
+        "head": {
+          "n": 15,
+          "q": [
+            201.37248,
+            238.677715,
+            277.60291,
+            308.453265,
+            777.28424
+          ]
+        },
+        "legs": {
+          "n": 17,
+          "q": [
+            131.12549,
+            185.64606,
+            228.47205,
+            273.91293,
+            397.00681
+          ]
+        },
+        "auc_head_greater": 0.7058823529411765
+      },
+      "width_ms": {
+        "head": {
+          "n": 15,
+          "q": [
+            199.62018,
+            213.749105,
+            238.85069,
+            279.94279500000005,
+            307.6546
+          ]
+        },
+        "legs": {
+          "n": 17,
+          "q": [
+            159.84821,
+            209.19502,
+            249.94934,
+            288.04752,
+            331.36868
+          ]
+        },
+        "auc_head_greater": 0.5254901960784314
+      },
+      "area_width_ms": {
+        "head": {
+          "n": 15,
+          "q": [
+            217.58461,
+            238.769015,
+            275.67374,
+            304.552765,
+            398.78915
+          ]
+        },
+        "legs": {
+          "n": 17,
+          "q": [
+            191.95284,
+            221.67186,
+            255.92665,
+            302.14432,
+            335.93857
+          ]
+        },
+        "auc_head_greater": 0.5882352941176471
+      },
+      "slope_norm_s": {
+        "head": {
+          "n": 15,
+          "q": [
+            4.6178007,
+            6.5391793499999995,
+            7.4998631,
+            8.2264538,
+            9.0052576
+          ]
+        },
+        "legs": {
+          "n": 17,
+          "q": [
+            5.0084748,
+            6.377739,
+            6.866725,
+            8.1363373,
+            9.6029024
+          ]
+        },
+        "auc_head_greater": 0.5176470588235295
+      },
+      "asymmetry": {
+        "head": {
+          "n": 15,
+          "q": [
+            0.90976256,
+            1.3861856000000001,
+            1.5880578,
+            1.81911255,
+            4.5551085
+          ]
+        },
+        "legs": {
+          "n": 17,
+          "q": [
+            0.69948655,
+            0.98393613,
+            1.2141213,
+            1.5561181,
+            2.523747
+          ]
+        },
+        "auc_head_greater": 0.7215686274509804
+      },
+      "release_rise_ms": {
+        "head": {
+          "n": 15,
+          "q": [
+            87.94043,
+            102.31454500000001,
+            110.9754,
+            121.38916,
+            138.2229
+          ]
+        },
+        "legs": {
+          "n": 17,
+          "q": [
+            70.686707,
+            85.186829,
+            95.489746,
+            129.94855,
+            297.35632
+          ]
+        },
+        "auc_head_greater": 0.6
+      },
+      "recovery_ms": {
+        "head": {
+          "n": 15,
+          "q": [
+            132.72217,
+            138.464385,
+            140.57349,
+            145.99292000000003,
+            157.95105
+          ]
+        },
+        "legs": {
+          "n": 17,
+          "q": [
+            129.0932,
+            134.22443,
+            139.07928,
+            151.42847,
+            159.22235
+          ]
+        },
+        "auc_head_greater": 0.5607843137254902
+      },
+      "release_width_ms": {
+        "head": {
+          "n": 15,
+          "q": [
+            118.85919,
+            122.64893000000001,
+            129.4137,
+            130.42407500000002,
+            139.04498
+          ]
+        },
+        "legs": {
+          "n": 17,
+          "q": [
+            107.56891,
+            115.0592,
+            119.38696,
+            132.414,
+            147.85468
+          ]
+        },
+        "auc_head_greater": 0.596078431372549
+      },
+      "release_area_width_ms": {
+        "head": {
+          "n": 15,
+          "q": [
+            131.99181,
+            136.07786,
+            144.5909,
+            146.79334,
+            151.46115
+          ]
+        },
+        "legs": {
+          "n": 17,
+          "q": [
+            126.50883,
+            128.05405,
+            140.37656,
+            148.99821,
+            183.57071
+          ]
+        },
+        "auc_head_greater": 0.5843137254901961
+      },
+      "trough_peak_ratio": {
+        "head": {
+          "n": 15,
+          "q": [
+            1.6499904,
+            1.89571465,
+            2.1004341,
+            2.2128871500000002,
+            2.4721596
+          ]
+        },
+        "legs": {
+          "n": 17,
+          "q": [
+            1.3063642,
+            2.0190251,
+            2.1215942,
+            2.9374058,
+            3.326638
+          ]
+        },
+        "auc_head_greater": 0.37254901960784315
+      },
+      "area_ratio": {
+        "head": {
+          "n": 15,
+          "q": [
+            0.6075182,
+            1.03108945,
+            1.0814461,
+            1.1480167,
+            1.2229799
+          ]
+        },
+        "legs": {
+          "n": 17,
+          "q": [
+            0.8316254,
+            0.95912337,
+            1.1676812,
+            1.706213,
+            2.1154265
+          ]
+        },
+        "auc_head_greater": 0.4196078431372549
+      },
+      "peak_counts": {
+        "head": {
+          "n": 15,
+          "q": [
+            135502.0,
+            222840.0,
+            246804.5,
+            277848.0,
+            299548.5
+          ]
+        },
+        "legs": {
+          "n": 17,
+          "q": [
+            104261.5,
+            120201.5,
+            125414.5,
+            144050.0,
+            217075.0
+          ]
+        },
+        "auc_head_greater": 0.9725490196078431
+      },
+      "trough_counts": {
+        "head": {
+          "n": 15,
+          "q": [
+            223577.0,
+            471609.25,
+            517954.5,
+            557533.25,
+            605642.0
+          ]
+        },
+        "legs": {
+          "n": 17,
+          "q": [
+            239816.0,
+            264886.0,
+            279572.5,
+            316714.5,
+            426220.5
+          ]
+        },
+        "auc_head_greater": 0.9176470588235294
+      },
+      "positive_area_counts_s": {
+        "head": {
+          "n": 15,
+          "q": [
+            54036.72519512571,
+            62447.2854950779,
+            65177.15035918412,
+            70721.8117332905,
+            75737.2821312372
+          ]
+        },
+        "legs": {
+          "n": 17,
+          "q": [
+            21907.193179852904,
+            31754.747997464063,
+            36660.3566286848,
+            39869.36591570104,
+            44312.75103151979
+          ]
+        },
+        "auc_head_greater": 1.0
+      },
+      "negative_area_counts_s": {
+        "head": {
+          "n": 15,
+          "q": [
+            32828.29855308171,
+            67309.68465810729,
+            74767.0901507441,
+            79839.07767385291,
+            82410.21006421208
+          ]
+        },
+        "legs": {
+          "n": 17,
+          "q": [
+            32601.184561256647,
+            37895.69165542197,
+            40507.90491436202,
+            46924.484082395895,
+            56940.84818714987
+          ]
+        },
+        "auc_head_greater": 0.9294117647058824
+      },
+      "peak_to_trough_ms": {
+        "head": {
+          "n": 15,
+          "q": [
+            477.9999999999998,
+            805.9999999999939,
+            1033.0000000000014,
+            1134.0000000000002,
+            1436.0
+          ]
+        },
+        "legs": {
+          "n": 17,
+          "q": [
+            427.99999999999727,
+            604.9999999999968,
+            705.0000000000001,
+            805.9999999999992,
+            931.9999999999986
+          ]
+        },
+        "auc_head_greater": 0.8313725490196078
+      },
+      "pressure_onset_to_release_ms": {
+        "head": {
+          "n": 15,
+          "q": [
+            669.1338537423696,
+            922.5701352932241,
+            1106.6503369131055,
+            1194.3070885347922,
+            1485.3960377501955
+          ]
+        },
+        "legs": {
+          "n": 17,
+          "q": [
+            474.0034495868173,
+            688.1100285646937,
+            819.6580505517943,
+            921.345433082756,
+            1064.278375271911
+          ]
+        },
+        "auc_head_greater": 0.8352941176470589
+      },
+      "positive_tau_ms": {
+        "head": {
+          "n": 15,
+          "q": [
+            90.36966382924719,
+            109.09509623249122,
+            126.08791436985236,
+            141.98025308446387,
+            388.0856707651953
+          ]
+        },
+        "legs": {
+          "n": 17,
+          "q": [
+            63.09670642631373,
+            99.40272446975489,
+            123.14448168691207,
+            152.899219460339,
+            203.79163388694403
+          ]
+        },
+        "auc_head_greater": 0.5254901960784314
+      },
+      "negative_tau_ms": {
+        "head": {
+          "n": 15,
+          "q": [
+            58.22909297433132,
+            60.7275404590287,
+            61.37889249983107,
+            63.12899399221973,
+            68.23862491600894
+          ]
+        },
+        "legs": {
+          "n": 17,
+          "q": [
+            55.79310517746522,
+            57.55799566390049,
+            59.9594929674098,
+            63.398727284341554,
+            68.97156420258659
+          ]
+        },
+        "auc_head_greater": 0.6313725490196078
+      },
+      "between_pulses_fraction": {
+        "head": {
+          "n": 11,
+          "q": [
+            -0.10066874793611948,
+            -0.03482094196630807,
+            -0.017016568861788015,
+            -0.00612352477419102,
+            0.04841263592543019
+          ]
+        },
+        "legs": {
+          "n": 9,
+          "q": [
+            -0.22827918122494603,
+            -0.1558341286093141,
+            -0.09482327222924568,
+            0.09995853355123546,
+            0.11808454894271564
+          ]
+        },
+        "auc_head_greater": 0.6464646464646465
+      },
+      "post_400_700_fraction": {
+        "head": {
+          "n": 15,
+          "q": [
+            -0.028399212672155567,
+            -0.010619945905960526,
+            -0.006844906814193742,
+            0.006727428186140173,
+            0.023531146759212678
+          ]
+        },
+        "legs": {
+          "n": 17,
+          "q": [
+            -0.019049998768243197,
+            -0.009639821720801502,
+            -0.0065751618850816325,
+            -0.00045842604706272324,
+            0.01946541551662392
+          ]
+        },
+        "auc_head_greater": 0.5294117647058824
+      },
+      "rebound_200_800_fraction": {
+        "head": {
+          "n": 15,
+          "q": [
+            -0.02689715023230805,
+            -0.008199748711758124,
+            -0.005894332418236004,
+            0.008227838504207772,
+            0.02554892915571519
+          ]
+        },
+        "legs": {
+          "n": 17,
+          "q": [
+            -0.015350054253734476,
+            -0.0032785956563918454,
+            0.0006556515383172888,
+            0.006146435384848666,
+            0.027282691660728046
+          ]
+        },
+        "auc_head_greater": 0.4470588235294118
+      }
+    }
+  },
+  "original_zones": {
+    "3": {
+      "rise_ms": {
+        "n": 6,
+        "q": [
+          125.60875,
+          144.3815675,
+          149.17366,
+          154.5845925,
+          176.04936
+        ]
+      },
+      "decay_ms": {
+        "n": 6,
+        "q": [
+          238.47079,
+          284.46632,
+          285.28675999999996,
+          295.491125,
+          340.98343
+        ]
+      },
+      "width_ms": {
+        "n": 6,
+        "q": [
+          177.83502,
+          208.526745,
+          229.01668999999998,
+          274.6786525,
+          314.99454
+        ]
+      },
+      "area_width_ms": {
+        "n": 6,
+        "q": [
+          224.25682,
+          241.33501,
+          260.18338,
+          279.1485325,
+          302.8754
+        ]
+      },
+      "slope_norm_s": {
+        "n": 6,
+        "q": [
+          6.0495157,
+          6.9897972500000005,
+          7.7162583,
+          8.069564725,
+          8.897418
+        ]
+      },
+      "asymmetry": {
+        "n": 6,
+        "q": [
+          1.3545678,
+          1.8685221,
+          1.9519846,
+          1.975785425,
+          2.7146471
+        ]
+      },
+      "release_rise_ms": {
+        "n": 6,
+        "q": [
+          92.916138,
+          225.54590000000002,
+          232.69567999999998,
+          253.26498500000002,
+          259.09009
+        ]
+      },
+      "recovery_ms": {
+        "n": 6,
+        "q": [
+          172.42847,
+          177.129695,
+          178.010585,
+          178.40510749999999,
+          179.22461
+        ]
+      },
+      "release_width_ms": {
+        "n": 6,
+        "q": [
+          153.55231,
+          161.2763975,
+          169.4306,
+          176.5214675,
+          184.26556
+        ]
+      },
+      "release_area_width_ms": {
+        "n": 6,
+        "q": [
+          171.12968,
+          197.94203,
+          209.205205,
+          211.8025275,
+          214.30695
+        ]
+      },
+      "trough_peak_ratio": {
+        "n": 6,
+        "q": [
+          1.2527066,
+          1.5033351750000001,
+          1.54990425,
+          1.642537725,
+          1.8239102
+        ]
+      },
+      "area_ratio": {
+        "n": 6,
+        "q": [
+          1.1093729,
+          1.177009525,
+          1.2067837,
+          1.2305401749999998,
+          1.25709
+        ]
+      },
+      "peak_counts": {
+        "n": 6,
+        "q": [
+          357069.5,
+          390634.25,
+          429653.75,
+          476547.5,
+          486814.5
+        ]
+      },
+      "trough_counts": {
+        "n": 6,
+        "q": [
+          592655.5,
+          620483.125,
+          663498.25,
+          692825.125,
+          734596.5
+        ]
+      },
+      "positive_area_counts_s": {
+        "n": 6,
+        "q": [
+          107936.5087755117,
+          108367.5413559772,
+          109987.3409729544,
+          111875.70088452511,
+          116431.24326932183
+        ]
+      },
+      "negative_area_counts_s": {
+        "n": 6,
+        "q": [
+          119741.83678510996,
+          127551.35683256805,
+          133644.59731076504,
+          139131.54741005317,
+          143067.9403353663
+        ]
+      },
+      "peak_to_trough_ms": {
+        "n": 6,
+        "q": [
+          806.0000000000009,
+          837.2500000000007,
+          869.0000000000016,
+          994.5000000000003,
+          1158.0000000000014
+        ]
+      },
+      "pressure_onset_to_release_ms": {
+        "n": 6,
+        "q": [
+          718.0156679490715,
+          746.4560717400981,
+          785.220699924343,
+          986.6517949298584,
+          1114.1306871028505
+        ]
+      },
+      "positive_tau_ms": {
+        "n": 6,
+        "q": [
+          134.17842026458612,
+          139.16179692932204,
+          146.00692762152022,
+          148.74248773434863,
+          156.45181422531533
+        ]
+      },
+      "negative_tau_ms": {
+        "n": 6,
+        "q": [
+          73.36087667049152,
+          76.0238533264046,
+          77.5716072364215,
+          78.52446254770246,
+          78.89197528569983
+        ]
+      },
+      "between_pulses_fraction": {
+        "n": 3,
+        "q": [
+          -0.07509842574649996,
+          -0.060928266867421504,
+          -0.04675810798834305,
+          0.0056294287030365445,
+          0.05801696539441615
+        ]
+      },
+      "post_400_700_fraction": {
+        "n": 6,
+        "q": [
+          -0.021384261177024428,
+          -0.016463737657471382,
+          -0.012428515288036207,
+          -0.007837954983759877,
+          0.0034270190736262356
+        ]
+      },
+      "rebound_200_800_fraction": {
+        "n": 6,
+        "q": [
+          -0.01730094464659486,
+          -0.004807680441635252,
+          -0.003634552882280908,
+          0.0019483870459094936,
+          0.013970663169475652
+        ]
+      }
+    },
+    "4": {
+      "rise_ms": {
+        "n": 6,
+        "q": [
+          112.68055,
+          120.1705775,
+          134.29204,
+          156.89808,
+          200.38716
+        ]
+      },
+      "decay_ms": {
+        "n": 6,
+        "q": [
+          277.53613,
+          284.150975,
+          303.93184,
+          329.64777000000004,
+          421.96719
+        ]
+      },
+      "width_ms": {
+        "n": 6,
+        "q": [
+          279.10452,
+          286.43697000000003,
+          293.26999,
+          329.2250675,
+          360.60406
+        ]
+      },
+      "area_width_ms": {
+        "n": 6,
+        "q": [
+          281.75751,
+          285.518445,
+          295.50577999999996,
+          349.206685,
+          379.728
+        ]
+      },
+      "slope_norm_s": {
+        "n": 6,
+        "q": [
+          5.3129354,
+          6.539242724999999,
+          7.86608815,
+          8.532992825000001,
+          8.7209682
+        ]
+      },
+      "asymmetry": {
+        "n": 6,
+        "q": [
+          1.5985879,
+          1.8589465,
+          2.29122675,
+          2.3947832,
+          3.7448094
+        ]
+      },
+      "release_rise_ms": {
+        "n": 6,
+        "q": [
+          128.19769,
+          166.205945,
+          173.052005,
+          191.0303675,
+          240.22241
+        ]
+      },
+      "recovery_ms": {
+        "n": 6,
+        "q": [
+          149.8728,
+          167.3148,
+          168.396115,
+          169.1622125,
+          175.52216
+        ]
+      },
+      "release_width_ms": {
+        "n": 6,
+        "q": [
+          145.60114,
+          149.927555,
+          154.41269,
+          159.72185,
+          170.229
+        ]
+      },
+      "release_area_width_ms": {
+        "n": 6,
+        "q": [
+          169.87787,
+          178.4066475,
+          184.3393,
+          188.21057000000002,
+          192.7608
+        ]
+      },
+      "trough_peak_ratio": {
+        "n": 6,
+        "q": [
+          1.831033,
+          2.136531675,
+          2.24666895,
+          2.38940055,
+          2.4602127
+        ]
+      },
+      "area_ratio": {
+        "n": 6,
+        "q": [
+          1.1426209,
+          1.194034625,
+          1.2826004000000002,
+          1.3576286,
+          1.4774908
+        ]
+      },
+      "peak_counts": {
+        "n": 6,
+        "q": [
+          246297.0,
+          273396.125,
+          312425.0,
+          328589.0,
+          349365.5
+        ]
+      },
+      "trough_counts": {
+        "n": 6,
+        "q": [
+          600092.0,
+          606873.125,
+          651483.0,
+          727808.5,
+          748895.5
+        ]
+      },
+      "positive_area_counts_s": {
+        "n": 6,
+        "q": [
+          76820.77435725123,
+          89235.81758324469,
+          94530.22270090519,
+          98894.21601276088,
+          117479.68061835205
+        ]
+      },
+      "negative_area_counts_s": {
+        "n": 6,
+        "q": [
+          113043.4098667398,
+          114327.00542328869,
+          119685.20064981756,
+          124836.45067821287,
+          137242.03050733494
+        ]
+      },
+      "peak_to_trough_ms": {
+        "n": 6,
+        "q": [
+          754.999999999999,
+          780.9999999999989,
+          806.0,
+          868.5000000000005,
+          1007.0000000000001
+        ]
+      },
+      "pressure_onset_to_release_ms": {
+        "n": 6,
+        "q": [
+          762.4140318335293,
+          770.4316273501458,
+          790.5765141655356,
+          860.820409762011,
+          937.3738648904335
+        ]
+      },
+      "positive_tau_ms": {
+        "n": 6,
+        "q": [
+          132.19852059746623,
+          138.9814309781976,
+          145.68928253233952,
+          148.40115756249,
+          223.97217920630888
+        ]
+      },
+      "negative_tau_ms": {
+        "n": 6,
+        "q": [
+          64.55897988880524,
+          73.10161300797827,
+          74.90663502890376,
+          75.77296895885193,
+          77.17403264615322
+        ]
+      },
+      "between_pulses_fraction": {
+        "n": 2,
+        "q": [
+          -0.029927110719289683,
+          -0.02642387949282263,
+          -0.02292064826635558,
+          -0.019417417039888526,
+          -0.015914185813421473
+        ]
+      },
+      "post_400_700_fraction": {
+        "n": 6,
+        "q": [
+          -0.017322343907267553,
+          -0.012689452818038006,
+          -0.007915797215732504,
+          -0.007088432301933394,
+          0.004732111879920548
+        ]
+      },
+      "rebound_200_800_fraction": {
+        "n": 6,
+        "q": [
+          -0.014141165021363391,
+          -0.0029417864430923207,
+          -0.002602119692244239,
+          -0.0009705146736777903,
+          0.008340879779199672
+        ]
+      }
+    },
+    "5": {
+      "rise_ms": {
+        "n": 6,
+        "q": [
+          155.47485,
+          168.9577675,
+          195.72337499999998,
+          229.1473325,
+          323.79932
+        ]
+      },
+      "decay_ms": {
+        "n": 6,
+        "q": [
+          261.01764,
+          320.86368,
+          328.09857,
+          339.71889,
+          432.11224
+        ]
+      },
+      "width_ms": {
+        "n": 6,
+        "q": [
+          296.17737,
+          300.32159249999995,
+          336.533475,
+          369.6501225,
+          385.33063
+        ]
+      },
+      "area_width_ms": {
+        "n": 6,
+        "q": [
+          308.71198,
+          317.0616875,
+          353.84778,
+          382.1864425,
+          420.52808
+        ]
+      },
+      "slope_norm_s": {
+        "n": 6,
+        "q": [
+          3.6017599,
+          4.775727874999999,
+          5.6618915,
+          6.65726315,
+          8.1302519
+        ]
+      },
+      "asymmetry": {
+        "n": 6,
+        "q": [
+          1.3345064,
+          1.359577225,
+          1.5104596,
+          1.968911875,
+          2.1000226
+        ]
+      },
+      "release_rise_ms": {
+        "n": 6,
+        "q": [
+          124.85413,
+          139.2395825,
+          150.43195,
+          174.606855,
+          192.44281
+        ]
+      },
+      "recovery_ms": {
+        "n": 6,
+        "q": [
+          166.00818,
+          175.51462,
+          179.652345,
+          187.50839,
+          194.0014
+        ]
+      },
+      "release_width_ms": {
+        "n": 6,
+        "q": [
+          162.62158,
+          179.293135,
+          197.70987,
+          203.0855975,
+          222.09967
+        ]
+      },
+      "release_area_width_ms": {
+        "n": 6,
+        "q": [
+          182.78096,
+          191.5738925,
+          215.085605,
+          222.8816,
+          223.96176
+        ]
+      },
+      "trough_peak_ratio": {
+        "n": 6,
+        "q": [
+          1.8499631,
+          1.9507413,
+          2.097254,
+          2.33238415,
+          3.309835
+        ]
+      },
+      "area_ratio": {
+        "n": 6,
+        "q": [
+          1.1040663,
+          1.288226625,
+          1.3077429999999999,
+          1.404473375,
+          1.4386075
+        ]
+      },
+      "peak_counts": {
+        "n": 6,
+        "q": [
+          185057.0,
+          199661.375,
+          211686.25,
+          214584.75,
+          281135.0
+        ]
+      },
+      "trough_counts": {
+        "n": 6,
+        "q": [
+          387416.5,
+          413324.25,
+          444626.5,
+          525752.0,
+          710936.0
+        ]
+      },
+      "positive_area_counts_s": {
+        "n": 6,
+        "q": [
+          65730.56192145991,
+          67167.26338826111,
+          72828.45983965773,
+          86530.0818735272,
+          91827.53223797471
+        ]
+      },
+      "negative_area_counts_s": {
+        "n": 6,
+        "q": [
+          86766.48522171497,
+          91661.73983322798,
+          95981.50880346599,
+          100372.30736168129,
+          129945.56056956203
+        ]
+      },
+      "peak_to_trough_ms": {
+        "n": 6,
+        "q": [
+          603.9999999999992,
+          641.499999999998,
+          704.4999999999995,
+          748.7499999999993,
+          855.9999999999999
+        ]
+      },
+      "pressure_onset_to_release_ms": {
+        "n": 6,
+        "q": [
+          648.5723270544134,
+          742.494032566821,
+          762.0088249559229,
+          786.5043366749597,
+          1042.540184965458
+        ]
+      },
+      "positive_tau_ms": {
+        "n": 6,
+        "q": [
+          130.53588647057975,
+          147.4633609243329,
+          163.13749395549672,
+          181.69937825682095,
+          294.57341441712873
+        ]
+      },
+      "negative_tau_ms": {
+        "n": 6,
+        "q": [
+          73.72959794193247,
+          75.11315807132571,
+          77.21330522183274,
+          80.87444482744391,
+          83.8523897807497
+        ]
+      },
+      "between_pulses_fraction": {
+        "n": 0,
+        "q": []
+      },
+      "post_400_700_fraction": {
+        "n": 6,
+        "q": [
+          -0.01742231038065552,
+          -0.015904690584234743,
+          -0.009594456329089111,
+          -0.007429188628569319,
+          -0.003905335861031017
+        ]
+      },
+      "rebound_200_800_fraction": {
+        "n": 6,
+        "q": [
+          -0.010935259597874638,
+          -0.0033788282937992314,
+          -0.0022933342782366036,
+          -0.001923785429174899,
+          0.000264077136287419
+        ]
+      }
+    },
+    "6": {
+      "rise_ms": {
+        "n": 8,
+        "q": [
+          127.74233,
+          201.5930525,
+          215.655395,
+          235.370215,
+          276.65009
+        ]
+      },
+      "decay_ms": {
+        "n": 8,
+        "q": [
+          136.52365,
+          219.9888325,
+          244.19343,
+          266.992305,
+          288.61896
+        ]
+      },
+      "width_ms": {
+        "n": 8,
+        "q": [
+          259.47031,
+          272.1853625,
+          309.657455,
+          355.86444500000005,
+          438.24268
+        ]
+      },
+      "area_width_ms": {
+        "n": 8,
+        "q": [
+          275.63602,
+          284.7450025,
+          322.596895,
+          359.37755999999996,
+          398.70453
+        ]
+      },
+      "slope_norm_s": {
+        "n": 8,
+        "q": [
+          5.4128366,
+          5.52265455,
+          6.0799208,
+          6.672500925,
+          7.782496
+        ]
+      },
+      "asymmetry": {
+        "n": 8,
+        "q": [
+          0.66159552,
+          0.948644625,
+          1.1845865,
+          1.284920425,
+          1.7770185
+        ]
+      },
+      "release_rise_ms": {
+        "n": 8,
+        "q": [
+          96.083008,
+          98.40380125,
+          110.94443,
+          167.18439,
+          238.1416
+        ]
+      },
+      "recovery_ms": {
+        "n": 8,
+        "q": [
+          167.79816,
+          172.93231,
+          177.964175,
+          179.0620375,
+          185.02948
+        ]
+      },
+      "release_width_ms": {
+        "n": 8,
+        "q": [
+          142.32697,
+          152.39334000000002,
+          159.73065,
+          176.4313725,
+          178.50897
+        ]
+      },
+      "release_area_width_ms": {
+        "n": 8,
+        "q": [
+          158.72957,
+          167.47147999999999,
+          186.51680499999998,
+          189.9311475,
+          205.85364
+        ]
+      },
+      "trough_peak_ratio": {
+        "n": 8,
+        "q": [
+          1.6311517,
+          1.8938036,
+          2.25015405,
+          2.606047225,
+          3.3744979
+        ]
+      },
+      "area_ratio": {
+        "n": 8,
+        "q": [
+          1.080472,
+          1.200853375,
+          1.2771807499999999,
+          1.3684977,
+          1.4237956
+        ]
+      },
+      "peak_counts": {
+        "n": 8,
+        "q": [
+          161688.5,
+          201734.75,
+          244207.0,
+          266448.125,
+          328177.5
+        ]
+      },
+      "trough_counts": {
+        "n": 8,
+        "q": [
+          422402.5,
+          477461.5,
+          498301.0,
+          566049.875,
+          800552.5
+        ]
+      },
+      "positive_area_counts_s": {
+        "n": 8,
+        "q": [
+          64465.936922546214,
+          72349.72944222963,
+          77013.40811166388,
+          79298.36830981766,
+          91568.61438101032
+        ]
+      },
+      "negative_area_counts_s": {
+        "n": 8,
+        "q": [
+          78978.21542115026,
+          89557.30359523912,
+          95393.15876347464,
+          100180.79798513291,
+          127071.35275647226
+        ]
+      },
+      "peak_to_trough_ms": {
+        "n": 8,
+        "q": [
+          378.0000000000001,
+          516.4999999999998,
+          541.4999999999992,
+          585.5000000000001,
+          754.999999999999
+        ]
+      },
+      "pressure_onset_to_release_ms": {
+        "n": 8,
+        "q": [
+          499.09261167167784,
+          605.9066689580694,
+          653.2709358508257,
+          709.3125491381036,
+          813.8764682290046
+        ]
+      },
+      "positive_tau_ms": {
+        "n": 8,
+        "q": [
+          68.11705283517959,
+          108.71055872478416,
+          152.1684016800507,
+          166.18613369154653,
+          197.21671525598947
+        ]
+      },
+      "negative_tau_ms": {
+        "n": 8,
+        "q": [
+          75.25387209803853,
+          75.58682221751394,
+          77.0014117902388,
+          79.14726050678777,
+          80.08248602432755
+        ]
+      },
+      "between_pulses_fraction": {
+        "n": 0,
+        "q": []
+      },
+      "post_400_700_fraction": {
+        "n": 8,
+        "q": [
+          -0.017492107566197932,
+          -0.012500986693268937,
+          -0.011057383750477658,
+          -0.010374115942736486,
+          -0.0036694653287696615
+        ]
+      },
+      "rebound_200_800_fraction": {
+        "n": 8,
+        "q": [
+          -0.013710154091465174,
+          -0.007458435092804614,
+          -0.005239279632073062,
+          -0.0028370852084881066,
+          0.007922653417483551
+        ]
+      }
+    },
+    "7": {
+      "rise_ms": {
+        "n": 7,
+        "q": [
+          202.31757,
+          215.36891,
+          225.1438,
+          231.048865,
+          273.62741
+        ]
+      },
+      "decay_ms": {
+        "n": 7,
+        "q": [
+          231.16945,
+          250.997255,
+          330.89001,
+          351.644745,
+          404.65924
+        ]
+      },
+      "width_ms": {
+        "n": 7,
+        "q": [
+          203.83002,
+          322.652235,
+          367.06833,
+          373.85649,
+          417.55594
+        ]
+      },
+      "area_width_ms": {
+        "n": 7,
+        "q": [
+          236.80768,
+          342.91758500000003,
+          383.25327,
+          398.87863,
+          438.55518
+        ]
+      },
+      "slope_norm_s": {
+        "n": 7,
+        "q": [
+          4.5989833,
+          5.13014385,
+          5.1794014,
+          5.45175575,
+          7.1382732
+        ]
+      },
+      "asymmetry": {
+        "n": 7,
+        "q": [
+          1.0782155,
+          1.19712395,
+          1.2813567,
+          1.4864074999999999,
+          1.797937
+        ]
+      },
+      "release_rise_ms": {
+        "n": 7,
+        "q": [
+          130.5166,
+          148.64575,
+          172.68311,
+          175.905125,
+          184.64551
+        ]
+      },
+      "recovery_ms": {
+        "n": 7,
+        "q": [
+          156.64136,
+          157.44592,
+          163.4361,
+          171.34112499999998,
+          189.06854
+        ]
+      },
+      "release_width_ms": {
+        "n": 7,
+        "q": [
+          131.89642,
+          145.02515,
+          158.56299,
+          160.82702999999998,
+          168.71484
+        ]
+      },
+      "release_area_width_ms": {
+        "n": 7,
+        "q": [
+          162.89241,
+          167.146565,
+          177.62389,
+          184.685145,
+          190.03767
+        ]
+      },
+      "trough_peak_ratio": {
+        "n": 7,
+        "q": [
+          1.4611393,
+          1.7445143,
+          1.8609962,
+          2.049437,
+          2.3462822
+        ]
+      },
+      "area_ratio": {
+        "n": 7,
+        "q": [
+          0.86713684,
+          0.882046015,
+          0.91190493,
+          0.940165815,
+          1.0537611
+        ]
+      },
+      "peak_counts": {
+        "n": 7,
+        "q": [
+          152832.0,
+          178878.75,
+          201235.5,
+          244315.75,
+          287520.5
+        ]
+      },
+      "trough_counts": {
+        "n": 7,
+        "q": [
+          314332.0,
+          366542.75,
+          420107.5,
+          423263.25,
+          425540.5
+        ]
+      },
+      "positive_area_counts_s": {
+        "n": 7,
+        "q": [
+          61226.63253637242,
+          67556.16044374308,
+          77124.14868268925,
+          79938.2430798825,
+          89814.22648539448
+        ]
+      },
+      "negative_area_counts_s": {
+        "n": 7,
+        "q": [
+          55832.87323647869,
+          63974.8426260424,
+          71168.82821071216,
+          74814.35700795634,
+          78453.53342357739
+        ]
+      },
+      "peak_to_trough_ms": {
+        "n": 7,
+        "q": [
+          654.9999999999993,
+          717.4999999999984,
+          780.9999999999989,
+          830.5000000000007,
+          1033.0
+        ]
+      },
+      "pressure_onset_to_release_ms": {
+        "n": 7,
+        "q": [
+          768.3800289154306,
+          846.8022046715457,
+          855.1001915119034,
+          935.2960999338945,
+          1051.452758713512
+        ]
+      },
+      "positive_tau_ms": {
+        "n": 7,
+        "q": [
+          117.86357371566092,
+          129.37386387446574,
+          161.8442035210492,
+          175.7525060602655,
+          257.3087832364835
+        ]
+      },
+      "negative_tau_ms": {
+        "n": 7,
+        "q": [
+          67.33897947206374,
+          69.18651405483635,
+          71.80180253320765,
+          73.96222373003181,
+          81.82431919770566
+        ]
+      },
+      "between_pulses_fraction": {
+        "n": 2,
+        "q": [
+          -0.02999214618790513,
+          -0.02697379022022667,
+          -0.023955434252548213,
+          -0.020937078284869754,
+          -0.017918722317191296
+        ]
+      },
+      "post_400_700_fraction": {
+        "n": 7,
+        "q": [
+          -0.0368886362206743,
+          -0.01883341943649561,
+          -0.007387075965742391,
+          -0.004543499290030679,
+          -0.0019247727780455973
+        ]
+      },
+      "rebound_200_800_fraction": {
+        "n": 7,
+        "q": [
+          -0.034234828730907954,
+          -0.010201622811907968,
+          -0.002080387744117885,
+          -0.00042094862475647917,
+          0.0010088302037648885
+        ]
+      }
+    }
+  },
+  "amplitude_matched_pairs": [
+    {
+      "head": "live:pressure-head-20260920-200652.csv:2",
+      "legs": "live:pressure-legs-20260920.csv:1",
+      "amplitude_ratio": 1.01056547276287,
+      "head_minus_legs": {
+        "rise_ms": 75.26327,
+        "decay_ms": 49.891490000000005,
+        "width_ms": 121.86278000000001,
+        "area_width_ms": 112.75331000000003,
+        "slope_norm_s": -2.128439,
+        "asymmetry": -0.10456714,
+        "release_rise_ms": -107.47675,
+        "recovery_ms": -26.002319999999997,
+        "release_width_ms": -4.564149999999984,
+        "release_area_width_ms": -32.10955999999999,
+        "trough_peak_ratio": 0.956251,
+        "area_ratio": -0.09331299999999998,
+        "peak_counts": 2293.5,
+        "trough_counts": 212767.5,
+        "positive_area_counts_s": 25202.708771240897,
+        "negative_area_counts_s": 23120.419985668967,
+        "peak_to_trough_ms": -202.0000000000001,
+        "pressure_onset_to_release_ms": 37.5123291699839,
+        "positive_tau_ms": 7.074237107062871,
+        "negative_tau_ms": -10.742471228255269,
+        "between_pulses_fraction": null,
+        "post_400_700_fraction": 0.009344355533822476,
+        "rebound_200_800_fraction": 0.0051531305433889655
+      }
+    },
+    {
+      "head": "live:pressure-head-supplement-20260920.csv:12",
+      "legs": "live:pressure-legs-20260920.csv:23",
+      "amplitude_ratio": 1.0133301425745684,
+      "head_minus_legs": {
+        "rise_ms": -33.808160000000015,
+        "decay_ms": 517.36798,
+        "width_ms": 30.04096000000004,
+        "area_width_ms": 96.64483000000001,
+        "slope_norm_s": 0.5558547999999996,
+        "asymmetry": 3.2838028,
+        "release_rise_ms": 8.074039999999997,
+        "recovery_ms": 16.83331000000001,
+        "release_width_ms": -8.477289999999982,
+        "release_area_width_ms": -2.1660599999999874,
+        "trough_peak_ratio": -0.4490116999999998,
+        "area_ratio": -0.4275751,
+        "peak_counts": 1782.5,
+        "trough_counts": -57100.5,
+        "positive_area_counts_s": 13634.133180591401,
+        "negative_area_counts_s": -8992.148604333452,
+        "peak_to_trough_ms": 528.999999999982,
+        "pressure_onset_to_release_ms": 507.08088685253483,
+        "positive_tau_ms": 254.29829652865322,
+        "negative_tau_ms": 9.268881555582425,
+        "between_pulses_fraction": null,
+        "post_400_700_fraction": -0.004130322131610603,
+        "rebound_200_800_fraction": -0.0052235861463326054
+      }
+    },
+    {
+      "head": "live:pressure-head-supplement-20260920.csv:1",
+      "legs": "live:pressure-legs-20260920.csv:16",
+      "amplitude_ratio": 1.1290000790139065,
+      "head_minus_legs": {
+        "rise_ms": 80.30573000000001,
+        "decay_ms": 283.77955,
+        "width_ms": 40.57229000000001,
+        "area_width_ms": 113.48978000000005,
+        "slope_norm_s": -1.5209618000000003,
+        "asymmetry": 0.6601576,
+        "release_rise_ms": 15.321533000000002,
+        "recovery_ms": 5.820189999999997,
+        "release_width_ms": 16.25721,
+        "release_area_width_ms": 15.438220000000001,
+        "trough_peak_ratio": 0.4560202,
+        "area_ratio": -0.007367729999999906,
+        "peak_counts": 19591.5,
+        "trough_counts": 110707.5,
+        "positive_area_counts_s": 24516.39165988219,
+        "negative_area_counts_s": 19918.993240184165,
+        "peak_to_trough_ms": 504.00000000000136,
+        "pressure_onset_to_release_ms": 565.4215418128992,
+        "positive_tau_ms": 108.74153831194354,
+        "negative_tau_ms": 3.7171603169963916,
+        "between_pulses_fraction": 0.14323590815467588,
+        "post_400_700_fraction": 0.0364503309443698,
+        "rebound_200_800_fraction": 0.026564532150157142
+      }
+    }
+  ],
+  "source_groups": {
+    "pressure-head-20260920-200652.csv": {
+      "peak_counts": {
+        "n": 2,
+        "q": [
+          219368.5,
+          226874.625,
+          234380.75,
+          241886.875,
+          249393.0
+        ]
+      },
+      "trough_counts": {
+        "n": 2,
+        "q": [
+          496346.5,
+          511388.875,
+          526431.25,
+          541473.625,
+          556516.0
+        ]
+      },
+      "decay_ms": {
+        "n": 2,
+        "q": [
+          230.12466,
+          243.4249925,
+          256.725325,
+          270.02565749999997,
+          283.32599
+        ]
+      },
+      "release_rise_ms": {
+        "n": 2,
+        "q": [
+          114.05304,
+          116.7496025,
+          119.44616500000001,
+          122.1427275,
+          124.83929
+        ]
+      },
+      "recovery_ms": {
+        "n": 2,
+        "q": [
+          133.22003,
+          135.05839500000002,
+          136.89676,
+          138.73512499999998,
+          140.57349
+        ]
+      },
+      "baseline_counts": {
+        "n": 2,
+        "q": [
+          3944709.0,
+          3946590.125,
+          3948471.25,
+          3950352.375,
+          3952233.5
+        ]
+      }
+    },
+    "pressure-head-supplement-20260920.csv": {
+      "peak_counts": {
+        "n": 13,
+        "q": [
+          135502.0,
+          226311.5,
+          246804.5,
+          285430.0,
+          299548.5
+        ]
+      },
+      "trough_counts": {
+        "n": 13,
+        "q": [
+          223577.0,
+          446872.0,
+          517954.5,
+          558550.5,
+          605642.0
+        ]
+      },
+      "decay_ms": {
+        "n": 13,
+        "q": [
+          201.37248,
+          247.23077,
+          277.60291,
+          318.65427,
+          777.28424
+        ]
+      },
+      "release_rise_ms": {
+        "n": 13,
+        "q": [
+          87.94043,
+          102.08392,
+          109.98401,
+          117.93903,
+          138.2229
+        ]
+      },
+      "recovery_ms": {
+        "n": 13,
+        "q": [
+          132.72217,
+          138.73767,
+          145.14001,
+          146.26025,
+          157.95105
+        ]
+      },
+      "baseline_counts": {
+        "n": 13,
+        "q": [
+          3949810.0,
+          3954755.0,
+          3960869.5,
+          3961555.5,
+          3963147.5
+        ]
+      }
+    },
+    "pressure-legs-20260920.csv": {
+      "peak_counts": {
+        "n": 17,
+        "q": [
+          104261.5,
+          120201.5,
+          125414.5,
+          144050.0,
+          217075.0
+        ]
+      },
+      "trough_counts": {
+        "n": 17,
+        "q": [
+          239816.0,
+          264886.0,
+          279572.5,
+          316714.5,
+          426220.5
+        ]
+      },
+      "decay_ms": {
+        "n": 17,
+        "q": [
+          131.12549,
+          185.64606,
+          228.47205,
+          273.91293,
+          397.00681
+        ]
+      },
+      "release_rise_ms": {
+        "n": 17,
+        "q": [
+          70.686707,
+          85.186829,
+          95.489746,
+          129.94855,
+          297.35632
+        ]
+      },
+      "recovery_ms": {
+        "n": 17,
+        "q": [
+          129.0932,
+          134.22443,
+          139.07928,
+          151.42847,
+          159.22235
+        ]
+      },
+      "baseline_counts": {
+        "n": 17,
+        "q": [
+          3927607.0,
+          3930277.0,
+          3932147.0,
+          3936021.5,
+          3939582.5
+        ]
+      }
+    },
+    "pressure-zone03-right-hind-leg-20260920-171839.csv": {
+      "peak_counts": {
+        "n": 6,
+        "q": [
+          357069.5,
+          390634.25,
+          429653.75,
+          476547.5,
+          486814.5
+        ]
+      },
+      "trough_counts": {
+        "n": 6,
+        "q": [
+          592655.5,
+          620483.125,
+          663498.25,
+          692825.125,
+          734596.5
+        ]
+      },
+      "decay_ms": {
+        "n": 6,
+        "q": [
+          238.47079,
+          284.46632,
+          285.28675999999996,
+          295.491125,
+          340.98343
+        ]
+      },
+      "release_rise_ms": {
+        "n": 6,
+        "q": [
+          92.916138,
+          225.54590000000002,
+          232.69567999999998,
+          253.26498500000002,
+          259.09009
+        ]
+      },
+      "recovery_ms": {
+        "n": 6,
+        "q": [
+          172.42847,
+          177.129695,
+          178.010585,
+          178.40510749999999,
+          179.22461
+        ]
+      },
+      "baseline_counts": {
+        "n": 6,
+        "q": [
+          3925690.5,
+          3927612.75,
+          3929513.25,
+          3930534.375,
+          3933698.0
+        ]
+      }
+    },
+    "pressure-zone04-left-hind-leg-20260920-172018.csv": {
+      "peak_counts": {
+        "n": 6,
+        "q": [
+          246297.0,
+          273396.125,
+          312425.0,
+          328589.0,
+          349365.5
+        ]
+      },
+      "trough_counts": {
+        "n": 6,
+        "q": [
+          600092.0,
+          606873.125,
+          651483.0,
+          727808.5,
+          748895.5
+        ]
+      },
+      "decay_ms": {
+        "n": 6,
+        "q": [
+          277.53613,
+          284.150975,
+          303.93184,
+          329.64777000000004,
+          421.96719
+        ]
+      },
+      "release_rise_ms": {
+        "n": 6,
+        "q": [
+          128.19769,
+          166.205945,
+          173.052005,
+          191.0303675,
+          240.22241
+        ]
+      },
+      "recovery_ms": {
+        "n": 6,
+        "q": [
+          149.8728,
+          167.3148,
+          168.396115,
+          169.1622125,
+          175.52216
+        ]
+      },
+      "baseline_counts": {
+        "n": 6,
+        "q": [
+          3935053.5,
+          3936548.125,
+          3938415.75,
+          3940960.625,
+          3941891.5
+        ]
+      }
+    },
+    "pressure-zone05-right-front-leg-20260920-173826.csv": {
+      "peak_counts": {
+        "n": 6,
+        "q": [
+          185057.0,
+          199661.375,
+          211686.25,
+          214584.75,
+          281135.0
+        ]
+      },
+      "trough_counts": {
+        "n": 6,
+        "q": [
+          387416.5,
+          413324.25,
+          444626.5,
+          525752.0,
+          710936.0
+        ]
+      },
+      "decay_ms": {
+        "n": 6,
+        "q": [
+          261.01764,
+          320.86368,
+          328.09857,
+          339.71889,
+          432.11224
+        ]
+      },
+      "release_rise_ms": {
+        "n": 6,
+        "q": [
+          124.85413,
+          139.2395825,
+          150.43195,
+          174.606855,
+          192.44281
+        ]
+      },
+      "recovery_ms": {
+        "n": 6,
+        "q": [
+          166.00818,
+          175.51462,
+          179.652345,
+          187.50839,
+          194.0014
+        ]
+      },
+      "baseline_counts": {
+        "n": 6,
+        "q": [
+          3947173.0,
+          3948574.0,
+          3950174.5,
+          3950755.75,
+          3950818.5
+        ]
+      }
+    },
+    "pressure-zone06-left-front-leg-20260920-174028.csv": {
+      "peak_counts": {
+        "n": 8,
+        "q": [
+          161688.5,
+          201734.75,
+          244207.0,
+          266448.125,
+          328177.5
+        ]
+      },
+      "trough_counts": {
+        "n": 8,
+        "q": [
+          422402.5,
+          477461.5,
+          498301.0,
+          566049.875,
+          800552.5
+        ]
+      },
+      "decay_ms": {
+        "n": 8,
+        "q": [
+          136.52365,
+          219.9888325,
+          244.19343,
+          266.992305,
+          288.61896
+        ]
+      },
+      "release_rise_ms": {
+        "n": 8,
+        "q": [
+          96.083008,
+          98.40380125,
+          110.94443,
+          167.18439,
+          238.1416
+        ]
+      },
+      "recovery_ms": {
+        "n": 8,
+        "q": [
+          167.79816,
+          172.93231,
+          177.964175,
+          179.0620375,
+          185.02948
+        ]
+      },
+      "baseline_counts": {
+        "n": 8,
+        "q": [
+          3950131.5,
+          3953254.625,
+          3956326.75,
+          3958817.0,
+          3964178.0
+        ]
+      }
+    },
+    "pressure-zone07-neck-head-20260920-174226.csv": {
+      "peak_counts": {
+        "n": 7,
+        "q": [
+          152832.0,
+          178878.75,
+          201235.5,
+          244315.75,
+          287520.5
+        ]
+      },
+      "trough_counts": {
+        "n": 7,
+        "q": [
+          314332.0,
+          366542.75,
+          420107.5,
+          423263.25,
+          425540.5
+        ]
+      },
+      "decay_ms": {
+        "n": 7,
+        "q": [
+          231.16945,
+          250.997255,
+          330.89001,
+          351.644745,
+          404.65924
+        ]
+      },
+      "release_rise_ms": {
+        "n": 7,
+        "q": [
+          130.5166,
+          148.64575,
+          172.68311,
+          175.905125,
+          184.64551
+        ]
+      },
+      "recovery_ms": {
+        "n": 7,
+        "q": [
+          156.64136,
+          157.44592,
+          163.4361,
+          171.34112499999998,
+          189.06854
+        ]
+      },
+      "baseline_counts": {
+        "n": 7,
+        "q": [
+          3952543.5,
+          3954863.75,
+          3956790.0,
+          3959551.75,
+          3967791.5
+        ]
+      }
+    }
+  },
+  "normalized_waveform_distances": {
+    "original": {
+      "press": {
+        "window_s": [
+          -0.25,
+          0.35
+        ],
+        "within_head": {
+          "n": 21,
+          "q": [
+            0.05571894461729839,
+            0.1208456752467071,
+            0.1770415682186613,
+            0.2469536803621356,
+            0.33046072722922554
+          ]
+        },
+        "within_legs": {
+          "n": 325,
+          "q": [
+            0.027730416207774496,
+            0.10573627318504307,
+            0.15026127545805398,
+            0.20688693411405787,
+            0.6042430590890173
+          ]
+        },
+        "between": {
+          "n": 182,
+          "q": [
+            0.03875501025904726,
+            0.11909647689123219,
+            0.15786167704068557,
+            0.22539453495960474,
+            0.5847538118312681
+          ]
+        }
+      },
+      "release": {
+        "window_s": [
+          0,
+          0.35
+        ],
+        "within_head": {
+          "n": 21,
+          "q": [
+            0.00558702744474366,
+            0.018340827130094987,
+            0.027653318477529235,
+            0.03058113104963467,
+            0.05117672821809619
+          ]
+        },
+        "within_legs": {
+          "n": 325,
+          "q": [
+            0.004447033492404243,
+            0.02218549459705267,
+            0.039304101699395536,
+            0.06494796622195655,
+            0.14304766766863644
+          ]
+        },
+        "between": {
+          "n": 182,
+          "q": [
+            0.009580322547687394,
+            0.02935427801634638,
+            0.04643784394781682,
+            0.08242544336384355,
+            0.15325697445616468
+          ]
+        }
+      }
+    },
+    "live": {
+      "press": {
+        "window_s": [
+          -0.25,
+          0.35
+        ],
+        "within_head": {
+          "n": 105,
+          "q": [
+            0.01939597559779625,
+            0.06830427568532689,
+            0.10540622289166234,
+            0.138942113730496,
+            0.21228959249671447
+          ]
+        },
+        "within_legs": {
+          "n": 136,
+          "q": [
+            0.05716630719931094,
+            0.12271988276438704,
+            0.2001042631269825,
+            0.26269449367050823,
+            0.37002228287893474
+          ]
+        },
+        "between": {
+          "n": 255,
+          "q": [
+            0.04150956348222987,
+            0.11355768577143069,
+            0.16912970667330432,
+            0.22806437352588554,
+            0.367413603316415
+          ]
+        }
+      },
+      "release": {
+        "window_s": [
+          0,
+          0.35
+        ],
+        "within_head": {
+          "n": 105,
+          "q": [
+            0.00563913092198984,
+            0.0199148227750042,
+            0.03778363677475682,
+            0.0649213396495731,
+            0.089415944969167
+          ]
+        },
+        "within_legs": {
+          "n": 136,
+          "q": [
+            0.00896518440172228,
+            0.023027965081385122,
+            0.035292575201726184,
+            0.05340027121150037,
+            0.12679295865027357
+          ]
+        },
+        "between": {
+          "n": 255,
+          "q": [
+            0.007880361123932887,
+            0.025825744230645566,
+            0.038507535593104304,
+            0.05377592698602911,
+            0.11832628434315148
+          ]
+        }
+      }
+    }
+  },
+  "threshold_sensitivity": [
+    {
+      "min_positive_peak_counts": 100000,
+      "recordings": [
+        {
+          "cohort": "live",
+          "file": "pressure-head-20260920-200652.csv",
+          "replay_status_counts": {
+            "1": 2,
+            "2": 2
+          },
+          "newly_valid": []
+        },
+        {
+          "cohort": "live",
+          "file": "pressure-head-supplement-20260920.csv",
+          "replay_status_counts": {
+            "1": 13,
+            "2": 13
+          },
+          "newly_valid": []
+        },
+        {
+          "cohort": "live",
+          "file": "pressure-legs-20260920.csv",
+          "replay_status_counts": {
+            "1": 26,
+            "2": 17,
+            "3": 9
+          },
+          "newly_valid": []
+        },
+        {
+          "cohort": "original",
+          "file": "pressure-zone03-right-hind-leg-20260920-171839.csv",
+          "replay_status_counts": {
+            "1": 6,
+            "2": 6
+          },
+          "newly_valid": []
+        },
+        {
+          "cohort": "original",
+          "file": "pressure-zone04-left-hind-leg-20260920-172018.csv",
+          "replay_status_counts": {
+            "1": 6,
+            "2": 6
+          },
+          "newly_valid": []
+        },
+        {
+          "cohort": "original",
+          "file": "pressure-zone05-right-front-leg-20260920-173826.csv",
+          "replay_status_counts": {
+            "1": 6,
+            "2": 6
+          },
+          "newly_valid": []
+        },
+        {
+          "cohort": "original",
+          "file": "pressure-zone06-left-front-leg-20260920-174028.csv",
+          "replay_status_counts": {
+            "1": 8,
+            "2": 8
+          },
+          "newly_valid": []
+        },
+        {
+          "cohort": "original",
+          "file": "pressure-zone07-neck-head-20260920-174226.csv",
+          "replay_status_counts": {
+            "1": 7,
+            "2": 7
+          },
+          "newly_valid": []
+        }
+      ]
+    },
+    {
+      "min_positive_peak_counts": 90000,
+      "recordings": [
+        {
+          "cohort": "live",
+          "file": "pressure-head-20260920-200652.csv",
+          "replay_status_counts": {
+            "1": 2,
+            "2": 2
+          },
+          "newly_valid": []
+        },
+        {
+          "cohort": "live",
+          "file": "pressure-head-supplement-20260920.csv",
+          "replay_status_counts": {
+            "1": 13,
+            "2": 13
+          },
+          "newly_valid": []
+        },
+        {
+          "cohort": "live",
+          "file": "pressure-legs-20260920.csv",
+          "replay_status_counts": {
+            "1": 26,
+            "2": 18,
+            "3": 8
+          },
+          "newly_valid": [
+            {
+              "event": 14,
+              "peak_counts": 96952.0,
+              "trough_counts": 273817.0,
+              "features12": [
+                155.49754,
+                151.29828,
+                206.16881,
+                224.79922,
+                8.5151415,
+                0.97299469,
+                157.55215,
+                137.43719,
+                120.24078,
+                142.4705,
+                2.8242533,
+                1.7899208
+              ]
+            }
+          ]
+        },
+        {
+          "cohort": "original",
+          "file": "pressure-zone03-right-hind-leg-20260920-171839.csv",
+          "replay_status_counts": {
+            "1": 6,
+            "2": 6
+          },
+          "newly_valid": []
+        },
+        {
+          "cohort": "original",
+          "file": "pressure-zone04-left-hind-leg-20260920-172018.csv",
+          "replay_status_counts": {
+            "1": 6,
+            "2": 6
+          },
+          "newly_valid": []
+        },
+        {
+          "cohort": "original",
+          "file": "pressure-zone05-right-front-leg-20260920-173826.csv",
+          "replay_status_counts": {
+            "1": 6,
+            "2": 6
+          },
+          "newly_valid": []
+        },
+        {
+          "cohort": "original",
+          "file": "pressure-zone06-left-front-leg-20260920-174028.csv",
+          "replay_status_counts": {
+            "1": 8,
+            "2": 8
+          },
+          "newly_valid": []
+        },
+        {
+          "cohort": "original",
+          "file": "pressure-zone07-neck-head-20260920-174226.csv",
+          "replay_status_counts": {
+            "1": 7,
+            "2": 7
+          },
+          "newly_valid": []
+        }
+      ]
+    },
+    {
+      "min_positive_peak_counts": 75000,
+      "recordings": [
+        {
+          "cohort": "live",
+          "file": "pressure-head-20260920-200652.csv",
+          "replay_status_counts": {
+            "1": 2,
+            "2": 2
+          },
+          "newly_valid": []
+        },
+        {
+          "cohort": "live",
+          "file": "pressure-head-supplement-20260920.csv",
+          "replay_status_counts": {
+            "1": 13,
+            "2": 13
+          },
+          "newly_valid": []
+        },
+        {
+          "cohort": "live",
+          "file": "pressure-legs-20260920.csv",
+          "replay_status_counts": {
+            "1": 26,
+            "2": 24,
+            "3": 2
+          },
+          "newly_valid": [
+            {
+              "event": 2,
+              "peak_counts": 89808.0,
+              "trough_counts": 372390.0,
+              "features12": [
+                273.88229,
+                184.73463,
+                287.28149,
+                293.42792,
+                9.1782465,
+                0.67450374,
+                96.865723,
+                145.51111,
+                121.97681,
+                138.36813,
+                4.1465125,
+                1.9553192
+              ]
+            },
+            {
+              "event": 8,
+              "peak_counts": 75800.0,
+              "trough_counts": 199831.0,
+              "features12": [
+                184.52367,
+                211.69388,
+                289.44052,
+                291.17105,
+                6.2284961,
+                1.1472452,
+                101.07605,
+                137.10278,
+                138.67279,
+                148.47427,
+                2.6362929,
+                1.3443015
+              ]
+            },
+            {
+              "event": 11,
+              "peak_counts": 87351.0,
+              "trough_counts": 342197.0,
+              "features12": [
+                277.85205,
+                210.819,
+                226.79382,
+                271.8544,
+                7.5181737,
+                0.75874555,
+                203.96246,
+                146.87512,
+                120.87811,
+                150.91457,
+                3.9174938,
+                2.1747189
+              ]
+            },
+            {
+              "event": 14,
+              "peak_counts": 96952.0,
+              "trough_counts": 273817.0,
+              "features12": [
+                155.49754,
+                151.29828,
+                206.16881,
+                224.79922,
+                8.5151415,
+                0.97299469,
+                157.55215,
+                137.43719,
+                120.24078,
+                142.4705,
+                2.8242533,
+                1.7899208
+              ]
+            },
+            {
+              "event": 15,
+              "peak_counts": 87574.5,
+              "trough_counts": 315768.5,
+              "features12": [
+                193.30928,
+                251.58354,
+                232.00955,
+                265.37753,
+                7.5118456,
+                1.3014561,
+                146.67218,
+                145.39978,
+                113.68567,
+                137.72719,
+                3.6057129,
+                1.8713139
+              ]
+            },
+            {
+              "event": 17,
+              "peak_counts": 78827.0,
+              "trough_counts": 265525.0,
+              "features12": [
+                193.32915,
+                185.45279,
+                181.16632,
+                216.33052,
+                6.9174266,
+                0.95925933,
+                174.33115,
+                168.1225,
+                117.79913,
+                148.81824,
+                3.3684525,
+                2.3172281
+              ]
+            },
+            {
+              "event": 18,
+              "peak_counts": 86009.0,
+              "trough_counts": 279712.0,
+              "features12": [
+                191.49118,
+                353.1189,
+                314.86191,
+                362.77707,
+                6.1802835,
+                1.8440478,
+                82.432678,
+                136.00385,
+                129.56549,
+                138.42587,
+                3.2521248,
+                1.2409223
+              ]
+            }
+          ]
+        },
+        {
+          "cohort": "original",
+          "file": "pressure-zone03-right-hind-leg-20260920-171839.csv",
+          "replay_status_counts": {
+            "1": 6,
+            "2": 6
+          },
+          "newly_valid": []
+        },
+        {
+          "cohort": "original",
+          "file": "pressure-zone04-left-hind-leg-20260920-172018.csv",
+          "replay_status_counts": {
+            "1": 6,
+            "2": 6
+          },
+          "newly_valid": []
+        },
+        {
+          "cohort": "original",
+          "file": "pressure-zone05-right-front-leg-20260920-173826.csv",
+          "replay_status_counts": {
+            "1": 6,
+            "2": 6
+          },
+          "newly_valid": []
+        },
+        {
+          "cohort": "original",
+          "file": "pressure-zone06-left-front-leg-20260920-174028.csv",
+          "replay_status_counts": {
+            "1": 8,
+            "2": 8
+          },
+          "newly_valid": []
+        },
+        {
+          "cohort": "original",
+          "file": "pressure-zone07-neck-head-20260920-174226.csv",
+          "replay_status_counts": {
+            "1": 7,
+            "2": 7
+          },
+          "newly_valid": []
+        }
+      ]
+    },
+    {
+      "min_positive_peak_counts": 50000,
+      "recordings": [
+        {
+          "cohort": "live",
+          "file": "pressure-head-20260920-200652.csv",
+          "replay_status_counts": {
+            "1": 2,
+            "2": 2
+          },
+          "newly_valid": []
+        },
+        {
+          "cohort": "live",
+          "file": "pressure-head-supplement-20260920.csv",
+          "replay_status_counts": {
+            "1": 13,
+            "2": 13
+          },
+          "newly_valid": []
+        },
+        {
+          "cohort": "live",
+          "file": "pressure-legs-20260920.csv",
+          "replay_status_counts": {
+            "1": 26,
+            "2": 26
+          },
+          "newly_valid": [
+            {
+              "event": 2,
+              "peak_counts": 89808.0,
+              "trough_counts": 372390.0,
+              "features12": [
+                273.88229,
+                184.73463,
+                287.28149,
+                293.42792,
+                9.1782465,
+                0.67450374,
+                96.865723,
+                145.51111,
+                121.97681,
+                138.36813,
+                4.1465125,
+                1.9553192
+              ]
+            },
+            {
+              "event": 7,
+              "peak_counts": 65816.5,
+              "trough_counts": 268904.5,
+              "features12": [
+                256.05615,
+                349.87711,
+                371.76395,
+                365.07742,
+                6.1109295,
+                1.3664078,
+                116.84351,
+                145.36322,
+                125.07709,
+                143.43985,
+                4.08567,
+                1.6052701
+              ]
+            },
+            {
+              "event": 8,
+              "peak_counts": 75800.0,
+              "trough_counts": 199831.0,
+              "features12": [
+                184.52367,
+                211.69388,
+                289.44052,
+                291.17105,
+                6.2284961,
+                1.1472452,
+                101.07605,
+                137.10278,
+                138.67279,
+                148.47427,
+                2.6362929,
+                1.3443015
+              ]
+            },
+            {
+              "event": 9,
+              "peak_counts": 71972.5,
+              "trough_counts": 321181.5,
+              "features12": [
+                129.69244,
+                181.23219,
+                199.15901,
+                219.15707,
+                8.5905037,
+                1.3973998,
+                162.8797,
+                148.07776,
+                120.40259,
+                144.77522,
+                4.4625587,
+                2.9479675
+              ]
+            },
+            {
+              "event": 11,
+              "peak_counts": 87351.0,
+              "trough_counts": 342197.0,
+              "features12": [
+                277.85205,
+                210.819,
+                226.79382,
+                271.8544,
+                7.5181737,
+                0.75874555,
+                203.96246,
+                146.87512,
+                120.87811,
+                150.91457,
+                3.9174938,
+                2.1747189
+              ]
+            },
+            {
+              "event": 14,
+              "peak_counts": 96952.0,
+              "trough_counts": 273817.0,
+              "features12": [
+                155.49754,
+                151.29828,
+                206.16881,
+                224.79922,
+                8.5151415,
+                0.97299469,
+                157.55215,
+                137.43719,
+                120.24078,
+                142.4705,
+                2.8242533,
+                1.7899208
+              ]
+            },
+            {
+              "event": 15,
+              "peak_counts": 87574.5,
+              "trough_counts": 315768.5,
+              "features12": [
+                193.30928,
+                251.58354,
+                232.00955,
+                265.37753,
+                7.5118456,
+                1.3014561,
+                146.67218,
+                145.39978,
+                113.68567,
+                137.72719,
+                3.6057129,
+                1.8713139
+              ]
+            },
+            {
+              "event": 17,
+              "peak_counts": 78827.0,
+              "trough_counts": 265525.0,
+              "features12": [
+                193.32915,
+                185.45279,
+                181.16632,
+                216.33052,
+                6.9174266,
+                0.95925933,
+                174.33115,
+                168.1225,
+                117.79913,
+                148.81824,
+                3.3684525,
+                2.3172281
+              ]
+            },
+            {
+              "event": 18,
+              "peak_counts": 86009.0,
+              "trough_counts": 279712.0,
+              "features12": [
+                191.49118,
+                353.1189,
+                314.86191,
+                362.77707,
+                6.1802835,
+                1.8440478,
+                82.432678,
+                136.00385,
+                129.56549,
+                138.42587,
+                3.2521248,
+                1.2409223
+              ]
+            }
+          ]
+        },
+        {
+          "cohort": "original",
+          "file": "pressure-zone03-right-hind-leg-20260920-171839.csv",
+          "replay_status_counts": {
+            "1": 6,
+            "2": 6
+          },
+          "newly_valid": []
+        },
+        {
+          "cohort": "original",
+          "file": "pressure-zone04-left-hind-leg-20260920-172018.csv",
+          "replay_status_counts": {
+            "1": 6,
+            "2": 6
+          },
+          "newly_valid": []
+        },
+        {
+          "cohort": "original",
+          "file": "pressure-zone05-right-front-leg-20260920-173826.csv",
+          "replay_status_counts": {
+            "1": 6,
+            "2": 6
+          },
+          "newly_valid": []
+        },
+        {
+          "cohort": "original",
+          "file": "pressure-zone06-left-front-leg-20260920-174028.csv",
+          "replay_status_counts": {
+            "1": 8,
+            "2": 8
+          },
+          "newly_valid": []
+        },
+        {
+          "cohort": "original",
+          "file": "pressure-zone07-neck-head-20260920-174226.csv",
+          "replay_status_counts": {
+            "1": 7,
+            "2": 7
+          },
+          "newly_valid": []
+        }
+      ]
+    }
+  ],
+  "limitations": [
+    "Same-session single-capture confounding; no independent test.",
+    "Human contact/release timestamps and force were not measured.",
+    "Additional post-release features use up to 0.8 seconds after trough.",
+    "AUC describes pairwise ordering; it is not classifier validation accuracy.",
+    "Current LEGS capture has no per-event foot identity.",
+    "Videos have no documented time synchronization to UART and are not used as labels."
+  ]
+}

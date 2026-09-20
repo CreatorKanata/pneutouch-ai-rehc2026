@@ -2,6 +2,10 @@
 
 Copyright (C) 2026 Kanata the Kid Creator
 
+後続の[65イベントの詳細再検証](head-legs-waveform-analysis-20260920.md)で、HEAD/LEGSの
+振幅の大小関係が最初の記録と追加記録で逆転すると確認した。
+本書の振幅を使った改善は記録内の探索結果であり、安定した部位固有の差の証明ではない。
+
 ## 結論と現在の状態
 
 「HEADがLEGSになる、ほかはおおむねOK」という実操作の報告を受け、
