@@ -2,7 +2,6 @@
  * File: SystemStatePredict.c
  * Title: 推論画面を表示する。
  * LastUpdated: 2025.05.30
- * Copyright (C) 2025 DATA TECNO Co., Ltd.
 ******************************************************************************/
 
 /**

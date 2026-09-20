@@ -2,7 +2,6 @@
  * File: HighSpeedCom.h
  * Title: 高速通信
  * LastUpdated: 2025.05.23
- * Copyright (C) 2025 DATA TECNO Co., Ltd.
 ******************************************************************************/
 
 /**

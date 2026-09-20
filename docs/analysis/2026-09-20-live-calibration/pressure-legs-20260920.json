@@ -1,0 +1,11 @@
+{
+  "label": "LEGS",
+  "zone": 3,
+  "file": "docs\\analysis\\2026-09-20-live-calibration\\pressure-legs-20260920.csv",
+  "samples": 4613,
+  "sequence_gaps": 0,
+  "start_utc": "2026-09-20T11:17:19.827966+00:00",
+  "end_utc": "2026-09-20T11:19:18.507191+00:00",
+  "stop_reason": "user_end",
+  "sps": 39.55911995539735
+}

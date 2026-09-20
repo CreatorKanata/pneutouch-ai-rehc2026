@@ -5,12 +5,29 @@
 #include "board.h"
 #include "pressure_app.h"
 #include "pneu_config.h"
+#include "pressure_model.h"
+#include "pressure_display.h"
 
 static uint32_t now, bits;
 static unsigned pulses, watchdogs;
 static bool ready;
 static char output[512];
 static unsigned length;
+static unsigned predictions, displays;
+volatile pneu_model_status_t pneutouch_model;
+volatile pneu_display_status_t pneutouch_display;
+bool pneu_model_init(void) { pneutouch_model.ready = true; return true; }
+pneu_demo_class_t pneu_model_predict(const float values[12])
+{
+    assert(values[0] > 199 && values[0] < 201); /* Actual extracted rise time */
+    assert(values[10] > .99f && values[10] < 1.01f);
+    ++predictions; return PNEU_CLASS_BACK;
+}
+const char *pneu_class_name(pneu_demo_class_t label) { (void)label; return "BACK"; }
+void pneu_display_init(void) {}
+void pneu_display_poll(void) {}
+void pneu_display_idle(const char *s) { (void)s; }
+void pneu_display_result(pneu_demo_class_t label) { assert(label == PNEU_CLASS_BACK); ++displays; }
 void board_init(void) {}
 void pneu_ai_validation_init(void) {}
 bool pneu_ai_validation_poll(void) { return false; }
@@ -44,7 +61,7 @@ static void poll_at(uint32_t milliseconds)
 int main(void)
 {
     pressure_app_init();
-    assert(strstr(output, "PneutouchAi Phase0; PNEU1,seq,ms,raw; baud=115200") != NULL);
+    assert(strstr(output, "PneutouchAi Live; PNEU1,seq,ms,raw; baud=115200") != NULL);
     assert(pneutouch_status.state == PNEU_SETTLING);
     poll_at(PNEU_SENSOR_TIMEOUT_MS);
     assert(strcmp(output, "# ERROR,HX710B_TIMEOUT\r\n") == 0);
@@ -73,6 +90,17 @@ int main(void)
     assert(pneutouch_status.state == PNEU_SENSOR_TIMEOUT);
     assert(pneutouch_status.samples == 2 && pneutouch_status.raw == 8388607);
     assert(watchdogs == 6);
+    /* Actual simulated GPIO -> acquisition -> 12 features -> chip adapter -> LCD. */
+    ready = true; bits = 4000000;
+    poll_at(3000);
+    for (unsigned i = 0; i < 125; ++i) {
+        int u = (int)i-60, delta = 0;
+        if (u >= 0) delta = u <= 10 ? 20000*u : u <= 20 ? 20000*(20-u) :
+            u <= 30 ? -20000*(u-20) : u <= 40 ? -20000*(40-u) : 0;
+        bits = (uint32_t)(4000000+delta);
+        poll_at(4000+i*25);
+    }
+    assert(predictions == 1 && displays == 1);
     puts("Pressure app: UART framing, signed limits, debug status and no fake samples PASS");
     return 0;
 }

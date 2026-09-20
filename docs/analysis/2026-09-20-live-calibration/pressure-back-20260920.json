@@ -1,0 +1,11 @@
+{
+  "label": "BACK",
+  "zone": 2,
+  "file": "docs\\analysis\\2026-09-20-live-calibration\\pressure-back-20260920.csv",
+  "samples": 4719,
+  "sequence_gaps": 0,
+  "start_utc": "2026-09-20T11:12:48.577105+00:00",
+  "end_utc": "2026-09-20T11:14:47.738873+00:00",
+  "stop_reason": "user_end",
+  "sps": 39.59182988436299
+}

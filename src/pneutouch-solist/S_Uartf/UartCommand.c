@@ -2,7 +2,6 @@
  * File: UartCommand.c
  * Title: UARTで受信したコマンドを実行する。
  * LastUpdated: 2025.05.23
- * Copyright (C) 2025 DATA TECNO Co., Ltd.
 ******************************************************************************/
 
 /**

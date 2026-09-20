@@ -2,7 +2,6 @@
  * File: HighSpeedComHelper.c
  * Title: 高速通信ヘルパー
  * LastUpdated: 2025.05.23
- * Copyright (C) 2025 DATA TECNO Co., Ltd.
 ******************************************************************************/
 
 /**

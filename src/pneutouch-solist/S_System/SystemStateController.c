@@ -2,7 +2,6 @@
  * File: SystemStateController.c
  * Title: システムの状態を制御する。
  * LastUpdated: 2025.05.29
- * Copyright (C) 2025 DATA TECNO Co., Ltd.
 ******************************************************************************/
 
 /**

@@ -10,19 +10,28 @@
 #define TIMEOUT_MS 4000U
 #define MAX_INTERVAL_MS 100U
 
+/* Only extract() uses these arrays. Cache each conversion once per completed
+   event: thousands of repeated soft-float conversions otherwise stall the M0+
+   for longer than one 25 ms sample period. Single-threaded, no heap or stack. */
+static float extraction_time[PNEU_HISTORY_COUNT];
+static float extraction_delta[PNEU_HISTORY_COUNT];
+
 static float magnitude(float x) { return x < 0.0f ? -x : x; }
 static pneu_history_sample_t sample(const pneu_features_t *s, unsigned i)
 {
-    return s->history[(s->head + PNEU_HISTORY_COUNT - s->count + i) % PNEU_HISTORY_COUNT];
+    unsigned index = s->head + PNEU_HISTORY_COUNT - s->count + i;
+    if (index >= PNEU_HISTORY_COUNT) index -= PNEU_HISTORY_COUNT;
+    return s->history[index];
 }
 static float time_at(const pneu_features_t *s, unsigned i)
 {
-    /* Differences remain within the bounded window, including uint32 wrap. */
-    return (float)(int32_t)(sample(s, i).ms - s->event.trigger_ms);
+    (void)s;
+    return extraction_time[i];
 }
 static float delta_at(const pneu_features_t *s, unsigned i)
 {
-    return (float)sample(s, i).raw - s->event.baseline;
+    (void)s;
+    return extraction_delta[i];
 }
 static void add_quiet(pneu_features_t *s, int32_t raw)
 {
@@ -93,12 +102,19 @@ static bool extract(pneu_features_t *s)
     const float levels[3] = {0.1f, 0.5f, 0.9f};
     float *f = s->event.value;
     for (i = 0; i < s->count; ++i) {
+        pneu_history_sample_t v = sample(s, i);
+        /* Differences remain within the bounded window, including uint32 wrap. */
+        extraction_time[i] = (float)(int32_t)(v.ms-s->event.trigger_ms);
+        extraction_delta[i] = (float)v.raw;
+    }
+    for (i = 0; i < s->count; ++i) {
         float t = time_at(s, i);
         if (t >= first-800.0f && t <= first-300.0f && nbase < PNEU_BASELINE_COUNT)
             s->scratch[nbase++] = sample(s, i).raw;
     }
     if (nbase < 5) return false;
     s->event.baseline = median(s, nbase);
+    for (i = 0; i < s->count; ++i) extraction_delta[i] -= s->event.baseline;
     while (begin+1 < s->count && time_at(s, begin) < first) ++begin;
     peak = begin;
     for (i = begin; i < s->count; ++i)

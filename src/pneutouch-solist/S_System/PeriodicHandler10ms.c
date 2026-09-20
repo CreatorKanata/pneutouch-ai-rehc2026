@@ -2,7 +2,6 @@
  * File: PeriodicHandler10ms.c
  * Title: 10msタイマー割込みを使用する。
  * LastUpdated: 2025.06.16
- * Copyright (C) 2025 DATA TECNO Co., Ltd.
 ******************************************************************************/
 
 /**

@@ -1,13 +1,13 @@
 /*****************************************************************************
  * File: main.h
- * Title: AIVibrationInference
- * LastUpdated: 2025.05.23
- * Copyright (C) 2025 DATA TECNO Co., Ltd.
+ * Title: PneutouchAI
+ * LastUpdated: 2026.09.20
+ * Copyright (C) 2026 Kanata the Kid Creator
 ******************************************************************************/
 
 /**
  * @file main.h
- * @brief AIVibrationInference
+ * @brief PneutouchAI by Kanata the Kid Creator
  */
  
 #ifndef MAIN_H__

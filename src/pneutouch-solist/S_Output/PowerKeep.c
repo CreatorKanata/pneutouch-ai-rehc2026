@@ -2,7 +2,6 @@
  * File: PowerKeep.c
  * Title: 電圧保持(POWER_KEEP)を制御する。
  * LastUpdated: 2025.05.23
- * Copyright (C) 2025 DATA TECNO Co., Ltd.
 ******************************************************************************/
 
 /**

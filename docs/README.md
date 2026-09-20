@@ -7,6 +7,7 @@
 
 | 文書 | 内容 |
 |---|---|
+| [live-pressure-demo-20260920.md](live-pressure-demo-20260920.md) | 実圧力→12特徴→Solist-AIのライブ推定とLCDの3秒表示 |
 | [concept.md](concept.md) | ユーザーが記した構想の原文。変更せず保存 |
 | [phase0-bringup.md](phase0-bringup.md) | 作成済みのHX710B計測プロジェクト：配線、LEXIDE、波形、CSV |
 | [product-design.md](product-design.md) | 技術仮説、7区画、デモ体験、成功条件 |

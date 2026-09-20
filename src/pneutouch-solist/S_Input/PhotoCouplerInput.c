@@ -2,7 +2,6 @@
  * File: PhotoCouplerInput.c
  * Title: フォトカプラ入力を取り扱う。
  * LastUpdated: 2025.06.13
- * Copyright (C) 2025 DATA TECNO Co., Ltd.
 ******************************************************************************/
 
 /**

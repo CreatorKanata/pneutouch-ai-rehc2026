@@ -1,0 +1,80 @@
+{
+  "variant": "final current-session 60-example model",
+  "configuration": "Debug",
+  "write_launch": "PneutouchAi Write (Debug)",
+  "build_errors": 0,
+  "build_warnings": 6,
+  "warning_detail": "Six pre-existing pointer-sign warnings in inactive S_Uartf/UartCommand.c during full rebuild",
+  "model": {
+    "inputs": 12,
+    "hidden": 32,
+    "outputs": 4,
+    "seed": 1,
+    "epochs": 4,
+    "examples": 60,
+    "steps": 240,
+    "boot_training_us": 311069
+  },
+  "memory": {
+    "text": 25088,
+    "initialized_data": 8,
+    "bss": 7208,
+    "reserved_stack": 1280,
+    "normal_ram_reserved": 8496,
+    "normal_ram_capacity": 16384,
+    "heap": 0
+  },
+  "tests": {
+    "portable_c_suites": 7,
+    "python_total": 22,
+    "python_skipped": 1,
+    "javascript_passed": 7,
+    "feature_cache_exact_replay_recordings": 13
+  },
+  "hashes": {
+    "src/pneutouch-solist/S_PneuTouch/acquisition.c": "e744d00aa739feb503d6efa244ed380ccee15674af0a8f92dc3f5ecbcf6a2edc",
+    "src/pneutouch-solist/S_PneuTouch/acquisition.h": "a35b6abd25ac16a76855f79b425eee40f467f5296d25044ac24e6fcd7d010cea",
+    "src/pneutouch-solist/S_PneuTouch/ai_validation.c": "5a1a8488e8f48398895f7a4da2506c8bdbaf5f8516b678c280ab70060019ef23",
+    "src/pneutouch-solist/S_PneuTouch/ai_validation.h": "c2bcc3d9e18bbb82ec516466bb0e81cf4146c5d2c8deadcb126a9d9758f213c0",
+    "src/pneutouch-solist/S_PneuTouch/board.c": "be6a1fd17b05d0663561b526b0223b1a4e2a13f8bc0cc559c7f83b6c0fb42dc5",
+    "src/pneutouch-solist/S_PneuTouch/board.h": "aa6f683ff2cdb19c6f98f36c290278960af97ba5b484c45834b61d9c02ba00ee",
+    "src/pneutouch-solist/S_PneuTouch/hx710b.c": "4f76c59b8b4c24f09b13d6868bb65c75708e3b592f76f003edf78f477063e313",
+    "src/pneutouch-solist/S_PneuTouch/hx710b.h": "c0d903cc3617c6abd9db9b4549e45dc6d39d8022b6e853d5845333d8c1e64660",
+    "src/pneutouch-solist/S_PneuTouch/pneu_config.h": "9dedce9aa1315fa8c3e8556e9c78495a0829b6e485b625de19930ed8f3e55650",
+    "src/pneutouch-solist/S_PneuTouch/pressure_app.c": "1de4353b4af14f5182e4035016595b43f86934694c161f95435b1630466ac95c",
+    "src/pneutouch-solist/S_PneuTouch/pressure_app.h": "ae6627f3c371266de7655e5c0dc070111216af216ba0c47ecd66cb4e89a4c90b",
+    "src/pneutouch-solist/S_PneuTouch/pressure_display.c": "a34a98db023ba8ac40557726afd3caa5c40815bdc7c6b3ed3267b6051b0fa004",
+    "src/pneutouch-solist/S_PneuTouch/pressure_display.h": "6b2d87135217d4195b39e308892fa6b4c7d57c078d1473c6d1542e3c1c2efefd",
+    "src/pneutouch-solist/S_PneuTouch/pressure_features.c": "afb213b046406b6b89e3773c1da71311b28d254deffe0c69891fd339a18d6515",
+    "src/pneutouch-solist/S_PneuTouch/pressure_features.h": "68af137ebfb4018e2160b8da478bd7d524a5138aaff62779ba98b46a00bef230",
+    "src/pneutouch-solist/S_PneuTouch/pressure_model.c": "ab63e5ec829d537e6aa839b9778e3f3e0f7e6de06ca5f58fe2b55a83cd834015",
+    "src/pneutouch-solist/S_PneuTouch/pressure_model.h": "e6d674b973e5c52656b0320b3c1b65ca875736fe96dd5520bf85c286a2434aca",
+    "src/pneutouch-solist/S_PneuTouch/pressure_model_data.h": "9ec685b118d9c5ea5444fd9117cd21b46e9111d8d4124c88e4ff5fc0f658723e",
+    "src/pneutouch-solist/S_System/main.c": "f103d44789eb75549cc417cbd2af79d2d90e738c57ec5a1b274893344b174dfa",
+    "src/pneutouch-solist/S_System/main.h": "62cfc39c93c8a1f8f11a1b6815284a526c49b3283ce98e9158709e7b91424732",
+    "src/pneutouch-solist/.cproject": "93d5e334018ec2834656960bef3b41cc82a63207b50d3dcd13c5d0aea6437e7b",
+    "src/pneutouch-solist/Debug/PneutouchAi.elf": "70b34c87a3762c02407f76a6ae83f988e6e3208006ca7c90e52add7c8e7259f1",
+    "src/pneutouch-solist/Debug/PneutouchAi.hex": "0468b5dc3d929c7a0529fc1815965e9704c1cca26d3b03dd1bb6eb368a7282c2"
+  },
+  "final_live_monitor": {
+    "file": "final-live-monitor.json",
+    "samples": 2106,
+    "sequence_gaps": 0,
+    "sample_interval_ms": [
+      25,
+      26
+    ],
+    "physical_press_events": 0,
+    "event_compute_latency_measured": false
+  },
+  "training_reconstruction": {
+    "file": "deployment-fit-check.json",
+    "correct": 46,
+    "total": 60,
+    "not_generalization_accuracy": true
+  },
+  "restored_live_after_validation": {
+    "file": "deployment-resume.json",
+    "samples": 127
+  }
+}

@@ -2,7 +2,6 @@
  * File: LogControlEnd.h
  * Title: End設定の際にログ機能を取り扱う。
  * LastUpdated: 2025.05.23
- * Copyright (C) 2025 DATA TECNO Co., Ltd.
 ******************************************************************************/
 
 /**

@@ -1,0 +1,11 @@
+{
+  "label": "TAIL",
+  "zone": 1,
+  "file": "docs\\analysis\\2026-09-20-live-calibration\\pressure-tail-20260920.csv",
+  "samples": 4705,
+  "sequence_gaps": 0,
+  "start_utc": "2026-09-20T11:21:11.474812+00:00",
+  "end_utc": "2026-09-20T11:23:10.337501+00:00",
+  "stop_reason": "user_end",
+  "sps": 39.57863561404099
+}

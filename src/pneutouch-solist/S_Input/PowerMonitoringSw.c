@@ -2,7 +2,6 @@
  * File: PowerMonitoringSw.c
  * Title: 電源監視用SW(POWSW_CHK)を取り扱う。
  * LastUpdated: 2025.05.23
- * Copyright (C) 2025 DATA TECNO Co., Ltd.
 ******************************************************************************/
 
 /**

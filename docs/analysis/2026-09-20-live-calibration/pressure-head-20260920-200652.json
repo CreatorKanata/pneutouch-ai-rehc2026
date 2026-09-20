@@ -1,0 +1,11 @@
+{
+  "label": "HEAD",
+  "zone": 7,
+  "file": "docs\\analysis\\2026-09-20-live-calibration\\pressure-head-20260920-200652.csv",
+  "samples": 2441,
+  "sequence_gaps": 0,
+  "start_utc": "2026-09-20T11:06:52.109652+00:00",
+  "end_utc": "2026-09-20T11:07:53.658370+00:00",
+  "stop_reason": "user_end",
+  "sps": 39.65287483342542
+}

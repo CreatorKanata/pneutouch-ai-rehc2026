@@ -4,6 +4,8 @@
 #include "acquisition.h"
 #include "pneu_config.h"
 #include "ai_validation.h"
+#include "pressure_model.h"
+#include "pressure_display.h"
 
 volatile pneutouch_status_t pneutouch_status;
 volatile pneutouch_feature_status_t pneutouch_features;
@@ -13,6 +15,8 @@ static pneu_feature_event_t pending_features;
 static unsigned pending_part;
 static bool pending;
 static bool was_validation;
+static bool lcd_ready_reported, lcd_failed_reported;
+static uint32_t lcd_updates_reported;
 
 static void text(const char *s) { while (*s) board_putc(*s++); }
 
@@ -66,6 +70,21 @@ static void process_features(const pressure_sample_t *sample)
         ++pneutouch_features.completed;
         pneutouch_features.last_complete = features.event;
         pending_features = features.event; pending_part = 0; pending = true;
+        {
+            unsigned i;
+            static const char hex[] = "0123456789abcdef";
+            pneu_demo_class_t label = pneu_model_predict(features.event.value);
+            text("# PNEC1,"); number(features.event.id); board_putc(',');
+            number(board_millis()); board_putc(','); text(pneu_class_name(label));
+            board_putc(','); number(pneutouch_model.inference_us);
+            for (i = 0; i < 4; ++i) {
+                int shift; board_putc(',');
+                for (shift = 12; shift >= 0; shift -= 4)
+                    board_putc(hex[(pneutouch_model.scores[i] >> shift)&15U]);
+            }
+            text("\r\n");
+            pneu_display_result(label);
+        }
     } else if (result == PNEU_EVENT_INVALID || result == PNEU_EVENT_TIMEOUT) {
         ++pneutouch_features.rejected;
         text("# PNEE1,"); number(features.event.id);
@@ -82,11 +101,18 @@ void pressure_app_init(void)
     pneu_features_init(&features); pending = false;
     board_init();
     pneu_ai_validation_init(); was_validation = false;
+    pneu_display_init();
+    lcd_ready_reported = lcd_failed_reported = false; lcd_updates_reported = 0;
+    if (!pneu_model_init()) pneu_display_idle("AI ERROR");
     acquisition_init(&acquisition, sensor, board_millis());
-    text("# PneutouchAi Phase0; PNEU1,seq,ms,raw; baud=");
+    text("# PneutouchAi Live; PNEU1,seq,ms,raw; baud=");
     number(PNEU_UART_BAUD); text("; nominal_sps="); number(PNEU_SAMPLE_RATE_HZ);
     text("\r\n");
     text("# PNEF1; version=1; features=12; units_x1000; classes=tail/back/legs/head; gesture=press_release_1s\r\n");
+    text(pneutouch_model.ready ? "# PNEM1,READY," : "# PNEM1,ERROR,");
+    number(pneutouch_model.training_examples); board_putc(',');
+    number(pneutouch_model.training_steps); board_putc(',');
+    number(pneutouch_model.training_us); text("\r\n");
     pneutouch_status.state = PNEU_SETTLING;
 }
 
@@ -94,9 +120,27 @@ void pressure_app_poll(void)
 {
     pressure_sample_t sample;
     board_watchdog();
-    if (pneu_ai_validation_poll()) { was_validation = true; return; }
+    pneu_display_poll();
+    if (pneutouch_display.ready && !lcd_ready_reported) {
+        text("# PNEL1,READY\r\n"); lcd_ready_reported = true;
+    }
+    if (pneutouch_display.failed && !lcd_failed_reported) {
+        text("# PNEL1,ERROR,I2C\r\n"); lcd_failed_reported = true;
+    }
+    if (pneutouch_display.updates != lcd_updates_reported) {
+        lcd_updates_reported = pneutouch_display.updates;
+        text("# PNEL1,"); text(pneu_class_name(pneutouch_display.label)); board_putc(',');
+        number(pneutouch_display.label ? pneutouch_display.shown_ms : pneutouch_display.cleared_ms);
+        text("\r\n");
+    }
+    if (pneu_ai_validation_poll()) {
+        if (!was_validation) pneu_display_idle("VALIDATION");
+        was_validation = true; return;
+    }
     if (was_validation) {
         const hx710b_t sensor = {0, board_dout_high, board_sensor_pulse, PNEU_HX_PULSES};
+        /* PAI1 uses the same chip instance. Restore the fixed live model. */
+        pneu_display_idle(pneu_model_init() ? "READY" : "AI ERROR");
         acquisition_init(&acquisition, sensor, board_millis());
         pneu_features_reset(&features); pending = false; was_validation = false;
         text("# PneutouchAi live acquisition resumed; sequence restarts\r\n");

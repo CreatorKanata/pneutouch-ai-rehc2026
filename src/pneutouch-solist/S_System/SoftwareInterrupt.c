@@ -2,7 +2,6 @@
  * File: SoftwareInterrupt.c
  * Title: ソフトウェア割り込みを使用する。
  * LastUpdated: 2025.05.23
- * Copyright (C) 2025 DATA TECNO Co., Ltd.
 ******************************************************************************/
 
 /**

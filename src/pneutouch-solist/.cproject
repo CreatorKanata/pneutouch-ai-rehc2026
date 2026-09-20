@@ -163,7 +163,7 @@
 		</cconfiguration>
 	</storageModule>
 	<storageModule moduleId="cdtBuildSystem" version="4.0.0">
-		<project id="AIVibrationInference.com.lapis_tech.lexide.managedbuilder.llvm.arm.ui.prjtype.lapis.exe.711019735" name="Executable (LAPIS)" projectType="com.lapis_tech.lexide.managedbuilder.llvm.arm.ui.prjtype.lapis.exe"/>
+		<project id="PneutouchAi.com.lapis_tech.lexide.managedbuilder.llvm.arm.ui.prjtype.lapis.exe.711019735" name="Executable (LAPIS)" projectType="com.lapis_tech.lexide.managedbuilder.llvm.arm.ui.prjtype.lapis.exe"/>
 	</storageModule>
 	<storageModule moduleId="scannerConfiguration">
 		<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>

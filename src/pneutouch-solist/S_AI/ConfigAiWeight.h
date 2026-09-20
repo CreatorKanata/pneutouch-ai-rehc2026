@@ -2,7 +2,6 @@
  * File: ConfigAiWeight.h
  * Title: AI重み設定モジュール
  * LastUpdated: 2025.05.23
- * Copyright (C) 2025 DATA TECNO Co., Ltd.
 ******************************************************************************/
 
 /**

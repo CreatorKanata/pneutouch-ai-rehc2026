@@ -5,6 +5,10 @@
 #include "smpl_common.h"
 #include "uartf1.h"
 #include "wdt.h"
+#include "irq.h"
+#include "Lcd.h"
+#include "LcdI2cf0.h"
+#include "Regulator5VOutput.h"
 
 static volatile uint32_t milliseconds;
 
@@ -94,4 +98,34 @@ void board_putc(char value)
     /* A peripheral fault deliberately lets the watchdog reset the MCU. */
     while (uartf1_checkWriteBusy()) {}
     uartf1_putc((uint8_t)value);
+}
+
+static volatile int lcd_result;
+static uint32_t lcd_started;
+static uint16_t lcd_expected;
+static void lcd_complete(uint32_t size, uint8_t error)
+{
+    lcd_result = !error && size == lcd_expected ? 1 : -1;
+}
+void board_lcd_init(void)
+{
+    Regulator5VOutputInit(); Regulator5VOutputOn();
+    LcdPeripheralInit(); LcdBacklightOn();
+    lcd_result = 1;
+}
+void board_lcd_start(uint8_t *buffer, uint16_t size)
+{
+    lcd_result = 0; lcd_expected = size; lcd_started = board_millis();
+    if (LcdI2cf0Write(0x7c, buffer, size, lcd_complete) != I2F_R_OK) lcd_result = -1;
+}
+int board_lcd_status(void)
+{
+    if (!lcd_result && board_millis()-lcd_started >= 10U) {
+        irq_i2cf0_dis();
+        /* Stop and disable the interface before relinquishing the TX buffer. */
+        clear_bit(I2CF0->I2F0CTL, (1U << 5) | (1U << 7));
+        irq_i2cf0_clearIRQ();
+        lcd_result = -1;
+    }
+    return lcd_result;
 }

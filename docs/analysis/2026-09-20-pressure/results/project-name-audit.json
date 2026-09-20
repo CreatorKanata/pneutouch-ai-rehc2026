@@ -1,0 +1,6 @@
+{
+  "scope": "src (both projects), source/config/launch/Tcl/names; generated builds excluded",
+  "files_scanned": 211,
+  "matches": [],
+  "outside_source": "Remaining external SDK/reference titles in docs reference catalogs and config.py; negative assertions in tests/test_project.py identify old names to reject."
+}

@@ -2,7 +2,6 @@
  * File: SystemStateAILearnErase.h
  * Title: 学習した重みデータの消去画面を制御する。
  * LastUpdated: 2025.05.23
- * Copyright (C) 2025 DATA TECNO Co., Ltd.
 ******************************************************************************/
 
 /**

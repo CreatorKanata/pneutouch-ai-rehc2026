@@ -1,12 +1,10 @@
 /*****************************************************************************
  * File: main.c
- * Title: AIVibrationInference
- * LastUpdated: 2026.03.16
- * Copyright (C) 2025 - 2026 DATA TECNO Co., Ltd.
-******************************************************************************/
-
-/* PneuTouch replaces the vibration demo entry point. The original working
-   demo is preserved in commit 95a453e. Use the same Debug / Write launches. */
+ * Title: PneutouchAI
+ * LastUpdated: 2026.09.20
+ * Copyright (C) 2026 Kanata the Kid Creator
+ ******************************************************************************/
+/* Live pressure -> 12 features -> Solist-AI -> LCD for 3 seconds. */
 #include "../S_PneuTouch/pressure_app.h"
 
 int main(void)

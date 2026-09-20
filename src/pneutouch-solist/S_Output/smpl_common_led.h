@@ -21,7 +21,6 @@
  * File: smpl_common_led.h
  * Title: LEDを制御する。 
  * LastUpdated: 2025.05.30
- * Copyright (C) 2025 DATA TECNO Co., Ltd.
 ******************************************************************************/
 
 /**

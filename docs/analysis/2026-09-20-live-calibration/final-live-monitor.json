@@ -1,0 +1,26 @@
+{
+  "start_utc": "2026-09-20T11:31:30.619553+00:00",
+  "port": "COM7",
+  "source": "physical HX710B only; UART monitor sends no bytes",
+  "samples": 2106,
+  "sequence_gaps": 0,
+  "restarts": 0,
+  "interval_counts": {
+    "25": 1691,
+    "26": 414
+  },
+  "notifications": [
+    "# PneutouchAi Live; PNEU1,seq,ms,raw; baud=115200; nominal_sps=40",
+    "# PNEF1; version=1; features=12; units_x1000; classes=tail/back/legs/head; gesture=press_release_1s",
+    "# PNEM1,READY,60,240,311069",
+    "# PNEL1,READY",
+    "# PNEL1,UNKNOWN,543"
+  ],
+  "classifications": [],
+  "lcd": [
+    "# PNEL1,READY",
+    "# PNEL1,UNKNOWN,543"
+  ],
+  "holds_ms": [],
+  "elapsed_s": 120.26599999999962
+}

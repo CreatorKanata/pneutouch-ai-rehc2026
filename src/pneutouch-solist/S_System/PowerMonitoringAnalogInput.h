@@ -2,7 +2,6 @@
  * File: PowerMonitoringAnalogInput.h
  * Title: 電源電圧監視アナログ入力を使用する。
  * LastUpdated: 2025.06.13
- * Copyright (C) 2025 DATA TECNO Co., Ltd.
 ******************************************************************************/
 
 /**

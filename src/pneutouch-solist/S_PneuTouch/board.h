@@ -11,4 +11,8 @@ void board_watchdog(void);
 bool board_dout_high(void *context);
 bool board_sensor_pulse(void *context);
 void board_putc(char value);
+void board_lcd_init(void);
+/* Buffer must remain valid until status is nonzero. 0=busy, 1=ACK, -1=fault. */
+void board_lcd_start(uint8_t *buffer, uint16_t size);
+int board_lcd_status(void);
 #endif

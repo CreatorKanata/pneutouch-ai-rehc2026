@@ -2,7 +2,6 @@
  * File: UartCommandCommon.h
  * Title: UARTで受信したコマンドをパース、実行するための情報を提供する。
  * LastUpdated: 2025.05.23
- * Copyright (C) 2025 DATA TECNO Co., Ltd.
 ******************************************************************************/
 
 /**

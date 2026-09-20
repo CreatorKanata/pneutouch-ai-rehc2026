@@ -1,5 +1,7 @@
 <!-- Project entry point: concept, investigated constraints, and the implementation roadmap. -->
-# PneuTouch AI — REHC2026
+# PneutouchAI — REHC2026
+
+**Created by Kanata the Kid Creator.**
 
 TPU製の中空恐竜を7つの空気室に分け、**1個の空気圧センサーの過渡波形から触れた場所を推定**するプロジェクトです。
 DT-EBML63Q2557 / Solist-AIでのオンデバイス学習・推論を目指します。
@@ -13,7 +15,11 @@ MPS20N0040D＋HX710Bを40 SPS設定で読み、CN9のUARTから生値を送信�
 同日、保存済み43イベントによる**Solist-AI実機の教師あり4分類**も検証しました。
 12特徴量は前半学習で21/22、逆順で19/22。64/128点の波形入力と比較しています。
 [実機学習・比較結果](docs/solist-chip-validation-20260920.md)を参照してください。
-記録内の探索評価であり、ライブ分類と学習モデルの永続保存は未統合です。
+記録内の探索評価です。現在は実センサーから12特徴量を抽出してチップ上でライブ分類し、
+LCDへ `HEAD / BACK / LEGS / TAIL` を3秒表示します。
+起動時に追加計測した60イベントから自動学習するため、推定時のPC操作は不要です。
+追加計測の確認用8件では6件正解で、頭・足の混同が残っています。
+[ライブデモの操作・検証記録](docs/live-pressure-demo-20260920.md)を参照してください。
 
 ## 最初に使う
 

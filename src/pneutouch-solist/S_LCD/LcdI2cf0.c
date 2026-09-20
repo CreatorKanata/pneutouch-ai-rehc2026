@@ -5,7 +5,6 @@
  * File: LcdI2cf0.c
  * Title: Lcdで使用するI2Cを制御する。
  * LastUpdated: 2025.05.23
- * Copyright (C) 2025 DATA TECNO Co., Ltd.
 ******************************************************************************/
 
 /**
@@ -108,6 +107,8 @@ void LcdI2cf0InitNormalMode(uint8_t mode, uint8_t rate)
 
 int32_t LcdI2cf0Write( uint8_t slaveAddr, uint8_t *buf, uint16_t size, cbfI2f_t func )
 {
+	/* Never stall pressure acquisition on a stuck LCD bus. */
+	if (get_bit(I2CF0->I2F0SR, (1 << 5)) != 0) return I2F_R_INTERRUPT_NG;
 	ctrlParam.Mode = I2C_WRITE_MODE;    
 	ctrlParam.Data = buf;
 	ctrlParam.DataSize = size;
@@ -120,7 +121,6 @@ int32_t LcdI2cf0Write( uint8_t slaveAddr, uint8_t *buf, uint16_t size, cbfI2f_t 
 	ctrlParam.Status = I2F_TRANS_SLAVE_ADDRESS;
 	
 	//I2Cバスが開放されているか確認。
-	while ( get_bit(I2CF0->I2F0SR, (1 << 5)) != 0 ) { }
 	
 	//I2Cマスターを送信モードへ
 	set_bit( I2CF0->I2F0CTL, (1 << 4));
@@ -182,6 +182,7 @@ static int32_t i2cf0Continue( void )
 				return ( I2F_R_TRANS_FIN );
 			}	
 	}
+	return I2F_R_INTERRUPT_NG;
 }
 
 void I2CF0_IRQHandler( void )

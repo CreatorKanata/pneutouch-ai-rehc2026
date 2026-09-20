@@ -2,7 +2,6 @@
  * File: BfloatUtility.h
  * Title: bfloat16へのユーティリティ
  * LastUpdated: 2025.05.23
- * Copyright (C) 2025 DATA TECNO Co., Ltd.
 ******************************************************************************/
 
 /**

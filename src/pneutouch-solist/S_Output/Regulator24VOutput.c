@@ -2,7 +2,6 @@
  * File: Regulator24VOutput.c
  * Title: 24Vレギュレータを制御する。
  * LastUpdated: 2025.05.23
- * Copyright (C) 2025 DATA TECNO Co., Ltd.
 ******************************************************************************/
 
 #include "Regulator24VOutput.h"

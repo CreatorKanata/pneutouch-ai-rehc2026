@@ -2,7 +2,6 @@
  * File: SystemStatePredictDraw.h
  * Title: 推論画面の表示を制御する。
  * LastUpdated: 2025.05.23
- * Copyright (C) 2025 DATA TECNO Co., Ltd.
 ******************************************************************************/
 
 /**

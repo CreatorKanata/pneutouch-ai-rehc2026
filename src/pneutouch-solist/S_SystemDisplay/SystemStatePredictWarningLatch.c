@@ -2,7 +2,6 @@
  * File: SystemStatePredictWarningLatch.c
  * Title: 警告ラッチ時に表示する推論画面を作成する。
  * LastUpdated: 2025.05.23
- * Copyright (C) 2025 DATA TECNO Co., Ltd.
 ******************************************************************************/
 
 /**

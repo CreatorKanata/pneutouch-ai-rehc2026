@@ -15,7 +15,7 @@ def main():
     # Windows may briefly keep a just-executed binary locked during cleanup.
     with tempfile.TemporaryDirectory(prefix="pneutouch-test-", ignore_cleanup_errors=True) as directory:
         (Path(directory) / "pneu_config.h").write_text(header())
-        for name in ("hx710b", "acquisition", "pressure_app", "pressure_features", "ai_validation"):
+        for name in ("hx710b", "acquisition", "pressure_app", "pressure_features", "ai_validation", "pressure_model", "pressure_display"):
             executable = Path(directory) / f"test_{name}{'.exe' if os.name == 'nt' else ''}"
             sources = ["src/pneutouch-solist/S_PneuTouch/hx710b.c", f"tests/test_{name}.c"]
             if name in ("acquisition", "pressure_app"): sources.append("src/pneutouch-solist/S_PneuTouch/acquisition.c")
@@ -24,11 +24,13 @@ def main():
                 sources.append("src/pneutouch-solist/S_PneuTouch/pressure_features.c")
             if name == "ai_validation":
                 sources.append("src/pneutouch-solist/S_PneuTouch/ai_validation.c")
+            if name in ("pressure_model", "pressure_display"):
+                sources.append(f"src/pneutouch-solist/S_PneuTouch/{name}.c")
             subprocess.run(shlex.split(os.environ.get("CC", "cc")) + [
                 "-std=c11", "-Wall", "-Wextra", "-Werror", "-pedantic",
                 "-Itests/ai_stubs", "-Isrc/pneutouch-solist/S_Driver",
                 "-Isrc/pneutouch-solist/S_PneuTouch", "-I" + directory, *sources,
-                "-o", str(executable)], cwd=ROOT, check=True)
+                "-o", str(executable), "-lm"], cwd=ROOT, check=True)
             subprocess.run([str(executable)], check=True)
     subprocess.run([sys.executable, "-m", "unittest", "discover", "-s", "tests", "-v"],
                    cwd=ROOT, check=True)

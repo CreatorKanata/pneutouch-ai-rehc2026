@@ -1,0 +1,161 @@
+{
+  "start_utc": "2026-09-20T11:00:09.936155+00:00",
+  "port": "COM7",
+  "source": "physical HX710B only; UART monitor sends no bytes",
+  "samples": 5710,
+  "sequence_gaps": 0,
+  "restarts": 0,
+  "interval_counts": {
+    "25": 4629,
+    "26": 1063,
+    "48": 3,
+    "8": 4,
+    "20": 3,
+    "51": 1,
+    "24": 1,
+    "7": 1,
+    "49": 1,
+    "19": 1,
+    "46": 1,
+    "22": 1
+  },
+  "notifications": [
+    "# PneutouchAi Live; PNEU1,seq,ms,raw; baud=115200; nominal_sps=40",
+    "# PNEF1; version=1; features=12; units_x1000; classes=tail/back/legs/head; gesture=press_release_1s",
+    "# PNEM1,READY,43,172,223154",
+    "# PNEL1,READY",
+    "# PNEL1,UNKNOWN,455",
+    "# PNEE1,1,START,29191",
+    "# PNEC1,1,29941,TAIL,106,3f08,3d9c,3ddc,3e88",
+    "# PNEF1,1,29191,29896,0,225610,68359,250690,255258,5188,303",
+    "# PNEF1,1,29191,29896,6,50780,154263,141103,143904,1580,891",
+    "# PNEL1,TAIL,29960",
+    "# PNEL1,UNKNOWN,32961",
+    "# PNEE1,2,START,32994",
+    "# PNEC1,2,33773,TAIL,106,3f2d,3dac,be26,3eb8",
+    "# PNEF1,2,32994,33725,0,201024,70260,235430,232818,6094,350",
+    "# PNEL1,TAIL,33784",
+    "# PNEF1,2,32994,33725,6,52087,136659,125303,129843,1499,836",
+    "# PNEL1,UNKNOWN,36785",
+    "# PNEE1,3,START,36823",
+    "# PNEC1,3,37548,TAIL,106,3f5b,bd5f,3e8f,be09",
+    "# PNEF1,3,36823,37503,0,126548,62371,126867,129589,9961,493",
+    "# PNEF1,3,36823,37503,6,46362,146114,110679,118529,1103,1009",
+    "# PNEL1,TAIL,37567",
+    "# PNEE1,4,START,38762",
+    "# PNEC1,4,39488,TAIL,103,3f5c,bd54,3e44,bd83",
+    "# PNEF1,4,38762,39442,0,146174,54027,136245,140423,8085,370",
+    "# PNEF1,4,38762,39442,6,45131,137169,104623,112527,1210,970",
+    "# PNEL1,TAIL,39507",
+    "# PNEL1,UNKNOWN,42508",
+    "# PNEE1,5,START,45185",
+    "# PNEC1,5,46311,TAIL,104,3eea,3e9d,3e45,bcc1",
+    "# PNEF1,5,45185,46268,0,129822,62579,128039,132947,9510,482",
+    "# PNEF1,5,45185,46268,6,102395,183603,171129,176235,676,896",
+    "# PNEL1,TAIL,46330",
+    "# PNEL1,UNKNOWN,49331",
+    "# PNEE1,6,START,52213",
+    "# PNEC1,6,53290,TAIL,103,3f26,3e18,3e87,be0a",
+    "# PNEF1,6,52213,53245,0,113096,61292,112767,117178,11080,542",
+    "# PNEF1,6,52213,53245,6,84507,169240,142885,153421,729,955",
+    "# PNEL1,TAIL,53309",
+    "# PNEL1,UNKNOWN,56310"
+  ],
+  "classifications": [
+    {
+      "event": 1,
+      "ms": 29941,
+      "label": "TAIL",
+      "predict_us": 106,
+      "scores_bf16": [
+        "3f08",
+        "3d9c",
+        "3ddc",
+        "3e88"
+      ]
+    },
+    {
+      "event": 2,
+      "ms": 33773,
+      "label": "TAIL",
+      "predict_us": 106,
+      "scores_bf16": [
+        "3f2d",
+        "3dac",
+        "be26",
+        "3eb8"
+      ]
+    },
+    {
+      "event": 3,
+      "ms": 37548,
+      "label": "TAIL",
+      "predict_us": 106,
+      "scores_bf16": [
+        "3f5b",
+        "bd5f",
+        "3e8f",
+        "be09"
+      ]
+    },
+    {
+      "event": 4,
+      "ms": 39488,
+      "label": "TAIL",
+      "predict_us": 103,
+      "scores_bf16": [
+        "3f5c",
+        "bd54",
+        "3e44",
+        "bd83"
+      ]
+    },
+    {
+      "event": 5,
+      "ms": 46311,
+      "label": "TAIL",
+      "predict_us": 104,
+      "scores_bf16": [
+        "3eea",
+        "3e9d",
+        "3e45",
+        "bcc1"
+      ]
+    },
+    {
+      "event": 6,
+      "ms": 53290,
+      "label": "TAIL",
+      "predict_us": 103,
+      "scores_bf16": [
+        "3f26",
+        "3e18",
+        "3e87",
+        "be0a"
+      ]
+    }
+  ],
+  "lcd": [
+    "# PNEL1,READY",
+    "# PNEL1,UNKNOWN,455",
+    "# PNEL1,TAIL,29960",
+    "# PNEL1,UNKNOWN,32961",
+    "# PNEL1,TAIL,33784",
+    "# PNEL1,UNKNOWN,36785",
+    "# PNEL1,TAIL,37567",
+    "# PNEL1,TAIL,39507",
+    "# PNEL1,UNKNOWN,42508",
+    "# PNEL1,TAIL,46330",
+    "# PNEL1,UNKNOWN,49331",
+    "# PNEL1,TAIL,53309",
+    "# PNEL1,UNKNOWN,56310"
+  ],
+  "holds_ms": [
+    3001,
+    3001,
+    3001,
+    3001,
+    3001
+  ],
+  "elapsed_s": 180.125
+}
