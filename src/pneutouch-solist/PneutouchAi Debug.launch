@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<launchConfiguration type="com.lapis_tech.lexide.debug.gdb.arm.core.gdb.launchConfigurationType">
+    <stringAttribute key=".lapisArmFlashHelperAddress" value="20000000"/>
+    <stringAttribute key=".lapisArmFlashHelperSize" value="2000"/>
+    <stringAttribute key=".lapisArmRtosMode" value="None"/>
+    <stringAttribute key="com.lapis_tech.lexide.debug.gdb.arm.core.additionalImageFileName1" value=""/>
+    <stringAttribute key="com.lapis_tech.lexide.debug.gdb.arm.core.additionalImageFileName2" value=""/>
+    <stringAttribute key="com.lapis_tech.lexide.debug.gdb.arm.core.additionalImageOffset1" value=""/>
+    <stringAttribute key="com.lapis_tech.lexide.debug.gdb.arm.core.additionalImageOffset2" value=""/>
+    <stringAttribute key="com.lapis_tech.lexide.debug.gdb.arm.core.additionalSymbolsFileName1" value=""/>
+    <stringAttribute key="com.lapis_tech.lexide.debug.gdb.arm.core.additionalSymbolsFileName2" value=""/>
+    <stringAttribute key="com.lapis_tech.lexide.debug.gdb.arm.core.additionalSymbolsOffset1" value=""/>
+    <stringAttribute key="com.lapis_tech.lexide.debug.gdb.arm.core.additionalSymbolsOffset2" value=""/>
+    <stringAttribute key="com.lapis_tech.lexide.debug.gdb.arm.core.lapisArmCommnicationSpeed" value="1000"/>
+    <stringAttribute key="com.lapis_tech.lexide.debug.gdb.arm.core.lapisArmCoreClock" value="48.0"/>
+    <booleanAttribute key="com.lapis_tech.lexide.debug.gdb.arm.core.lapisArmEnableDebugAccessAuthentication" value="false"/>
+    <booleanAttribute key="com.lapis_tech.lexide.debug.gdb.arm.core.lapisArmEtm" value="false"/>
+    <stringAttribute key="com.lapis_tech.lexide.debug.gdb.arm.core.lapisArmGdbServerOther" value=""/>
+    <booleanAttribute key="com.lapis_tech.lexide.debug.gdb.arm.core.lapisArmLaunchScope" value="false"/>
+    <stringAttribute key="com.lapis_tech.lexide.debug.gdb.arm.core.lapisArmSdmDllPath" value=""/>
+    <booleanAttribute key="com.lapis_tech.lexide.debug.gdb.arm.core.lapisArmSdmUseDefaultFile" value="true"/>
+    <stringAttribute key="com.lapis_tech.lexide.debug.gdb.arm.core.lapisArmShuntReg" value="Max:400mA (Resolution:98uA)"/>
+    <stringAttribute key="com.lapis_tech.lexide.debug.gdb.arm.core.lapisArmSwoBaudRate" value="921600"/>
+    <booleanAttribute key="com.lapis_tech.lexide.debug.gdb.arm.core.lapisArmSwv" value="true"/>
+    <stringAttribute key="com.lapis_tech.lexide.debug.gdb.arm.core.lapisArmTraceDelay" value="12"/>
+    <stringAttribute key="com.lapis_tech.lexide.debug.gdb.arm.core.lapisArmVddOut" value="3.3"/>
+    <booleanAttribute key="com.lapis_tech.lexide.debug.gdb.arm.core.lapisArmVddOutButton" value="true"/>
+    <booleanAttribute key="com.lapis_tech.lexide.debug.gdb.arm.core.lapisArmVerify" value="false"/>
+    <stringAttribute key="com.lapis_tech.lexide.debug.gdb.arm.core.lapisSvdPath" value="ML63Q25x7"/>
+    <stringAttribute key="com.lapis_tech.lexide.debug.gdb.arm.core.lapisTargetIce" value="CMSIS-DAP"/>
+    <booleanAttribute key="com.lapis_tech.lexide.debug.gdb.arm.core.loadAdditionalImage1" value="false"/>
+    <booleanAttribute key="com.lapis_tech.lexide.debug.gdb.arm.core.loadAdditionalImage2" value="false"/>
+    <booleanAttribute key="com.lapis_tech.lexide.debug.gdb.arm.core.loadAdditionalSymbols1" value="false"/>
+    <booleanAttribute key="com.lapis_tech.lexide.debug.gdb.arm.core.loadAdditionalSymbols2" value="false"/>
+    <booleanAttribute key="ilg.gnumcueclipse.debug.gdbjtag.openocd.doContinue" value="true"/>
+    <booleanAttribute key="ilg.gnumcueclipse.debug.gdbjtag.openocd.doDebugInRam" value="false"/>
+    <booleanAttribute key="ilg.gnumcueclipse.debug.gdbjtag.openocd.doFirstReset" value="true"/>
+    <booleanAttribute key="ilg.gnumcueclipse.debug.gdbjtag.openocd.doGdbServerAllocateConsole" value="true"/>
+    <booleanAttribute key="ilg.gnumcueclipse.debug.gdbjtag.openocd.doGdbServerAllocateTelnetConsole" value="false"/>
+    <booleanAttribute key="ilg.gnumcueclipse.debug.gdbjtag.openocd.doSecondReset" value="true"/>
+    <booleanAttribute key="ilg.gnumcueclipse.debug.gdbjtag.openocd.doStartGdbCLient" value="true"/>
+    <booleanAttribute key="ilg.gnumcueclipse.debug.gdbjtag.openocd.doStartGdbServer" value="true"/>
+    <booleanAttribute key="ilg.gnumcueclipse.debug.gdbjtag.openocd.enableSemihosting" value="true"/>
+    <stringAttribute key="ilg.gnumcueclipse.debug.gdbjtag.openocd.firstResetType" value="init"/>
+    <stringAttribute key="ilg.gnumcueclipse.debug.gdbjtag.openocd.gdbClientOtherCommands" value="set mem inaccessible-by-default off"/>
+    <stringAttribute key="ilg.gnumcueclipse.debug.gdbjtag.openocd.gdbClientOtherOptions" value=""/>
+    <stringAttribute key="ilg.gnumcueclipse.debug.gdbjtag.openocd.gdbServerExecutable" value="${eclipse_home}..\gdb\openocd_arm.exe"/>
+    <intAttribute key="ilg.gnumcueclipse.debug.gdbjtag.openocd.gdbServerGdbPortNumber" value="3333"/>
+    <stringAttribute key="ilg.gnumcueclipse.debug.gdbjtag.openocd.gdbServerOther" value="-s &quot;C:\Users\hide\AppData\Local\Arm\Packs\ROHM\ML63Q25x7_DFP\1.1.0\Cfg&quot; -s &quot;C:\LAPIS\LEXIDE\eclipse\..\Cfg&quot; -f &quot;C:\Users\hide\Documents\pneutouch-ai-rehc2026\src\pneutouch-solist\PneutouchAi.tcl&quot;"/>
+    <stringAttribute key="ilg.gnumcueclipse.debug.gdbjtag.openocd.gdbServerTclPortNumber" value="6666"/>
+    <intAttribute key="ilg.gnumcueclipse.debug.gdbjtag.openocd.gdbServerTelnetPortNumber" value="4444"/>
+    <stringAttribute key="ilg.gnumcueclipse.debug.gdbjtag.openocd.otherInitCommands" value=""/>
+    <stringAttribute key="ilg.gnumcueclipse.debug.gdbjtag.openocd.otherRunCommands" value=""/>
+    <stringAttribute key="ilg.gnumcueclipse.debug.gdbjtag.openocd.secondResetType" value="halt"/>
+    <stringAttribute key="ilg.gnumcueclipse.debug.gdbjtag.svdPath" value="C:\Users\hide\AppData\Local\Arm\Packs\ROHM\ML63Q25x7_DFP\1.1.0\SVD/ML63Q25x7.svd"/>
+    <stringAttribute key="org.eclipse.cdt.debug.gdbjtag.core.imageFileName" value=""/>
+    <stringAttribute key="org.eclipse.cdt.debug.gdbjtag.core.imageOffset" value=""/>
+    <stringAttribute key="org.eclipse.cdt.debug.gdbjtag.core.ipAddress" value="localhost"/>
+    <stringAttribute key="org.eclipse.cdt.debug.gdbjtag.core.jtagDevice" value="GNU MCU OpenOCD"/>
+    <booleanAttribute key="org.eclipse.cdt.debug.gdbjtag.core.loadImage" value="true"/>
+    <booleanAttribute key="org.eclipse.cdt.debug.gdbjtag.core.loadSymbols" value="true"/>
+    <stringAttribute key="org.eclipse.cdt.debug.gdbjtag.core.pcRegister" value=""/>
+    <intAttribute key="org.eclipse.cdt.debug.gdbjtag.core.portNumber" value="3333"/>
+    <booleanAttribute key="org.eclipse.cdt.debug.gdbjtag.core.setPcRegister" value="false"/>
+    <booleanAttribute key="org.eclipse.cdt.debug.gdbjtag.core.setResume" value="false"/>
+    <booleanAttribute key="org.eclipse.cdt.debug.gdbjtag.core.setStopAt" value="true"/>
+    <stringAttribute key="org.eclipse.cdt.debug.gdbjtag.core.stopAt" value="main"/>
+    <stringAttribute key="org.eclipse.cdt.debug.gdbjtag.core.symbolsFileName" value=""/>
+    <stringAttribute key="org.eclipse.cdt.debug.gdbjtag.core.symbolsOffset" value=""/>
+    <booleanAttribute key="org.eclipse.cdt.debug.gdbjtag.core.useFileForImage" value="false"/>
+    <booleanAttribute key="org.eclipse.cdt.debug.gdbjtag.core.useFileForSymbols" value="false"/>
+    <booleanAttribute key="org.eclipse.cdt.debug.gdbjtag.core.useProjBinaryForImage" value="true"/>
+    <booleanAttribute key="org.eclipse.cdt.debug.gdbjtag.core.useProjBinaryForSymbols" value="true"/>
+    <booleanAttribute key="org.eclipse.cdt.debug.gdbjtag.core.useRemoteTarget" value="true"/>
+    <stringAttribute key="org.eclipse.cdt.dsf.gdb.DEBUG_NAME" value="${eclipse_home}..\gdb\arm-none-eabi-gdb.exe"/>
+    <booleanAttribute key="org.eclipse.cdt.dsf.gdb.UPDATE_THREADLIST_ON_SUSPEND" value="false"/>
+    <intAttribute key="org.eclipse.cdt.launch.ATTR_BUILD_BEFORE_LAUNCH_ATTR" value="2"/>
+    <stringAttribute key="org.eclipse.cdt.launch.COREFILE_PATH" value=""/>
+    <stringAttribute key="org.eclipse.cdt.launch.PROGRAM_NAME" value="Debug\PneutouchAi.elf"/>
+    <stringAttribute key="org.eclipse.cdt.launch.PROJECT_ATTR" value="PneutouchAi"/>
+    <booleanAttribute key="org.eclipse.cdt.launch.PROJECT_BUILD_CONFIG_AUTO_ATTR" value="true"/>
+    <stringAttribute key="org.eclipse.cdt.launch.PROJECT_BUILD_CONFIG_ID_ATTR" value="com.lapis_tech.lexide.managedbuilder.llvm.arm.ui.config.debug.1342764584"/>
+    <booleanAttribute key="org.eclipse.debug.core.ATTR_FORCE_SYSTEM_CONSOLE_ENCODING" value="false"/>
+    <listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_PATHS">
+        <listEntry value="/PneutouchAi"/>
+    </listAttribute>
+    <listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_TYPES">
+        <listEntry value="4"/>
+    </listAttribute>
+    <stringAttribute key="org.eclipse.dsf.launch.MEMORY_BLOCKS" value="&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot; standalone=&quot;no&quot;?&gt;&#13;&#10;&lt;memoryBlockExpressionList context=&quot;Context string&quot;/&gt;&#13;&#10;"/>
+    <stringAttribute key="org.eclipse.embedcdt.debug.gdbjtag.core.PERIPHERALS" value="&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot; standalone=&quot;no&quot;?&gt;&#13;&#10;&lt;peripherals/&gt;&#13;&#10;"/>
+    <stringAttribute key="process_factory_id" value="org.eclipse.cdt.dsf.gdb.GdbProcessFactory"/>
+</launchConfiguration>
