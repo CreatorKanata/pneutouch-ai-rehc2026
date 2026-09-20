@@ -1,6 +1,8 @@
 <!-- Project entry point: concept, investigated constraints, and the implementation roadmap. -->
 # PneutouchAI — REHC2026
 
+![PneuTouchAI — 触れると動き出す中空恐竜](images/logo/pneu-touch-ai-thumbnail.png)
+
 **Created by Kanata the Kid Creator.**
 
 TPU製の中空恐竜を7つの空気室に分け、**1個の空気圧センサーの過渡波形から触れた場所を推定**するプロジェクトです。

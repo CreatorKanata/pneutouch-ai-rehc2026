@@ -70,7 +70,7 @@ fs.mkdirSync(out,{recursive:true});
     const replay=lines.slice(0,n).join('\r\n')+'\r\n';
     await page.evaluate(text=>window.feedTestSerial(text),replay);
     const expectedPart=lines[lastResult].split(',')[3];
-    await page.waitForFunction(part=>document.querySelector('#part-en').textContent===part,expectedPart);
+    await page.waitForFunction(part=>document.querySelector('#status-stage').dataset.part===part,expectedPart);
     await page.waitForFunction(()=>!document.querySelector('#reaction-video').hidden);
     await page.locator('#waveform-card').waitFor({state:'visible'});
     const waveformLayout=await page.evaluate(()=>{

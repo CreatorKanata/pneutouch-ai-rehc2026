@@ -15,35 +15,31 @@
 
     <aside class="hud" aria-label="恐竜のステータス">
       <header class="masthead">
-        <a class="brand" href="./" aria-label="PneutouchAI">Pneutouch<span>AI</span><small>by Kanata the Kid Creator</small></a>
-        <span id="connection" class="connection" data-state="off">未接続</span>
+        <a class="brand" href="./" aria-label="PneutouchAI"><img src="/images/logo/pneu-touch-ai-logo-256w.png" width="256" height="85" alt="PneuTouchAI"></a>
+        <div class="connection-tools">
+          <span id="connection" class="connection" data-state="off">未接続</span>
+          <button id="connect" disabled>恐竜につなぐ ↗</button><button id="disconnect" class="subtle" hidden>切断</button>
+        </div>
       </header>
 
       <section class="card touch-card" aria-label="恐竜の触れた場所">
         <div class="card-heading"><h1>触れたところ</h1><span id="phase-badge" class="small-pill">待機中</span></div>
         <div class="touch-body">
-          <div class="status-stage" id="status-stage" data-phase="idle">
+          <div class="status-stage" id="status-stage" data-phase="idle" data-part="">
             <img id="status-image" src="/images/demo/normal.jpg" width="1024" height="768" alt="待機中の恐竜のサイドビュー">
+            <div class="touch-overlay">
+              <div class="touch-result" aria-live="polite">
+                <h2 id="part-ja">どこをさわる？</h2>
+                <span id="reset-count" aria-label="表示が戻るまでの時間"></span>
+              </div>
+              <div class="legend"><span><i class="dot yellow"></i>押している</span><span><i class="dot red"></i>ここに触れた</span></div>
+            </div>
             <p id="image-error" hidden>状態画像を読み込めません</p>
           </div>
-          <div class="touch-result" aria-live="polite">
-            <div><p id="part-en">READY TO PLAY</p><h2 id="part-ja">どこをさわる？</h2></div>
-            <span id="reset-count" aria-label="表示が戻るまでの時間"></span>
-          </div>
         </div>
-        <div class="legend"><span><i class="dot yellow"></i>押している</span><span><i class="dot red"></i>ここに触れた</span></div>
       </section>
 
-      <div class="connection-tools">
-        <button id="connect" disabled>恐竜につなぐ ↗</button><button id="disconnect" class="subtle" hidden>切断</button>
-        <span>約1秒、押して離してみよう。</span>
-      </div>
-      <p id="notice" class="notice" role="status">デモを準備しています…</p>
-      <details class="device-help">
-        <summary>接続について</summary>
-        <p>CN9のUSB SerialはCOM6 / COM7です。圧力データは <strong>COM7</strong>。MCU-LINKのCOM4 / COM5とは別です。COM7を使うほかのアプリは切断してください。</p>
-        <p>色の表示は3秒、リアクション動画は最大5秒。次の推定が確定すると最新のリアクションに切り替わります。</p>
-      </details>
+      <p id="notice" class="notice" role="status" hidden></p>
     </aside>
 
     <div class="result-dock">

@@ -42,7 +42,7 @@ class DemoHandler(BaseHTTPRequestHandler):
             return
         directories = {'/demo-visualizer/': ROOT/'src/demo-visualizer',
                        '/shared/': ROOT/'src/shared', '/videos/demo/': ROOT/'videos/demo',
-                       '/images/demo/': ROOT/'images/demo'}
+                       '/images/demo/': ROOT/'images/demo', '/images/logo/': ROOT/'images/logo'}
         file = None
         for prefix, directory in directories.items():
             if not path.startswith(prefix): continue

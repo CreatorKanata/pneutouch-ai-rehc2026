@@ -9,7 +9,7 @@ const names = {HEAD:'あたま',BACK:'せなか',LEGS:'あし',TAIL:'しっぽ'}
 const model = new DemoState();
 let assets, playback, connection, connected = false, opening = false, lastReceived = 0, stalled = false;
 let lastImage = '', raf = 0, imageFailed = false;
-const notice = (text,error=false) => { $('notice').textContent = text; $('notice').dataset.error = error; };
+const notice = (text,error=false) => { $('notice').textContent = error ? text : ''; $('notice').dataset.error = error; $('notice').hidden = !error; };
 function controls() {
   $('connect').disabled = opening || connected || !connection || !('serial' in navigator);
   $('connect').hidden = connected; $('disconnect').hidden = !connected;
@@ -27,9 +27,8 @@ function render() {
   }
   $('status-image').alt = phase === 'pressed' ? '押下を検出し、全体が黄色になった恐竜' :
     phase === 'result' ? `${names[part]}が赤くなった恐竜` : '待機中の恐竜のサイドビュー';
-  $('status-stage').dataset.phase = phase;
+  $('status-stage').dataset.phase = phase; $('status-stage').dataset.part = phase === 'result' ? part : '';
   $('phase-badge').textContent = phase === 'pressed' ? '押している' : phase === 'result' ? 'ここに触れた！' : phase === 'unknown' ? '判定できませんでした' : '待機中';
-  $('part-en').textContent = phase === 'pressed' ? 'FEELING YOUR TOUCH' : phase === 'result' ? part : phase === 'unknown' ? 'TRY AGAIN' : 'READY TO PLAY';
   $('part-ja').textContent = phase === 'pressed' ? 'ぎゅっ。離してみよう' : phase === 'result' ? `${names[part]}にタッチ！` : phase === 'unknown' ? 'もう一度さわってみよう' : 'どこをさわる？';
   $('reset-count').textContent = ['result','unknown'].includes(phase) ? `${Math.max(0,(model.deadline-performance.now())/1000).toFixed(1)} s` : '';
   const trace = model.trace;
@@ -52,7 +51,7 @@ function receive(line) {
   if (effects.includes('reset')) { playback.showIdle(); notice('圧力データの続き方が変わりました。次のタッチを待っています。'); }
   if (effects.includes('press')) notice('タッチを感じました。手を離すと場所がわかります。');
   if (effects.includes('result')) {
-    if (PARTS.includes(p.part)) { playback.play(p.part); notice(`${names[p.part]}にタッチ！ 次の場所もさわってみよう。`); }
+    if (PARTS.includes(p.part)) { playback.play(p.part); notice(''); }
     else notice('場所を判定できませんでした。もう一度、約1秒押して離してみよう。');
   }
   if (effects.includes('rejected')) notice('波形を読み取れませんでした。もう一度押して離してみよう。');

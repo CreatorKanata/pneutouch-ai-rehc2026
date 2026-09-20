@@ -31,7 +31,8 @@ class DemoServerTests(unittest.TestCase):
     def test_app_config_modules_and_no_arbitrary_repository_files(self):
         self.assertEqual(self.request('/')[0], 302)
         for path in ['/demo-visualizer/', '/demo-visualizer/assets.json', '/shared/serial.mjs', '/config.json',
-                     '/images/demo/normal.jpg', '/images/demo/pressed.jpg', '/images/demo/head.jpg']:
+                     '/images/demo/normal.jpg', '/images/demo/pressed.jpg', '/images/demo/head.jpg',
+                     '/images/logo/pneu-touch-ai-logo-256w.png']:
             self.assertEqual(self.request(path)[0], 200, path)
         for path in ['/docs/concept.md', '/.git/config', '/demo-visualizer/../../config.py',
                      '/demo-visualizer/%2e%2e/shared/serial.mjs', '/videos/demo/%5c..%5c..%5cconfig.py',
