@@ -5,6 +5,8 @@
 #include <stdint.h>
 void board_init(void);
 uint32_t board_millis(void);
+uint32_t board_micros(void);
+int board_getc(void); /* -1 when no UART byte is available */
 void board_watchdog(void);
 bool board_dout_high(void *context);
 bool board_sensor_pulse(void *context);

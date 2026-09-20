@@ -12,6 +12,7 @@
 | [product-design.md](product-design.md) | 技術仮説、7区画、デモ体験、成功条件 |
 | [local-hardware.md](local-hardware.md) | 現在の実機、COM6/7とMCU-LINKの区別、受信記録 |
 | [pressure-validation-20260920.md](pressure-validation-20260920.md) | 7区画43回の実測分析。原仮説、代替特徴、開始時刻未知の再生、約1秒のデモ条件 |
+| [solist-chip-validation-20260920.md](solist-chip-validation-20260920.md) | 保存CSVで実機を自動学習。12特徴量と64/128点波形の4分類・時間・メモリ比較 |
 | [hardware.md](hardware.md) | DT-EBML63Q2557、HX710B、配線、電圧、通信 |
 | [sensor-options.md](sensor-options.md) | HX711・内蔵ADC・高速センサーの比較 |
 | [mcu-adc-option.md](mcu-adc-option.md) | DTの12 bit ADC、CN6回路、差動増幅と高速取得案 |

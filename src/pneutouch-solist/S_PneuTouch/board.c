@@ -10,6 +10,13 @@ static volatile uint32_t milliseconds;
 
 void SysTick_Handler(void) { ++milliseconds; }
 uint32_t board_millis(void) { return milliseconds; }
+uint32_t board_micros(void)
+{
+    uint32_t before, after, ticks;
+    do { before = milliseconds; ticks = SysTick->VAL; after = milliseconds; } while (before != after);
+    return before*1000U+(SysTick->LOAD-ticks)/(PNEU_CPU_HZ/1000000U);
+}
+int board_getc(void) { return uartf1_checkReadReady() ? (int)(uartf1_getc() & 255U) : -1; }
 void board_watchdog(void) { wdt_clear(); }
 
 /* SysTick runs from the 48 MHz core even while its interrupt is masked.

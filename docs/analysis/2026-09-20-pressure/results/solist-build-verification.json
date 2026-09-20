@@ -1,0 +1,40 @@
+{
+  "build_configuration": "Debug; LEXIDE generated makefile, LAPIS LCCARM Ver.20260317",
+  "write_launch": "PneutouchAi Write (Debug)",
+  "memory": {
+    "text_section": 19124,
+    "initialized_data": 4,
+    "bss": 5140,
+    "reserved_stack": 1280,
+    "normal_ram_reserved": 6424,
+    "normal_ram_capacity": 16384,
+    "feature_state": 2540,
+    "heap": 0
+  },
+  "tests": {
+    "portable_c_suites": 5,
+    "python_total": 22,
+    "python_skipped": 1,
+    "javascript_passed": 7,
+    "real_chip_runs": 18,
+    "real_chip_sanity_correct": 4,
+    "c_replay_complete": 59
+  },
+  "hashes": {
+    "src/pneutouch-solist/S_PneuTouch/acquisition.c": "e744d00aa739feb503d6efa244ed380ccee15674af0a8f92dc3f5ecbcf6a2edc",
+    "src/pneutouch-solist/S_PneuTouch/ai_validation.c": "5a1a8488e8f48398895f7a4da2506c8bdbaf5f8516b678c280ab70060019ef23",
+    "src/pneutouch-solist/S_PneuTouch/board.c": "4d05f6a89e454ad8206daffa400ea2e4da3eb4243d18cec802c9fc12e3b11567",
+    "src/pneutouch-solist/S_PneuTouch/hx710b.c": "4f76c59b8b4c24f09b13d6868bb65c75708e3b592f76f003edf78f477063e313",
+    "src/pneutouch-solist/S_PneuTouch/pressure_app.c": "418c06a62b534cfe5074d5e3c41c6eafe4b22ee9382fe50d72e64fe30f3349d1",
+    "src/pneutouch-solist/S_PneuTouch/pressure_features.c": "223ada636d185930672625382c23a4e0aa234b2453b00121a8a12ba04ddb4fad",
+    "src/pneutouch-solist/S_PneuTouch/acquisition.h": "a35b6abd25ac16a76855f79b425eee40f467f5296d25044ac24e6fcd7d010cea",
+    "src/pneutouch-solist/S_PneuTouch/ai_validation.h": "c2bcc3d9e18bbb82ec516466bb0e81cf4146c5d2c8deadcb126a9d9758f213c0",
+    "src/pneutouch-solist/S_PneuTouch/board.h": "9e630bef19789748364f0511d95f49eea2d949a65bd3cb3195d2dae9fcd97285",
+    "src/pneutouch-solist/S_PneuTouch/hx710b.h": "c0d903cc3617c6abd9db9b4549e45dc6d39d8022b6e853d5845333d8c1e64660",
+    "src/pneutouch-solist/S_PneuTouch/pneu_config.h": "9dedce9aa1315fa8c3e8556e9c78495a0829b6e485b625de19930ed8f3e55650",
+    "src/pneutouch-solist/S_PneuTouch/pressure_app.h": "ae6627f3c371266de7655e5c0dc070111216af216ba0c47ecd66cb4e89a4c90b",
+    "src/pneutouch-solist/S_PneuTouch/pressure_features.h": "68af137ebfb4018e2160b8da478bd7d524a5138aaff62779ba98b46a00bef230",
+    "src/pneutouch-solist/S_Library/SolistAi_Library_2_256_64.a": "d617114301f7144fb3f2c5b4098142827ae24a167f0dda13acf745652139121e",
+    "src/pneutouch-solist/Debug/PneutouchAi.elf": "13711887b0afd29596274048a1b61d69d3d2397aa4ec5a148bef226154e200c2"
+  }
+}

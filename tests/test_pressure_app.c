@@ -12,6 +12,8 @@ static bool ready;
 static char output[512];
 static unsigned length;
 void board_init(void) {}
+void pneu_ai_validation_init(void) {}
+bool pneu_ai_validation_poll(void) { return false; }
 uint32_t board_millis(void) { return now; }
 void board_watchdog(void) { ++watchdogs; }
 bool board_dout_high(void *context)
