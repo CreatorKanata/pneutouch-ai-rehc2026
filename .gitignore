@@ -19,3 +19,6 @@ __pycache__/
 # Main PneutouchAi project build outputs
 /src/pneutouch-solist/Debug/
 /src/pneutouch-solist/Release/
+
+# 大会用の動画素材はバージョン管理しない
+/videos/rehc2026/
