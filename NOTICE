@@ -1,0 +1,33 @@
+PneuTouch AI
+Copyright 2026 Kanata the Kid Creator
+
+This project is licensed under the Apache License, Version 2.0.
+See the LICENSE file for the full text.
+
+The Apache License applies to the original work of this project: the
+firmware in src/pneutouch-solist/S_PneuTouch, the PC applications, tools,
+tests, documents, measurement data, images, and the internal design of the
+3D model (air chambers, partitions, orifices, and pressure port).
+
+Third-party components
+
+The following parts are provided by third parties and remain under their
+own copyright notices and terms. The Apache License of this project does
+not replace them.
+
+1. ROHM Co., Ltd.
+   Files under src/pneutouch-solist other than S_PneuTouch originate from
+   the drivers, sample projects, and the Solist-AI library distributed by
+   ROHM Co., Ltd. Some of them are modified for this project. Files that
+   carry a ROHM copyright header follow the terms written in that header.
+
+2. Arm Limited
+   Files under src/pneutouch-solist/RTE are based on the CMSIS-Core(M)
+   device examples by Arm Limited and are licensed under the Apache
+   License, Version 2.0, as written in each file.
+
+3. Dinosaur outer shape
+   The outer shape of the models in 3d-models is based on
+   "Cute Stylized Dinosaur Toy" published on Printables:
+   https://www.printables.com/model/489585-cute-stylized-dinosaur-toy
+   The license chosen by its author applies to that shape.
