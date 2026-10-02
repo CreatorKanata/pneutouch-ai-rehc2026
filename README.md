@@ -56,6 +56,8 @@ PneuTouch AI は、センサーを増やす代わりに**恐竜の「形」に�
 センサー → しっぽ → 右後ろ足 → 右前足 → 左前足 → 左後ろ足 → 背中 → 頭
 ```
 
+![7つの空気室のつながり](images/protopedia/air-chambers.png)
+
 ## ハードウェア
 
 | 部品 | 役割 |
@@ -97,6 +99,8 @@ PneuTouch AI は、センサーを増やす代わりに**恐竜の「形」に�
 自作のファームウェアは `src/pneutouch-solist/S_PneuTouch` にあります。
 
 ### AIモデル
+
+![押して離したときの波形と12個の特徴量](images/protopedia/waveform-features.png)
 
 | 項目 | 内容 |
 |---|---|
