@@ -19,7 +19,6 @@ import csv
 import json
 import re
 import sys
-from collections import defaultdict
 from pathlib import Path
 
 import numpy as np
@@ -31,6 +30,9 @@ KEY = ['rise_ms', 'width_ms', 'decay_ms', 'release_width_ms', 'recovery_ms',
        'trough_peak_ratio', 'area_ratio', 'peak_counts', 'trough_counts']
 SHAPE = ap.POS_SHAPE + ap.NEG_SHAPE + ap.RATIOS          # amplitude-free 12 features
 TIME_KEYS = ['width_ms', 'decay_ms', 'recovery_ms', 'release_width_ms']
+GO_PIECES = ('ti1', 'ti4', 'ti5')
+MIN_GO_EVENTS = 7
+GO_ACCURACY = 0.8
 
 
 def piece_of(path):
@@ -65,6 +67,15 @@ def loo_centroid(x, labels):
         pred = min(cents, key=lambda c: np.linalg.norm(z[i] - cents[c]))
         hits += pred == labels[i]
     return hits / len(x)
+
+
+def subset_accuracy(x, labels, pieces, min_events=2):
+    """Evaluate only the requested classes; never score a missing/undersampled class."""
+    labels = np.asarray(labels)
+    if len(pieces) < 2 or any(np.count_nonzero(labels == p) < min_events for p in pieces):
+        return float('nan')
+    keep = np.isin(labels, pieces)
+    return loo_centroid(x[keep], labels[keep])
 
 
 def medians(events, pieces):
@@ -142,7 +153,7 @@ def plot_features(events, pieces, path):
     fig.tight_layout(); fig.savefig(path, dpi=110); plt.close(fig)
 
 
-def write_summary(out, events, pieces, med, acc_all, acc_pairs, strength, ratios, counts):
+def write_summary(out, events, pieces, med, acc_all, acc_pairs, acc_go, strength, ratios, counts):
     lines = ['# 試験片の比較', '', f'入力イベント: 検出 {sum(counts[p]["detected"] for p in pieces)}、'
              f'完全な波形 {sum(counts[p]["complete"] for p in pieces)}。', '',
              '## 片ごとの中央値（完全な波形のみ）', '',
@@ -152,7 +163,18 @@ def write_summary(out, events, pieces, med, acc_all, acc_pairs, strength, ratios
         m = med[p]
         lines.append(f"| {p} | {counts[p]['complete']} | {m['peak_counts']/1000:.0f} | {m['rise_ms']:.0f} | {m['width_ms']:.0f} | "
                      f"{m['decay_ms']:.0f} | {m['release_width_ms']:.0f} | {m['recovery_ms']:.0f} | {m['trough_peak_ratio']:.2f} | {m['area_ratio']:.2f} |")
-    lines += ['', '## 分離（一回抜き最近重心法、振幅を含まない 12 特徴量）', '',
+    lines += ['', '## 分離（一回抜き最近重心法、振幅を含まない 12 特徴量）', '']
+    target = ' / '.join(GO_PIECES)
+    if np.isfinite(acc_go):
+        decision = 'go' if acc_go >= GO_ACCURACY else 'no-go'
+        lines.append(f'- {target} の 3 分類（go 判定）: **{acc_go*100:.1f}%** → **{decision}**'
+                     f'（基準: {GO_ACCURACY*100:.0f}% 以上、丸め前の精度で判定）')
+    else:
+        lines.append(f'- {target} の 3 分類（go 判定）: **未判定**'
+                     f'（各片の完全な波形が {MIN_GO_EVENTS} 件以上必要）')
+    lines.append('- go 判定用の完全な波形数: ' + '、'.join(
+        f'{p}={counts.get(p, {}).get("complete", 0)}' for p in GO_PIECES))
+    lines += ['', '全片・ペア別の精度は参考値（go 判定には使わない）。', '',
               f'- 全片: **{acc_all*100:.0f}%**（偶然 {100/len(pieces):.0f}%）']
     for (a, b), v in acc_pairs.items():
         lines.append(f'- {a} vs {b}: {v*100:.0f}%')
@@ -188,13 +210,13 @@ def main():
     med = medians(complete, pieces)
     x = np.log(np.array([[e[k] for k in SHAPE] for e in complete]))
     labels = [e['piece'] for e in complete]
-    acc_all = loo_centroid(x, labels) if len(pieces) > 1 else float('nan')
+    acc_all = subset_accuracy(x, labels, pieces)
+    acc_go = subset_accuracy(x, labels, GO_PIECES, min_events=MIN_GO_EVENTS)
     acc_pairs = {}
     for i, a in enumerate(pieces):
         for b in pieces[i + 1:]:
-            m = np.array([l in (a, b) for l in labels])
-            acc_pairs[(a, b)] = loo_centroid(x[m], np.array(labels)[m])
-    write_summary(out, complete, pieces, med, acc_all, acc_pairs, strength_check(complete, pieces),
+            acc_pairs[(a, b)] = subset_accuracy(x, labels, (a, b))
+    write_summary(out, complete, pieces, med, acc_all, acc_pairs, acc_go, strength_check(complete, pieces),
                   pairwise_ratios(med, pieces), counts)
     with (out / 'events.csv').open('w', newline='', encoding='utf-8') as f:
         keys = ['piece', 'file', 'event', 'complete', 'exclusion'] + KEY + SHAPE
