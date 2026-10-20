@@ -1,0 +1,77 @@
+[
+  {
+    "name": "ti1-plain",
+    "face": "flat",
+    "face_mm": 1.5,
+    "depth_mm": 14.0,
+    "note": "基準: 皮 1.5 mm、内部なし",
+    "size_mm": [
+      62.5,
+      35.0,
+      41.3
+    ],
+    "tpu_cm3": 14.2,
+    "genus": 0,
+    "triangles": 1670
+  },
+  {
+    "name": "ti2-thick-3.0",
+    "face": "flat",
+    "face_mm": 3.0,
+    "depth_mm": 14.0,
+    "note": "内側から肉厚 3.0 mm（外形は同じ）",
+    "size_mm": [
+      62.5,
+      35.0,
+      41.3
+    ],
+    "tpu_cm3": 15.4,
+    "genus": 0,
+    "triangles": 1766
+  },
+  {
+    "name": "ti3-ribs",
+    "face": "ribs",
+    "face_mm": 1.5,
+    "depth_mm": 14.0,
+    "note": "皮の裏に縦リブ 1.5 mm × 高さ 3、ピッチ 6",
+    "size_mm": [
+      62.5,
+      35.0,
+      41.3
+    ],
+    "tpu_cm3": 14.8,
+    "genus": 0,
+    "triangles": 2078
+  },
+  {
+    "name": "ti4-gap-1.5",
+    "face": "gap",
+    "face_mm": 1.5,
+    "depth_mm": 14.0,
+    "note": "皮の裏に 1.5 mm の隙間と第 2 の膜 1.5 mm（隙間は床に通気）",
+    "size_mm": [
+      62.5,
+      35.0,
+      41.3
+    ],
+    "tpu_cm3": 15.5,
+    "genus": 0,
+    "triangles": 2214
+  },
+  {
+    "name": "ti5-gap-3.0",
+    "face": "gap",
+    "face_mm": 1.5,
+    "depth_mm": 14.0,
+    "note": "皮の裏に 3.0 mm の隙間と第 2 の膜 1.5 mm（隙間は床に通気）",
+    "size_mm": [
+      62.5,
+      35.0,
+      41.3
+    ],
+    "tpu_cm3": 15.6,
+    "genus": 0,
+    "triangles": 2342
+  }
+]
