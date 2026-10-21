@@ -9,6 +9,9 @@
 #define QUIET_COUNTS 25000.0f
 #define TIMEOUT_MS 4000U
 #define MAX_INTERVAL_MS 100U
+/* 40000 chosen for the TPU 85A dinosaur on 2026-10-21 (legs peak 49-88k; was 100000). */
+#define MIN_PEAK_COUNTS 40000.0f
+#define MIN_TROUGH_COUNTS 30000.0f
 
 /* Only extract() uses these arrays. Cache each conversion once per completed
    event: thousands of repeated soft-float conversions otherwise stall the M0+
@@ -123,7 +126,7 @@ static bool extract(pneu_features_t *s)
     for (i = peak; i < s->count; ++i)
         if (sample(s, i).raw < sample(s, trough).raw) trough = i;
     a = delta_at(s, peak); b = -delta_at(s, trough);
-    if (a < 100000.0f || b < 30000.0f) return false;
+    if (a < MIN_PEAK_COUNTS || b < MIN_TROUGH_COUNTS) return false;
     lo = 0;
     while (lo < peak && time_at(s, lo) < time_at(s, peak)-1200.0f) ++lo;
     for (i = 0; i < 3; ++i) {
