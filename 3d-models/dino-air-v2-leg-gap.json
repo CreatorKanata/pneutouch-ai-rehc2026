@@ -1,0 +1,64 @@
+{
+  "src": "3d-models/dino-air-7segments.stl",
+  "gap_mm": 2.5,
+  "wall_mm": 1.5,
+  "vent_d_mm": 1.2,
+  "legs": [
+    {
+      "z_bottom": 5.5,
+      "z_top": 27.5,
+      "centroid": [
+        -38.92080773571224,
+        54.71791313407999
+      ],
+      "vent_x": -32.61136777400971,
+      "vent_dir": 1.0,
+      "pocket_volume_cm3": null,
+      "max_unsupported_fraction": 0.10414783037289285,
+      "at_z": 28.5
+    },
+    {
+      "z_bottom": 5.5,
+      "z_top": 28.0,
+      "centroid": [
+        -7.1176693607764,
+        54.93353481051223
+      ],
+      "vent_x": -12.917907971143723,
+      "vent_dir": -1.0,
+      "pocket_volume_cm3": null,
+      "max_unsupported_fraction": 0.11922978003248208,
+      "at_z": 28.5
+    },
+    {
+      "z_bottom": 5.5,
+      "z_top": 21.0,
+      "centroid": [
+        -42.99477340328315,
+        102.91883528563712
+      ],
+      "vent_x": -35.76001901626587,
+      "vent_dir": 1.0,
+      "pocket_volume_cm3": null,
+      "max_unsupported_fraction": 0.14853407170182514,
+      "at_z": 21.5
+    },
+    {
+      "z_bottom": 5.5,
+      "z_top": 21.0,
+      "centroid": [
+        -2.272579506394409,
+        102.4674305866162
+      ],
+      "vent_x": -9.776014979183673,
+      "vent_dir": -1.0,
+      "pocket_volume_cm3": null,
+      "max_unsupported_fraction": 0.16457321599914912,
+      "at_z": 21.5
+    }
+  ],
+  "tpu_cm3_v1": 68.5,
+  "tpu_cm3_v2": 74.5,
+  "genus": 11,
+  "triangles": 30668
+}
