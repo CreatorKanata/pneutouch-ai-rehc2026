@@ -151,6 +151,25 @@ class PrepareRetrainTests(unittest.TestCase):
         self.assertIn('TAIL (0/13)', summary)
         self.assertEqual(len(ctx['kept']), 3 * GOOD)
 
+    def test_model_inputs_substitute_peak_and_trough(self):
+        order = pr.FEATURE_ORDER
+        feats = list(BASE['legs'])
+        kept = [dict(features12=feats, peak=48_000.0, label=3)]
+        x = rr.model_inputs(kept, order)
+        ratio = feats[order.index('trough_peak_ratio')]
+        self.assertAlmostEqual(x[0, 5], 48.0)
+        self.assertAlmostEqual(x[0, 10], 48_000.0 * ratio / 1000)
+        others = [i for i in range(12) if i not in (5, 10)]
+        self.assertEqual(list(x[0, others]), [feats[i] for i in others])
+        self.assertEqual(feats, BASE['legs'])  # input not mutated
+
+    def test_summary_has_model_input_loo_line(self):
+        self.run_tool()
+        summary = (self.out / 'summary.md').read_text(encoding='utf-8')
+        self.assertIn('- 4 zones: **', summary)
+        self.assertIn('- 4 zones, model inputs (peak/trough replace inputs 5/10): **', summary)
+        self.assertEqual(summary.count('HEAD vs LEGS:'), 2)
+
     def test_loo_predictions_match_shared_accuracy(self):
         rng = np.random.default_rng(3)
         x = np.vstack([rng.normal(c, 1.0, (8, 12)) for c in (0, 1.5, 3)])

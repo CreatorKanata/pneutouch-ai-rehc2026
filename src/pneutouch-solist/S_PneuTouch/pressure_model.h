@@ -15,7 +15,10 @@ typedef struct {
 extern volatile pneu_model_status_t pneutouch_model;
 /* Train the fixed reference set on the chip at boot (also after PAI1 mode). */
 bool pneu_model_init(void);
-pneu_demo_class_t pneu_model_predict(const float values[12], float positive_peak_counts);
+/* Both instances replace input 5 with positive peak / 1000 counts and input 10
+   with trough magnitude / 1000 counts before the log/normalization. */
+pneu_demo_class_t pneu_model_predict(const float values[12], float positive_peak_counts,
+                                     float trough_counts);
 bool pneu_model_transform(const float values[12], uint16_t words[12]);
 const char *pneu_class_name(pneu_demo_class_t label);
 #endif

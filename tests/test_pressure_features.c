@@ -56,6 +56,16 @@ int main(void)
         }
         assert(completed == 1);
     }
+    /* 30000-count trigger (TPU 85A legs): +20000 stays quiet, +35000 starts. */
+    pneu_features_init(&state);
+    for (i = 0; i < 60; ++i) feed(i, 4000000);
+    for (i = 60; i < 63; ++i) assert(feed(i, 4020000) == PNEU_EVENT_NONE);
+    assert(!state.active);
+    pneu_features_init(&state);
+    for (i = 0; i < 60; ++i) feed(i, 4000000);
+    assert(feed(60, 4035000) == PNEU_EVENT_NONE);
+    assert(feed(61, 4035000) == PNEU_EVENT_START);
+    assert(state.active);
     assert(pneu_demo_class_for_zone(0) == PNEU_CLASS_UNKNOWN);
     assert(pneu_demo_class_for_zone(1) == PNEU_CLASS_TAIL);
     assert(pneu_demo_class_for_zone(2) == PNEU_CLASS_BACK);

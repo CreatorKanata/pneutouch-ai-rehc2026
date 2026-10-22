@@ -4,7 +4,7 @@
 |---|---|
 | [strategy-review.md](strategy-review.md) | **まず読む。** GPT案と実装の照合、3基準での現在地、10日間で賭けるもの（teach モード、独立評価） |
 | [plan-10days.md](plan-10days.md) | 日程、独立評価の取り方、バックアップ方針 |
-| [retrain-85a.md](retrain-85a.md) | **85A 恐竜（v2）の再学習手順（10/21）**: 収録 → `prepare_retrain.py` → `generate_pressure_model.py` → ビルド → 独立評価 |
+| [retrain-85a.md](retrain-85a.md) | **85A 恐竜（v2）の再学習手順（10/21、10/22 更新）**: 収録 → `prepare_retrain.py` → `generate_pressure_model.py` → ビルド → 独立評価 |
 | [test-pieces-results.md](test-pieces-results.md) | **試験片 ti1〜ti5 の検証結果（10/21）**: あそびで減衰時間が 2.4〜2.9 倍変わり 3 分類 97%、go |
 | [test-pieces-protocol.md](test-pieces-protocol.md) | 試験片 ti1〜ti5 のテスト手順（Codex / 作業者向け。接続、記録、ファイル名、解析コマンド、go/no-go 判定） |
 | [what-discriminates.md](what-discriminates.md) | **何で場所を見分けられるか**: 文献3調査と計算の総合判断（受動空気では皮の内側だけ。音響なら空気室の形と穴の両方） |

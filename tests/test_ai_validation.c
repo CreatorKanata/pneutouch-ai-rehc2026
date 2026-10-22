@@ -13,9 +13,10 @@ static uint32_t busy;
 static unsigned live_predictions;
 volatile pneu_model_status_t pneutouch_model;
 bool pneu_model_init(void) { return true; }
-pneu_demo_class_t pneu_model_predict(const float values[12], float peak)
+pneu_demo_class_t pneu_model_predict(const float values[12], float peak, float trough)
 {
     assert(peak == 1.0f);
+    assert(trough == 1.0f); /* peak * values[10] */
     for (unsigned i = 0; i < 12; ++i) assert(values[i] == 1.0f);
     ++live_predictions;
     pneutouch_model.primary_label = PNEU_CLASS_LEGS;

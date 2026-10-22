@@ -127,7 +127,13 @@ static pneu_demo_class_t predict_instance(uint8_t instance, const uint16_t words
     return (pneu_demo_class_t)(winner+1U);
 }
 
-pneu_demo_class_t pneu_model_predict(const float values[12], float positive_peak_counts)
+static bool amplitude_ok(float counts)
+{
+    return counts > 0.0f && counts < 100000000.0f;
+}
+
+pneu_demo_class_t pneu_model_predict(const float values[12], float positive_peak_counts,
+                                     float trough_counts)
 {
     uint16_t words[12];
     float logged[12];
@@ -138,15 +144,17 @@ pneu_demo_class_t pneu_model_predict(const float values[12], float positive_peak
     pneutouch_model.specialist_used = false;
     pneutouch_model.inference_us = 0;
     if (!pneutouch_model.ready || !logarithms(values, logged) ||
-        !normalize(logged, words, model_mean, model_scale)) return PNEU_CLASS_UNKNOWN;
+        !amplitude_ok(positive_peak_counts) || !amplitude_ok(trough_counts)) return PNEU_CLASS_UNKNOWN;
+    /* Ten shape logarithms are shared by both instances; inputs 5 and 10 are
+       replaced once by absolute positive peak and trough magnitude in kcounts. */
+    logged[5] = logf(positive_peak_counts/1000.0f);
+    logged[10] = logf(trough_counts/1000.0f);
+    if (!normalize(logged, words, model_mean, model_scale)) return PNEU_CLASS_UNKNOWN;
     label = predict_instance(0, words, 0);
     pneutouch_model.primary_label = label;
     for (i = 0; i < 4; ++i) pneutouch_model.primary_scores[i] = pneutouch_model.scores[i];
     if (label == PNEU_CLASS_UNKNOWN) return label;
     if (label == PNEU_CLASS_HEAD || label == PNEU_CLASS_LEGS) {
-        if (!(positive_peak_counts > 0.0f && positive_peak_counts < 100000000.0f)) return PNEU_CLASS_UNKNOWN;
-        /* Eleven logarithms are shared; only absolute pressure adds a logf. */
-        logged[5] = logf(positive_peak_counts/1000.0f);
         if (!normalize(logged, words, specialist_mean, specialist_scale)) return PNEU_CLASS_UNKNOWN;
         pneutouch_model.specialist_used = true;
         label = predict_instance(1, words, 2); /* Only LEGS/HEAD are trained here. */

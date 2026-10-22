@@ -103,20 +103,44 @@ def loo_predictions(x, labels):
     return preds
 
 
-def loo_section(kept, names):
-    lines = ['## Leave-one-out nearest centroid (12 log features)', '']
-    if not kept:
-        return lines + ['- no kept events: n/a']
-    x = np.log(np.array([e['features12'] for e in kept], dtype=float))
-    labels = np.array([e['label'] for e in kept])
+MODEL_PEAK_INPUT, MODEL_TROUGH_INPUT = 5, 10
+
+
+def model_inputs(kept, order):
+    """Raw (pre-log) model inputs: features12 with input 5 = peak/1000 and
+    input 10 = trough/1000, trough = peak * trough_peak_ratio (as the firmware)."""
+    x = np.array([e['features12'] for e in kept], dtype=float)
+    peak = np.array([e['peak'] for e in kept], dtype=float)
+    ratio = x[:, order.index('trough_peak_ratio')]
+    x[:, MODEL_PEAK_INPUT] = peak / 1000
+    x[:, MODEL_TROUGH_INPUT] = peak * ratio / 1000
+    return x
+
+
+def loo_lines(x, labels, names, title):
+    """4-zone line, pair lines and (when defined) the confusion table."""
     acc4 = atp.subset_accuracy(x, labels, ORDER)
-    lines.append(f'- 4 zones: **{fmt_pct(acc4)}** (chance 25%)')
+    lines = [f'- {title}: **{fmt_pct(acc4)}** (chance 25%)']
     for a, b in PAIRS:
         lines.append(f'- {names[a]} vs {names[b]}: {fmt_pct(atp.subset_accuracy(x, labels, (a, b)))}')
     if np.isfinite(acc4):
         columns = [names[z] for z in ORDER]
         pred = [names[p] for p in loo_predictions(x, labels)]
         lines += [''] + confusion_lines(list(labels), pred, names, columns)
+    return lines
+
+
+def loo_section(kept, names, order):
+    lines = ['## Leave-one-out nearest centroid (12 log features)', '']
+    if not kept:
+        return lines + ['- no kept events: n/a']
+    labels = np.array([e['label'] for e in kept])
+    shape = np.log(np.array([e['features12'] for e in kept], dtype=float))
+    lines += loo_lines(shape, labels, names, '4 zones')
+    lines += ['', '*Model inputs as the firmware uses them: inputs 5/10 are log(peak/1000) and '
+              'log(trough/1000) instead of asymmetry and trough/peak.*', '']
+    lines += loo_lines(np.log(model_inputs(kept, order)), labels, names,
+                       '4 zones, model inputs (peak/trough replace inputs 5/10)')
     return lines
 
 
@@ -168,7 +192,8 @@ def write_summary(ctx):
     names = ctx['zone_names']
     med = zone_medians(ctx['kept'], ctx['feature_order'])
     sections = [input_section(ctx), ['## Per zone', ''] + zone_table(ctx, med),
-                firmware_section(ctx['kept'], names), loo_section(ctx['kept'], names),
+                firmware_section(ctx['kept'], names),
+                loo_section(ctx['kept'], names, ctx['feature_order']),
                 v2_section(med, names), readiness_section(ctx),
                 ['## Files', '', '- `pressure-demo-training.json`, `events.csv` (all events with exclusion '
                  'reason), `waveforms.png` (mean ± 1σ, baseline-subtracted, aligned at trigger)']]

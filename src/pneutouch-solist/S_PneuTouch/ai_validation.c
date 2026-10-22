@@ -122,7 +122,9 @@ static void command(void)
             if ((bits & 0x7f800000U) == 0x7f800000U) { error("NONFINITE"); return; }
             memcpy(&values[i], &bits, sizeof(bits));
         }
-        label = pneu_model_predict(values, values[12]);
+        /* Wire format stays 12 features + peak; trough = peak * trough/peak
+           ratio (input 10), the same rule tools/generate_pressure_model.py uses. */
+        label = pneu_model_predict(values, values[12], values[12]*values[10]);
         text("# PAI1,LIVEPREDICT,"); number(id); board_putc(','); number((uint32_t)label);
         board_putc(','); number((uint32_t)pneutouch_model.primary_label);
         board_putc(','); number(pneutouch_model.specialist_used ? 1U : 0U);

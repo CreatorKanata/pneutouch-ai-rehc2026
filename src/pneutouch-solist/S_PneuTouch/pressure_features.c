@@ -5,12 +5,13 @@
 
 #define WARM_POINTS 32U
 #define WARM_SPAN 20000
-#define TRIGGER_COUNTS 50000.0f
+/* 30000 since 2026-10-22 for the TPU 85A dinosaur: leg presses peak 30-88k counts; no false triggers seen on other zones. */
+#define TRIGGER_COUNTS 30000.0f
 #define QUIET_COUNTS 25000.0f
 #define TIMEOUT_MS 4000U
 #define MAX_INTERVAL_MS 100U
-/* 40000 chosen for the TPU 85A dinosaur on 2026-10-21 (legs peak 49-88k; was 100000). */
-#define MIN_PEAK_COUNTS 40000.0f
+/* 25000 chosen for the TPU 85A dinosaur on 2026-10-22 (legs peak 30-88k; was 100000 then 40000). */
+#define MIN_PEAK_COUNTS 25000.0f
 #define MIN_TROUGH_COUNTS 30000.0f
 
 /* Only extract() uses these arrays. Cache each conversion once per completed

@@ -1,6 +1,9 @@
 """Freeze recorded gestures for autonomous boot-time Solist-AI training.
 
 This is the final fit, not a new held-out accuracy measurement.
+Both instances replace input 5 with positive peak / 1000 counts and input 10
+with trough magnitude / 1000 counts (trough = event 'trough' if present, else
+peak * features12[10]), exactly as pressure_model.c does before the log.
 """
 import hashlib
 import json
@@ -13,10 +16,27 @@ SOURCE = ROOT / 'docs/analysis/2026-09-20-live-calibration/pressure-demo-trainin
 DEST = ROOT / 'src/pneutouch-solist/S_PneuTouch/pressure_model_data.h'
 
 
+def trough_counts(event):
+    """Positive magnitude of the release trough in counts."""
+    return event.get('trough', event['peak'] * event['features12'][10])
+
+
+def model_inputs(events):
+    """features12 with inputs 5/10 replaced by peak/1000 and trough/1000.
+
+    float32 division matches the firmware's `counts/1000.0f`.
+    """
+    x = np.array([e['features12'] for e in events], dtype=np.float32)
+    kilo = np.float32(1000)
+    x[:, 5] = np.array([e['peak'] for e in events], dtype=np.float32) / kilo
+    x[:, 10] = np.array([trough_counts(e) for e in events], dtype=np.float32) / kilo
+    return x
+
+
 def generate(source=SOURCE):
     data = json.loads(source.read_text(encoding='utf8'))
     events = data['events']
-    x = np.array([e['features12'] for e in events], dtype=np.float32)
+    x = model_inputs(events)
     count = len(events)
     hidden = data.get('model',{}).get('hidden',32)
     assert hidden in (32,64)
@@ -50,8 +70,7 @@ def generate(source=SOURCE):
               f'static const uint8_t model_order[{count*4}] = {{' +
               ','.join(map(str, order)) + '};']
     subset = [e for e in events if e['label'] in (3, 4)]
-    sx = np.array([e['features12'] for e in subset], dtype=np.float32)
-    sx[:, 5] = np.array([e['peak']/1000 for e in subset], dtype=np.float32)
+    sx = model_inputs(subset)
     slog = np.log(sx.astype(np.float64))
     sm = slog.mean(0).astype(np.float32)
     ss = (3*slog.std(0)).astype(np.float32)
@@ -59,14 +78,16 @@ def generate(source=SOURCE):
     sw = ((np.log(sx)-sm)/ss).view(np.uint32) >> 16
     srng = np.random.default_rng(1)
     so = np.concatenate([srng.permutation(len(subset)) for _ in range(4)])
-    lines += ['/* Instance 1: HEAD/LEGS only. Input 5 is positive peak / 1000 counts. */',
+    lines += [('/* Instance 1: HEAD/LEGS only. Both instances: input 5 = positive peak / 1000 counts, '
+               'input 10 = trough magnitude / 1000 counts. */'),
               '#define PNEU_SPECIALIST_HIDDEN 32U',
               f'#define PNEU_SPECIALIST_EXAMPLES {len(subset)}U',
               f'#define PNEU_SPECIALIST_STEPS {len(subset)*4}U',
               f'static const float specialist_mean[12] = {{{floats(sm)}}};',
               f'static const float specialist_scale[12] = {{{floats(ss)}}};',
-              f'static const float specialist_reference_shape[12] = {{{floats(subset[0]["features12"])}}};',
+              f'static const float specialist_reference_shape[12] = {{{floats(sx[0])}}};',
               f'static const float specialist_reference_peak = {float(subset[0]["peak"]):.9e}f;',
+              f'static const float specialist_reference_trough = {float(trough_counts(subset[0])):.9e}f;',
               f'static const uint16_t specialist_training[{len(subset)}][12] = {{']
     lines += ['    {' + ','.join(f'0x{int(v):04x}' for v in row) + '},' for row in sw]
     lines += ['};', f'static const uint8_t specialist_labels[{len(subset)}] = {{' +

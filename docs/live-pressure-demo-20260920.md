@@ -63,7 +63,7 @@ CN9はCOM6/COM7、圧力UARTは **COM7, 115200/8N1**。MCU-LINKはCOM4/COM5。
 | `PNEU1,seq,ms,raw` | 実センサー生値 |
 | `# PNEE1` / `# PNEF1` | 検出イベントと12特徴 |
 | `# PNEM1,READY,60,368,us` | 両モデルの起動時学習完了 |
-| `# PNEM2,HEAD_LEGS,32,128,input5=positive_peak_kcounts` | 専用モデルの構成（input5は0始まり） |
+| `# PNEM2,HEAD_LEGS,32,128,input5=positive_peak_kcounts,input10=trough_kcounts` | 専用モデルの構成（input5/input10は0始まり。2026-10-22から両モデルとも input5=正の山/1000、input10=谷の大きさ/1000） |
 | `# PNEC1,id,ms,label,us,s0,s1,s2,s3` | 最終段のスコア。bfloat16の16進数、順序TAIL/BACK/LEGS/HEAD。専用段はLEGS/HEADだけを比較。usは前処理と全推定を含む |
 | `# PNEL1,label,ms` | LCDへの全文送信ACKの時刻。UNKNOWNは待機表示への復帰 |
 | `# PNEL1,ERROR,I2C` | LCD通信異常 |
