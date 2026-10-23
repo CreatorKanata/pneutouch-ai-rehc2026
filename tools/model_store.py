@@ -156,9 +156,9 @@ def load(store, slot, training, k=0, name='', use=False):
 
 def dump(store, slot):
     """Same JSON shape as prepare_retrain (feature_order, events) plus the FeRAM source."""
-    info = store.slot(slot)
     events = []
     with store.paused():
+        info = store.slot(slot)
         for index in range(info['count'] if info['state'] else 0):
             label, row = store.get(slot, index)
             events.append(dict(label=label, zone=ZONE_NAMES[label], features12=[float(v) for v in row[:12]],
@@ -175,12 +175,18 @@ def describe_training(result):
 
 
 def run(args, store):
-    """Execute one CLI command; returns the lines to print."""
+    """Execute one CLI command; returns the lines to print.
+
+    Every command pauses acquisition first (PAI1 MODE 1): in live mode the board
+    streams PNEU1 and its small UART RX buffer drops a packet sent in one go.
+    """
     if args.command == 'info':
-        i = store.info()
+        with store.paused():
+            i = store.info()
         return [f'active slot: {i["active"]}'] + [f'slot {n}: {c} records' for n, c in enumerate(i['counts'])]
     if args.command == 'selftest':
-        result = store.selftest()
+        with store.paused():
+            result = store.selftest()
         return [f'FeRAM self test: {"PASS" if result == 0 else f"FAIL ({result})"}']
     if args.command == 'load':
         training = json.loads(args.input.read_text(encoding='utf-8'))

@@ -116,7 +116,7 @@ class ReferenceTests(unittest.TestCase):
     def test_report_and_cli(self):
         lines = fs.report(fixture_events())
         text = '\n'.join(lines)
-        self.assertIn('selected (5): rise_ms, slope_norm_s, trough_peak_ratio, trough, peak', text)
+        self.assertIn('selected (4): rise_ms, slope_norm_s, trough_peak_ratio, trough', text)
         self.assertIn('LOO nearest centroid, all 14 log features:', text)
         self.assertNotIn('HEAD/LEGS', text)
         with tempfile.TemporaryDirectory() as directory:

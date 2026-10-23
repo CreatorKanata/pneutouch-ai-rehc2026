@@ -5,7 +5,7 @@
 #include <string.h>
 
 #define MIN_SCALE 1e-6f
-#define AUTO_DIVISOR 16.0f
+#define AUTO_DIVISOR 10.0f
 #define MIN_AUTO 2U
 
 static bool finite_positive(float v)
@@ -34,7 +34,7 @@ bool pneu_stats_add(pneu_stats_t *s, uint8_t label, const float pool[PNEU_POOL_C
     return true;
 }
 
-/* Fisher, mean and 3 x population std of feature j. */
+/* Fisher, mean and population std of feature j. */
 static void score(const pneu_stats_t *s, uint8_t mask, float count, unsigned j, pneu_selection_t *out)
 {
     float total = 0.0f, squares = 0.0f, within = 0.0f, between = 0.0f, var;
@@ -52,7 +52,7 @@ static void score(const pneu_stats_t *s, uint8_t mask, float count, unsigned j, 
         between += nc*d*d;
     }
     var = squares/count-out->mean[j]*out->mean[j];
-    out->scale[j] = 3.0f*sqrtf(var > 0.0f ? var : 0.0f);
+    out->scale[j] = sqrtf(var > 0.0f ? var : 0.0f);
     /* A constant feature cannot be normalized, so it is never ranked. */
     out->fisher[j] = out->scale[j] > MIN_SCALE && within > 0.0f ? between/within : 0.0f;
 }

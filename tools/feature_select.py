@@ -2,7 +2,7 @@
 
 The chip ranks 14 pool features (features12 + peak + trough, all log) by the
 Fisher score over the four classes, keeps the best ones, normalizes
-with mean and 3 x population std, and trains Solist-AI in a fixed order.
+with mean and population std, and trains Solist-AI in a fixed order.
 This module mirrors that arithmetic in numpy float32 so a training JSON can
 be previewed on the PC before it is loaded with tools/model_store.py.
 
@@ -28,7 +28,7 @@ FEATURE_NAMES = prepare_retrain.FEATURE_ORDER + ['peak', 'trough']
 TRAIN_PRIMES = (3, 5, 7, 11, 13, 17, 19, 23)
 TRAIN_EPOCHS = 4
 MIN_SCALE = np.float32(1e-6)
-AUTO_DIVISOR = np.float32(16)
+AUTO_DIVISOR = np.float32(10)
 F32 = np.float32
 
 
@@ -90,7 +90,7 @@ def _scores(s, classes):
             d = F32(F32(sc / nc) - mean[j])
             between = F32(between + F32(F32(nc * d) * d))
         var = F32(F32(squares / count) - F32(mean[j] * mean[j]))
-        scale[j] = F32(F32(3) * np.sqrt(max(var, F32(0)), dtype=F32))
+        scale[j] = F32(np.sqrt(max(var, F32(0)), dtype=F32))
         fisher[j] = F32(between / within) if scale[j] > MIN_SCALE and within > 0 else F32(0)
     return fisher, mean, scale
 

@@ -119,9 +119,9 @@ static void test_training(void)
     for (unsigned i = 0; i < FIX_PRIMARY_AUTO_COUNT; ++i) assert(pneutouch_model.selected[i] == fix_primary_auto[i]);
     for (unsigned j = 0; j < 14; ++j)
         assert(fabs(pneutouch_model.fisher[j]-fix_primary_fisher[j]) <= 1e-4*fix_primary_fisher[j]+1e-5);
-    /* Cells in pool order 0..13: 0, 4, 10, 12, 13 selected; count " 5". */
+    /* Cells in pool order 0..13: 0, 4, 10, 13 selected; count " 4". */
     for (unsigned i = 0; i < 17; ++i) line[i] = pneutouch_model.lcd_line2[i];
-    assert(!memcmp(line, "\xff   \xff     \xff \xff\xff 5", 17));
+    assert(!memcmp(line, "\xff   \xff     \xff  \xff 4", 17));
 }
 
 static void test_line2_format(void)

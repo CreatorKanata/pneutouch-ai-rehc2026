@@ -229,7 +229,13 @@ class CliTests(unittest.TestCase):
             self.assertIn('active slot: 3', self.run_cli(board, 'use', '--slot', '3'))
             self.assertIn('slot 0 erased', self.run_cli(board, 'erase', '--slot', '0'))
             self.assertIn('READY', self.run_cli(board, 'train'))
+            board.sent.clear()
             self.assertIn('PASS', self.run_cli(board, 'selftest'))
+            # Live mode drops whole packets: even read-only commands pause acquisition first.
+            self.assertEqual([op for _, op in board.sent], ['MODE', 'SELFTEST', 'MODE'])
+            board.sent.clear()
+            self.run_cli(board, 'info')
+            self.assertEqual([op for _, op in board.sent], ['MODE', 'INFO', 'MODE'])
             board.override['SELFTEST'] = '# PST1,ERROR,MODE_REQUIRED'
             with self.assertRaises(SystemExit):
                 self.run_cli(board, 'selftest')
