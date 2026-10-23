@@ -10,11 +10,14 @@
 #define PNEU_STORE_SLOTS 4U
 #define PNEU_STORE_MAX_RECORDS 1000U
 #define PNEU_STORE_NAME 8U
+#define PNEU_RECALL_ABSENT 255U /* recall entry of a class without records */
 
 typedef enum { PNEU_SLOT_EMPTY = 0, PNEU_SLOT_OPEN = 1, PNEU_SLOT_COMMITTED = 2 } pneu_slot_state_t;
 
 typedef struct {
     uint8_t state, k, pool_count;
+    /* tuned_k 0 = never tuned; recall percent per class (label-1), only meaningful when tuned. */
+    uint8_t tuned_k, recall[4];
     uint16_t count;
     char name[PNEU_STORE_NAME+1U];
     bool valid;
@@ -33,6 +36,9 @@ bool pneu_store_open(uint8_t slot, uint8_t k, const char *name);
 bool pneu_store_put(uint8_t slot, uint8_t label, const float pool[PNEU_POOL_COUNT]);
 bool pneu_store_commit(uint8_t slot);       /* OPEN -> COMMITTED, count >= 4 */
 bool pneu_store_erase(uint8_t slot);        /* EMPTY, count 0 */
-/* CRC checked; works for OPEN or COMMITTED slots. */
+/* COMMITTED slot only; tuned_k 1..12; recall percent 0..100 or 255. Keeps k/state/count/name. */
+bool pneu_store_set_tuning(uint8_t slot, uint8_t tuned_k, const uint8_t recall[4]);
+/* CRC checked; works for OPEN or COMMITTED slots. Uses a one-entry header cache
+   (any header write or pneu_store_init drops it; pneu_store_slot_info always reads FeRAM). */
 bool pneu_store_get(uint8_t slot, uint16_t index, uint8_t *label, float pool[PNEU_POOL_COUNT]);
 #endif

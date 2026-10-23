@@ -50,8 +50,11 @@ static void command(void)
     if (!strcmp(fields[0], "PST1")) {
         if (job) { pneu_text("# PST1,ERROR,BUSY\r\n"); return; }
         last_command_ms = board_millis();
-        /* TRAIN re-initializes both instances, so a PAI1 INIT is no longer valid. */
+        /* TRAIN/TUNE retrain instance 0, so a PAI1 INIT is no longer valid; after TUNE
+           pneutouch_model.ready is false, so LIVEPREDICT needs LIVEINIT/TRAIN again. */
         if (pneu_store_command(fields, n, validation)) { initialized = false; live_ready = pneutouch_model.ready; }
+        /* TUNE can block longer than the 60 s idle timeout: the idle budget restarts when it ends. */
+        last_command_ms = board_millis();
         return;
     }
     if (n < 3 || strcmp(fields[0], "PAI1")) { error("PROTOCOL"); return; }

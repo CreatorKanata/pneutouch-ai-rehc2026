@@ -19,6 +19,7 @@ typedef struct {
 typedef struct {
     uint8_t count, index[PNEU_SELECT_MAX];         /* selected pool indices, best first */
     float fisher[PNEU_POOL_COUNT], mean[PNEU_POOL_COUNT], scale[PNEU_POOL_COUNT];
+    float inv_scale[PNEU_POOL_COUNT];              /* 1/scale (0 when constant): no division per word */
 } pneu_selection_t;
 
 void pneu_stats_reset(pneu_stats_t *s);

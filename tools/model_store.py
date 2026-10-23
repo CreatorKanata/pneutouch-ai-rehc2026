@@ -10,6 +10,7 @@ Solist-AI from the active slot; see docs/model-store.md.
     .venv/bin/python tools/model_store.py --port COM7 use --slot 1
     .venv/bin/python tools/model_store.py --port COM7 erase --slot 1
     .venv/bin/python tools/model_store.py --port COM7 train
+    .venv/bin/python tools/model_store.py --port COM7 tune
     .venv/bin/python tools/model_store.py --port COM7 selftest
 """
 import argparse
@@ -30,6 +31,10 @@ ZONE_NAMES = {1: 'TAIL', 2: 'BACK', 3: 'LEGS', 4: 'HEAD'}
 SLOTS, MAX_RECORDS, MIN_RECORDS, MAX_NAME = 4, 1000, 4, 8
 STATES = {0: 'empty', 1: 'open', 2: 'committed'}
 TRAIN_TIMEOUT_S = 120  # 1000 records x 4 epochs at ~1.5 ms per step, plus FeRAM reads
+TUNE_TIMEOUT_S = 900  # 1000 records x 20 trainings (k 4..8, 4 folds) worst case
+TUNE_K_MIN, TUNE_FOLDS, ADVICE_RECALL_PCT, RECALL_ABSENT = 4, 4, 90, 255
+MODEL_ERRORS = {1: 'STORE', 2: 'NO_SLOT', 3: 'RECORD', 4: 'SELECT', 5: 'AI'}
+ZONE_JA = {'TAIL': 'しっぽ', 'BACK': '背中', 'LEGS': '足', 'HEAD': '頭'}
 
 
 def encode_pool(pool):
@@ -87,11 +92,14 @@ class Store:
 
     def info(self):
         r = self._cmd('INFO')
-        return dict(active=int(r[0]), counts=[int(v) for v in r[1:5]])
+        return dict(active=int(r[0]), counts=[int(v) for v in r[1:5]], firmware=r[5] if len(r) > 5 else '')
 
     def slot(self, slot):
         r = self._cmd('SLOT', check_slot(slot))
-        return dict(slot=int(r[0]), state=int(r[1]), count=int(r[2]), pool=int(r[3]), k=int(r[4]), name=r[5])
+        # tuned_k and recall were added with TUNE; older firmware stops after the name.
+        return dict(slot=int(r[0]), state=int(r[1]), count=int(r[2]), pool=int(r[3]), k=int(r[4]), name=r[5],
+                    tuned_k=int(r[6]) if len(r) > 6 else 0,
+                    recall=_indices(r[7]) if len(r) > 7 else [0, 0, 0, 0])
 
     def open(self, slot, k, name):
         self._cmd('OPEN', check_slot(slot), k, check_name(name))
@@ -116,6 +124,16 @@ class Store:
         r = self._cmd('TRAIN', timeout=TRAIN_TIMEOUT_S)
         return dict(ready=r[0] == '1', error=int(r[1]), count=int(r[2]), k=int(r[3]),
                     selected=_indices(r[4]), training_us=int(r[5]))
+
+    def tune(self):
+        """4-fold cross-validation of k on the chip; writes tuned_k/recall into the active slot header."""
+        r = self._cmd('TUNE', timeout=TUNE_TIMEOUT_S)
+        correct = _indices(r[4])
+        confusion = _indices(r[7])
+        return dict(ok=r[0] == '1', error=int(r[1]), count=int(r[2]), best_k=int(r[3]),
+                    correct={TUNE_K_MIN + i: n for i, n in enumerate(correct)}, recall=_indices(r[5]),
+                    counts=_indices(r[6]), confusion=[confusion[i:i + 4] for i in range(0, 16, 4)],
+                    advice=int(r[8]), elapsed_us=int(r[9]))
 
     def selftest(self):
         return int(self._cmd('SELFTEST')[0])
@@ -164,7 +182,8 @@ def dump(store, slot):
             events.append(dict(label=label, zone=ZONE_NAMES[label], features12=[float(v) for v in row[:12]],
                                peak=float(row[12]), trough=float(row[13])))
     return dict(feature_order=FEATURE_ORDER, events=events,
-                source=dict(kind='fram', slot=slot, name=info['name'], k=info['k'], state=STATES[info['state']]))
+                source=dict(kind='fram', slot=slot, name=info['name'], k=info['k'], state=STATES[info['state']],
+                            tuned_k=info['tuned_k'], recall=info['recall']))
 
 
 def describe_training(result):
@@ -172,6 +191,30 @@ def describe_training(result):
     status = 'READY' if result['ready'] else f'ERROR {result["error"]}'
     return (f'{status}: {result["count"]} records, {result["k"]} features selected ({names}), '
             f'training {result["training_us"] / 1e6:.2f} s')
+
+
+def _zone(label):
+    name = ZONE_NAMES[label]
+    return f'{ZONE_JA[name]}（{name}）'
+
+
+def describe_tune(result):
+    """Lines for the CLI; RuntimeError (error code name) when the chip could not tune."""
+    if not result['ok']:
+        raise RuntimeError(f'TUNE failed: {MODEL_ERRORS.get(result["error"], result["error"])}')
+    count = result['count']
+    lines = [f'tune: {count} records, {TUNE_FOLDS}-fold, best k = {result["best_k"]} '
+             f'({result["elapsed_us"] / 1e6:.1f} s)',
+             '  ' + '  '.join(f'k={k} {round(100 * n / count) if count else 0}%' for k, n in result['correct'].items()),
+             '  ' + '  '.join(f'{ZONE_NAMES[c + 1]} {"-" if r == RECALL_ABSENT else f"{r}%"} ({n})'
+                              for c, (r, n) in enumerate(zip(result['recall'], result['counts'])))]
+    advice = result['advice']
+    if not advice:
+        return lines + [f'  提案: なし（すべての部位が {ADVICE_RECALL_PCT}% 以上）']
+    row = result['confusion'][advice - 1]
+    wrong = max((p for p in range(4) if p != advice - 1), key=lambda p: (row[p], -p))
+    return lines + [f'  提案: {_zone(advice)}のデータを追加してください'
+                    f'（{_zone(wrong + 1)}と混同 {row[wrong]}/{result["counts"][advice - 1]}）']
 
 
 def run(args, store):
@@ -183,7 +226,8 @@ def run(args, store):
     if args.command == 'info':
         with store.paused():
             i = store.info()
-        return [f'active slot: {i["active"]}'] + [f'slot {n}: {c} records' for n, c in enumerate(i['counts'])]
+        return ([f'firmware: {i["firmware"] or "unknown (older build)"}', f'active slot: {i["active"]}']
+                + [f'slot {n}: {c} records' for n, c in enumerate(i['counts'])])
     if args.command == 'selftest':
         with store.paused():
             result = store.selftest()
@@ -204,6 +248,10 @@ def run(args, store):
         if args.command == 'erase':
             store.erase(args.slot)
             return [f'slot {args.slot} erased']
+        if args.command == 'tune':
+            # TUNE leaves instance 0 untrained: TRAIN at once so the report ends with the tuned model.
+            lines = describe_tune(store.tune())
+            return lines + [describe_training(store.train())]
         return [describe_training(store.train())]
 
 
@@ -212,7 +260,7 @@ def parser():
     p.add_argument('--port', required=True)
     p.add_argument('--log', type=Path, default=None, help='UART transcript (TX/RX lines)')
     sub = p.add_subparsers(dest='command', required=True)
-    for name in ('info', 'train', 'selftest'):
+    for name in ('info', 'train', 'tune', 'selftest'):
         sub.add_parser(name)
     for name in ('use', 'erase'):
         sub.add_parser(name).add_argument('--slot', type=int, required=True)

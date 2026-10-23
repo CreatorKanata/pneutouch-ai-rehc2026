@@ -7,6 +7,8 @@
 #include "pressure_model.h"
 #include "pressure_display.h"
 #include "uart_text.h"
+#include "firmware_tag.h"
+#include <string.h>
 
 volatile pneutouch_status_t pneutouch_status;
 volatile pneutouch_feature_status_t pneutouch_features;
@@ -18,6 +20,8 @@ static bool pending;
 static bool was_validation;
 static bool lcd_ready_reported, lcd_failed_reported;
 static uint32_t lcd_updates_reported;
+static uint16_t tune_done, tune_total;
+static bool tuning;
 
 /* UART text goes through uart_text.c: no printf, heap allocation or semihosting. */
 #define FISHER_PRINT_LIMIT 4.0e9f
@@ -104,24 +108,56 @@ static void digits(char *out, unsigned width, uint32_t value)
     while (i) out[--i] = ' ';
 }
 
+/* "TUNE  7/20     " (phase 2) or "TUNE  7/20  57% " (percent of the current phase). */
+static void tune_line(char line[17], bool with_percent, uint16_t done, uint16_t total)
+{
+    memcpy(line, "TUNE            ", 17);
+    digits(line+5, 2, tune_done); line[7] = '/'; digits(line+8, 2, tune_total);
+    if (!with_percent) return;
+    digits(line+11, 3, total ? (uint32_t)done*100U/total : 0U); line[14] = '%';
+}
+
 /* Training blocks for seconds: keep the LCD state machine and watchdog going.
-   Line 1 "LEARN<phase> done/total"; line 2 as soon as the selection is known. */
+   Line 1 "LEARN<phase> done/total" (or the TUNE line while tuning); line 2 as
+   soon as the selection is known. */
 static void show_progress(uint8_t phase, uint16_t done, uint16_t total)
 {
     char line[17] = "LEARN0          ";
-    line[5] = (char)('0'+phase%10U);
-    digits(line+7, 4, done); line[11] = '/'; digits(line+12, 4, total);
-    if (phase == 1U && done == 0U) show_line2();
+    if (phase == PNEU_PHASE_TUNE) {
+        tune_done = done; tune_total = total; tuning = done < total;
+        tune_line(line, false, done, total);
+    } else if (tuning) tune_line(line, true, done, total);
+    else {
+        line[5] = (char)('0'+phase%10U);
+        digits(line+7, 4, done); line[11] = '/'; digits(line+12, 4, total);
+    }
+    if (phase == PNEU_PHASE_TRAIN && done == 0U) show_line2();
     pneu_display_idle(line);
     pneu_display_poll();
     board_watchdog();
 }
 
+static const char *const zone_names[] = {"NONE", "TAIL", "BACK", "LEGS", "HEAD"};
+
+static const char *zone_name(uint8_t label) { return zone_names[label <= 4U ? label : 0U]; }
+
+void pneu_ready_text(uint8_t advice, char out[17])
+{
+    memcpy(out, "READY", 6);
+    if (advice < 1U || advice > 4U) return;
+    memcpy(out+5, " MORE ", 6);
+    memcpy(out+11, zone_name(advice), 5); /* 4 letters + NUL: 15 characters */
+}
+
 static bool train_model(void)
 {
-    bool ready = pneu_model_init();
+    char text[17];
+    bool ready;
+    tuning = false; /* a failed PST1 TUNE never sent its last phase 2 */
+    ready = pneu_model_init();
     show_line2(); /* blank after a failure */
-    pneu_display_idle(ready ? "READY" :
+    pneu_ready_text(pneutouch_model.advice, text);
+    pneu_display_idle(ready ? text :
                       pneutouch_model.error == PNEU_MODEL_ERR_NO_SLOT ? "NO MODEL" : "AI ERROR");
     return ready;
 }
@@ -130,6 +166,17 @@ static void send_list(const volatile uint8_t *items, unsigned count)
 {
     unsigned i;
     for (i = 0; i < count; ++i) { if (i) board_putc(':'); pneu_number(items[i]); }
+}
+
+/* Tuning of the active slot and the records per class of the last init. */
+static void send_tune_banner(void)
+{
+    unsigned i;
+    pneu_text("# PNEM4,k="); pneu_number(pneutouch_model.tuned_k);
+    pneu_text(",recall="); send_list(pneutouch_model.recall, 4);
+    pneu_text(",counts=");
+    for (i = 0; i < 4U; ++i) { if (i) board_putc(':'); pneu_number(pneutouch_model.class_count[i]); }
+    pneu_text(",advice="); pneu_text(zone_name(pneutouch_model.advice)); pneu_text("\r\n");
 }
 
 static void send_model_banner(void)
@@ -151,6 +198,7 @@ static void send_model_banner(void)
         pneu_number(scaled >= FISHER_PRINT_LIMIT ? (uint32_t)FISHER_PRINT_LIMIT : scaled > 0.0f ? (uint32_t)scaled : 0U);
     }
     pneu_text("\r\n");
+    send_tune_banner();
 }
 
 void pressure_app_init(void)
@@ -169,7 +217,7 @@ void pressure_app_init(void)
     acquisition_init(&acquisition, sensor, board_millis());
     pneu_text("# PneutouchAi Live; PNEU1,seq,ms,raw; baud=");
     pneu_number(PNEU_UART_BAUD); pneu_text("; nominal_sps="); pneu_number(PNEU_SAMPLE_RATE_HZ);
-    pneu_text("\r\n");
+    pneu_text("; fw="); pneu_text(PNEU_FIRMWARE_TAG); pneu_text("\r\n");
     pneu_text("# PNEF1; version=1; features=12; units_x1000; classes=tail/back/legs/head; gesture=press_release_1s\r\n");
     send_model_banner();
     pneutouch_status.state = PNEU_SETTLING;

@@ -19,8 +19,13 @@
 #define SLOT_CAPACITY ((SLOT_SPAN-HEADER_SIZE)/RECORD_SIZE)
 #define MIN_COMMIT 4U
 #define MAX_K 12U
+#define TUNED_AT 9U
+#define RECALL_AT 20U
+#define MAX_RECALL 100U
 
 static uint8_t active;
+/* Last header read: pneu_store_get skips the 32-byte FeRAM read per record. */
+static struct { bool valid; uint8_t slot; pneu_store_slot_t info; } cached;
 
 static void put16(uint8_t *p, uint16_t v) { p[0] = (uint8_t)v; p[1] = (uint8_t)(v >> 8); }
 static uint16_t get16(const uint8_t *p) { return (uint16_t)(p[0] | (p[1] << 8)); }
@@ -54,6 +59,7 @@ static bool write_directory(uint8_t slot)
 bool pneu_store_init(void)
 {
     uint8_t d[DIR_SIZE];
+    cached.valid = false;
     board_store_read(DIR_ADDR, d, DIR_SIZE);
     if (get32(d) == DIR_MAGIC && get16(d+4) == STORE_VERSION && d[6] < PNEU_STORE_SLOTS &&
         get16(d+8) == pneu_crc16(d, 8U)) {
@@ -71,17 +77,34 @@ bool pneu_store_use(uint8_t slot)
     return slot < PNEU_STORE_SLOTS && write_directory(slot);
 }
 
+static bool recall_ok(const uint8_t recall[4])
+{
+    unsigned c;
+    for (c = 0; c < 4U; ++c)
+        if (recall[c] > MAX_RECALL && recall[c] != PNEU_RECALL_ABSENT) return false;
+    return true;
+}
+
+static bool header_ok(const uint8_t h[HEADER_SIZE])
+{
+    return get32(h) == SLOT_MAGIC && get16(h+4) == STORE_VERSION && h[6] == PNEU_POOL_COUNT &&
+           h[7] <= MAX_K && h[8] <= PNEU_SLOT_COMMITTED && h[TUNED_AT] <= MAX_K &&
+           get16(h+10) <= SLOT_CAPACITY && recall_ok(h+RECALL_AT) &&
+           get16(h+HEADER_CRC_AT) == pneu_crc16(h, HEADER_CRC_AT);
+}
+
+/* Fills the cache on success and drops it on failure. */
 static bool read_header(uint8_t slot, pneu_store_slot_t *info)
 {
     uint8_t h[HEADER_SIZE];
     unsigned i, end = 0;
     memset(info, 0, sizeof(*info));
+    cached.valid = false;
     if (slot >= PNEU_STORE_SLOTS) return false;
     board_store_read(header_addr(slot), h, HEADER_SIZE);
-    if (get32(h) != SLOT_MAGIC || get16(h+4) != STORE_VERSION || h[6] != PNEU_POOL_COUNT ||
-        h[7] > MAX_K || h[8] > PNEU_SLOT_COMMITTED || get16(h+10) > SLOT_CAPACITY ||
-        get16(h+HEADER_CRC_AT) != pneu_crc16(h, HEADER_CRC_AT)) return false;
-    info->pool_count = h[6]; info->k = h[7]; info->state = h[8];
+    if (!header_ok(h)) return false;
+    info->pool_count = h[6]; info->k = h[7]; info->state = h[8]; info->tuned_k = h[TUNED_AT];
+    memcpy(info->recall, h+RECALL_AT, sizeof(info->recall));
     info->count = get16(h+10);
     for (i = 0; i < PNEU_STORE_NAME; ++i) {
         info->name[i] = (char)h[12+i];
@@ -89,6 +112,7 @@ static bool read_header(uint8_t slot, pneu_store_slot_t *info)
     }
     info->name[end] = '\0'; /* space padding is not part of the name */
     info->valid = true;
+    cached.slot = slot; cached.info = *info; cached.valid = true;
     return true;
 }
 
@@ -101,9 +125,11 @@ static bool write_header(uint8_t slot, const pneu_store_slot_t *info)
 {
     uint8_t h[HEADER_SIZE] = {0};
     unsigned i;
+    cached.valid = false;
     put32(h, SLOT_MAGIC); put16(h+4, STORE_VERSION);
-    h[6] = PNEU_POOL_COUNT; h[7] = info->k; h[8] = info->state; /* h[9] reserved */
+    h[6] = PNEU_POOL_COUNT; h[7] = info->k; h[8] = info->state; h[TUNED_AT] = info->tuned_k;
     put16(h+10, info->count);
+    memcpy(h+RECALL_AT, info->recall, sizeof(info->recall));
     for (i = 0; i < PNEU_STORE_NAME; ++i) h[12+i] = ' ';
     for (i = 0; i < PNEU_STORE_NAME && info->name[i]; ++i) h[12+i] = (uint8_t)info->name[i];
     put16(h+HEADER_CRC_AT, pneu_crc16(h, HEADER_CRC_AT));
@@ -171,12 +197,24 @@ bool pneu_store_erase(uint8_t slot)
     return slot < PNEU_STORE_SLOTS && write_header(slot, &empty);
 }
 
+bool pneu_store_set_tuning(uint8_t slot, uint8_t tuned_k, const uint8_t recall[4])
+{
+    pneu_store_slot_t info;
+    if (tuned_k < 1U || tuned_k > MAX_K || !recall_ok(recall) || !read_header(slot, &info) ||
+        info.state != PNEU_SLOT_COMMITTED) return false;
+    info.tuned_k = tuned_k;
+    memcpy(info.recall, recall, sizeof(info.recall));
+    return write_header(slot, &info);
+}
+
 bool pneu_store_get(uint8_t slot, uint16_t index, uint8_t *label, float pool[PNEU_POOL_COUNT])
 {
     pneu_store_slot_t info;
     uint8_t r[RECORD_SIZE];
     unsigned j;
-    if (!read_header(slot, &info) || info.state == PNEU_SLOT_EMPTY || index >= info.count) return false;
+    if (cached.valid && cached.slot == slot) info = cached.info;
+    else if (!read_header(slot, &info)) return false;
+    if (info.state == PNEU_SLOT_EMPTY || index >= info.count) return false;
     board_store_read(record_addr(slot, index), r, RECORD_SIZE);
     if (get16(r+RECORD_CRC_AT) != pneu_crc16(r, RECORD_CRC_AT) || r[0] < 1U || r[0] > 4U) return false;
     for (j = 0; j < PNEU_POOL_COUNT; ++j) {

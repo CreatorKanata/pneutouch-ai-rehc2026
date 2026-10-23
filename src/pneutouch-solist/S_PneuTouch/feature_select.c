@@ -55,6 +55,7 @@ static void score(const pneu_stats_t *s, uint8_t mask, float count, unsigned j, 
     out->scale[j] = sqrtf(var > 0.0f ? var : 0.0f);
     /* A constant feature cannot be normalized, so it is never ranked. */
     out->fisher[j] = out->scale[j] > MIN_SCALE && within > 0.0f ? between/within : 0.0f;
+    out->inv_scale[j] = out->scale[j] > MIN_SCALE ? 1.0f/out->scale[j] : 0.0f;
 }
 
 void pneu_rank(const float fisher[PNEU_POOL_COUNT], uint8_t order[PNEU_POOL_COUNT])
@@ -123,7 +124,7 @@ bool pneu_select_words(const pneu_selection_t *sel, const float pool[PNEU_POOL_C
         uint32_t bits;
         float scaled;
         if (j >= PNEU_POOL_COUNT || !finite_positive(pool[j])) return false;
-        scaled = (logf(pool[j])-sel->mean[j])/sel->scale[j];
+        scaled = (logf(pool[j])-sel->mean[j])*sel->inv_scale[j];
         memcpy(&bits, &scaled, sizeof(bits));
         if ((bits & 0x7f800000U) == 0x7f800000U) return false;
         words[s] = (uint16_t)(bits >> 16);

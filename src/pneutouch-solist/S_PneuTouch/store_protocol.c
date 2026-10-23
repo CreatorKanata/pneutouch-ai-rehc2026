@@ -3,8 +3,10 @@
 #include "store_protocol.h"
 #include "model_store.h"
 #include "pressure_model.h"
+#include "model_tune.h"
 #include "uart_text.h"
 #include "board.h"
+#include "firmware_tag.h"
 #include <string.h>
 
 #define POOL_HEX (PNEU_POOL_COUNT*8U)
@@ -31,6 +33,13 @@ static void list(const volatile uint8_t *items, unsigned count)
     for (i = 0; i < count; ++i) { if (i) board_putc(':'); pneu_number(items[i]); }
 }
 
+static void list16(const volatile uint16_t *items, unsigned count)
+{
+    unsigned i;
+    board_putc(',');
+    for (i = 0; i < count; ++i) { if (i) board_putc(':'); pneu_number(items[i]); }
+}
+
 static const char *info_cmd(uint32_t id, char *const f[], unsigned n)
 {
     pneu_store_slot_t info;
@@ -39,6 +48,7 @@ static const char *info_cmd(uint32_t id, char *const f[], unsigned n)
     if (n != 3) return "FIELDS";
     head("INFO", id); field(pneu_store_active());
     for (s = 0; s < PNEU_STORE_SLOTS; ++s) field(pneu_store_slot_info(s, &info) ? info.count : 0U);
+    board_putc(','); pneu_text(PNEU_FIRMWARE_TAG); /* which build the board runs */
     end();
     return 0;
 }
@@ -51,7 +61,8 @@ static const char *slot_cmd(uint32_t id, char *const f[], unsigned n)
     if (!slot_arg(f[3], &s)) return "SLOT";
     (void)pneu_store_slot_info(s, &info);
     head("SLOT", id); field(s); field(info.state); field(info.count); field(info.pool_count);
-    field(info.k); board_putc(','); pneu_text(info.name); end();
+    field(info.k); board_putc(','); pneu_text(info.name);
+    field(info.tuned_k); list(info.recall, 4U); end(); /* zeros for empty/invalid slots */
     return 0;
 }
 
@@ -147,6 +158,34 @@ static const char *train_cmd(uint32_t id, char *const f[], unsigned n)
     return 0;
 }
 
+/* Records per class = row sums of the confusion matrix (all folds of the best k). */
+static void tune_counts(void)
+{
+    uint16_t counts[4];
+    unsigned t, p;
+    for (t = 0; t < 4U; ++t) {
+        uint32_t row = 0;
+        for (p = 0; p < 4U; ++p) row += pneutouch_tune.confusion[t][p];
+        counts[t] = (uint16_t)row;
+    }
+    list16(counts, 4U);
+}
+
+static const char *tune_cmd(uint32_t id, char *const f[], unsigned n)
+{
+    bool ok;
+    (void)f;
+    if (n != 3) return "FIELDS";
+    ok = pneu_model_tune();
+    head("TUNE", id); field(ok ? 1U : 0U); field(pneutouch_tune.error);
+    field(pneutouch_tune.count); field(pneutouch_tune.best_k);
+    list16(pneutouch_tune.correct+PNEU_TUNE_K_MIN, PNEU_TUNE_K_MAX-PNEU_TUNE_K_MIN+1U);
+    list(pneutouch_tune.recall, 4U); tune_counts();
+    list16(&pneutouch_tune.confusion[0][0], 16U);
+    field(pneutouch_tune.advice); field(pneutouch_tune.elapsed_us); end();
+    return 0;
+}
+
 static const char *selftest_cmd(uint32_t id, char *const f[], unsigned n)
 {
     int result;
@@ -164,7 +203,7 @@ static const struct { const char *name; bool needs_mode; handler_t run; } comman
     {"INFO", false, info_cmd}, {"SLOT", false, slot_cmd}, {"SELFTEST", false, selftest_cmd},
     {"OPEN", true, open_cmd}, {"PUT", true, put_cmd}, {"COMMIT", true, commit_cmd},
     {"GET", true, get_cmd}, {"ERASE", true, erase_cmd}, {"USE", true, use_cmd},
-    {"TRAIN", true, train_cmd},
+    {"TRAIN", true, train_cmd}, {"TUNE", true, tune_cmd},
 };
 
 bool pneu_store_command(char *const fields[], unsigned n, bool validation)
@@ -172,15 +211,16 @@ bool pneu_store_command(char *const fields[], unsigned n, bool validation)
     const char *why = "COMMAND";
     uint32_t id;
     unsigned i;
-    bool retrained = false;
+    bool clobbered = false;
     if (n < 3 || !pneu_integer(fields[2], &id)) why = "FIELDS";
     else for (i = 0; i < sizeof(commands)/sizeof(commands[0]); ++i) {
         if (strcmp(fields[1], commands[i].name)) continue;
         if (commands[i].needs_mode && !validation) { why = "MODE_REQUIRED"; break; }
         why = commands[i].run(id, fields, n);
-        retrained = !why && commands[i].run == train_cmd;
+        /* instance 0 was retrained (TRAIN) or clobbered by the folds (TUNE) */
+        clobbered = !why && (commands[i].run == train_cmd || commands[i].run == tune_cmd);
         break;
     }
     if (why) { pneu_text("# PST1,ERROR,"); pneu_text(why); end(); }
-    return retrained;
+    return clobbered;
 }

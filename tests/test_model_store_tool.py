@@ -29,14 +29,22 @@ def fixture_training():
     return dict(feature_order=ms.FEATURE_ORDER, events=events)
 
 
+# ok, err, count, best_k, correct k=4..8, recall, counts, confusion (row-major), advice, us
+TUNE_OK = ('1,0,176,4,169:162:146:141:137,90:100:100:78,37:33:69:37,'
+           '33:2:2:0:0:33:0:0:0:0:69:0:0:0:8:29,4,61000000')
+TUNE_FAIL = '0,2,0,0,0:0:0:0:0,255:255:255:255,0:0:0:0,0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0,0,0'
+
+
 class FakeBoard:
     """Byte-level stand-in for the CN9 UART: parses lines, checks CRC, answers like store_protocol.c."""
 
     def __init__(self):
         self.rx, self.out = b'', []
         self.mode, self.active = 0, 0
-        self.slots = [dict(state=0, k=0, name='', records=[]) for _ in range(4)]
+        self.slots = [dict(state=0, k=0, name='', records=[], tuned_k=0, recall='0:0:0:0') for _ in range(4)]
         self.sent, self.override, self.corrupt_get = [], {}, False
+        self.old_slot_reply = False  # firmware before TUNE: SLOT ends with the name
+        self.tune_reply = TUNE_OK
 
     def write(self, data):
         self.rx += data
@@ -77,9 +85,15 @@ class FakeBoard:
             return 'MODE_REQUIRED'
         if op == 'INFO':
             counts = [s['state'] and len(s['records']) for s in self.slots]
-            return self.reply('PST1', 'INFO', token, self.active, *counts)
+            return self.reply('PST1', 'INFO', token, self.active, *counts, 'fake-fw')
         if op == 'SELFTEST':
             return self.reply('PST1', 'SELFTEST', token, 0)
+        if op == 'TUNE':
+            fields = self.tune_reply.split(',')
+            if fields[0] == '1':
+                s = self.slots[self.active]
+                s['tuned_k'], s['recall'] = int(fields[3]), fields[5]
+            return self.reply('PST1', 'TUNE', token, *fields)
         if op == 'TRAIN':
             s = self.slots[self.active]
             return self.reply('PST1', 'TRAIN', token, 1, 0, len(s['records']), 3, '0:4:10', 1500000)
@@ -88,9 +102,10 @@ class FakeBoard:
             return 'SLOT'
         s = self.slots[slot]
         if op == 'SLOT':
-            return self.reply('PST1', 'SLOT', token, slot, s['state'], len(s['records']), 14, s['k'], s['name'])
+            extra = () if self.old_slot_reply else (s['tuned_k'], s['recall'])
+            return self.reply('PST1', 'SLOT', token, slot, s['state'], len(s['records']), 14, s['k'], s['name'], *extra)
         if op == 'OPEN':
-            self.slots[slot] = dict(state=1, k=int(f[4]), name=f[5], records=[])
+            self.slots[slot] = dict(state=1, k=int(f[4]), name=f[5], records=[], tuned_k=0, recall='0:0:0:0')
             return self.reply('PST1', 'OPEN', token, slot)
         if op == 'PUT':
             if s['state'] != 1:
@@ -109,7 +124,7 @@ class FakeBoard:
             if op == 'USE':
                 self.active = slot
             else:
-                self.slots[slot] = dict(state=0, k=0, name='', records=[])
+                self.slots[slot] = dict(state=0, k=0, name='', records=[], tuned_k=0, recall='0:0:0:0')
             return self.reply('PST1', op, token, slot)
         return 'COMMAND'
 
@@ -160,7 +175,8 @@ class SequencingTests(unittest.TestCase):
         training = fixture_training()
         ms.load(store, 1, training, k=5, name='x')
         data = ms.dump(store, 1)
-        self.assertEqual(data['source'], dict(kind='fram', slot=1, name='x', k=5, state='committed'))
+        self.assertEqual(data['source'], dict(kind='fram', slot=1, name='x', k=5, state='committed',
+                                              tuned_k=0, recall=[0, 0, 0, 0]))
         self.assertEqual(data['feature_order'], ms.FEATURE_ORDER)
         np.testing.assert_array_equal(fs.pool_rows(data['events']).view(np.uint32),
                                       fs.pool_rows(training['events']).view(np.uint32))
@@ -170,6 +186,40 @@ class SequencingTests(unittest.TestCase):
                                    0xF, 0)['index'], FIXTURE['primary']['auto'])  # feature_select accepts it
         self.assertEqual(board.mode, 0)
         self.assertEqual(ms.dump(store, 3)['events'], [])
+
+    def test_slot_with_and_without_tuning_fields(self):
+        store, board = make_store()
+        ms.load(store, 0, fixture_training(), use=True)
+        board.slots[0].update(tuned_k=5, recall='100:50:100:255')
+        info = store.slot(0)
+        self.assertEqual((info['tuned_k'], info['recall'], info['count']), (5, [100, 50, 100, 255], 8))
+        board.old_slot_reply = True
+        info = store.slot(0)
+        self.assertEqual((info['tuned_k'], info['recall'], info['count']), (0, [0, 0, 0, 0], 8))
+        board.old_slot_reply = False
+        source = ms.dump(store, 0)['source']
+        self.assertEqual((source['tuned_k'], source['recall']), (5, [100, 50, 100, 255]))
+
+    def test_tune_parses_the_reply(self):
+        store, board = make_store()
+        with store.paused():
+            result = store.tune()
+        self.assertEqual(result['correct'], {4: 169, 5: 162, 6: 146, 7: 141, 8: 137})
+        self.assertEqual((result['ok'], result['error'], result['count'], result['best_k']), (True, 0, 176, 4))
+        self.assertEqual(result['recall'], [90, 100, 100, 78])
+        self.assertEqual(result['counts'], [37, 33, 69, 37])
+        self.assertEqual(result['confusion'], [[33, 2, 2, 0], [0, 33, 0, 0], [0, 0, 69, 0], [0, 0, 8, 29]])
+        self.assertEqual((result['advice'], result['elapsed_us']), (4, 61000000))
+        lines = ms.describe_tune(result)
+        self.assertEqual(lines[0], 'tune: 176 records, 4-fold, best k = 4 (61.0 s)')
+        self.assertEqual(lines[1], '  k=4 96%  k=5 92%  k=6 83%  k=7 80%  k=8 78%')
+        self.assertEqual(lines[2], '  TAIL 90% (37)  BACK 100% (33)  LEGS 100% (69)  HEAD 78% (37)')
+        self.assertEqual(lines[3], '  提案: 頭（HEAD）のデータを追加してください（足（LEGS）と混同 8/37）')
+        none = dict(result, advice=0, recall=[100, 255, 95, 90])
+        self.assertEqual(ms.describe_tune(none)[2:], ['  TAIL 100% (37)  BACK - (33)  LEGS 95% (69)  HEAD 90% (37)',
+                                                      '  提案: なし（すべての部位が 90% 以上）'])
+        with self.assertRaisesRegex(RuntimeError, 'NO_SLOT'):
+            ms.describe_tune(dict(result, ok=False, error=2))
 
     def test_readback_mismatch_restores_live_mode(self):
         store, board = make_store()
@@ -223,7 +273,9 @@ class CliTests(unittest.TestCase):
             source.write_text(json.dumps(fixture_training()), encoding='utf-8')
             self.assertIn('8 records loaded and verified', self.run_cli(board, 'load', '--slot', '0', '--input',
                                                                          str(source), '--use'))
-            self.assertIn('slot 0: 8 records', self.run_cli(board, 'info'))
+            info = self.run_cli(board, 'info')
+            self.assertIn('slot 0: 8 records', info)
+            self.assertIn('firmware: fake-fw', info)
             self.assertIn('8 records ->', self.run_cli(board, 'dump', '--slot', '0', '--out', str(dumped)))
             self.assertEqual(len(json.loads(dumped.read_text())['events']), 8)
             self.assertIn('active slot: 3', self.run_cli(board, 'use', '--slot', '3'))
@@ -239,6 +291,24 @@ class CliTests(unittest.TestCase):
             board.override['SELFTEST'] = '# PST1,ERROR,MODE_REQUIRED'
             with self.assertRaises(SystemExit):
                 self.run_cli(board, 'selftest')
+        self.assertEqual(board.mode, 0)
+
+    def test_tune_then_train(self):
+        board = FakeBoard()
+        store, _ = make_store(board)
+        ms.load(store, 0, fixture_training(), use=True)
+        board.sent.clear()
+        out = self.run_cli(board, 'tune')
+        self.assertEqual([op for _, op in board.sent], ['MODE', 'TUNE', 'TRAIN', 'MODE'])
+        self.assertIn('best k = 4 (61.0 s)', out)
+        self.assertIn('提案: 頭（HEAD）のデータを追加してください（足（LEGS）と混同 8/37）', out)
+        self.assertIn('READY: 8 records, 3 features selected', out)
+        self.assertEqual(board.slots[0]['tuned_k'], 4)
+        board.tune_reply = TUNE_FAIL
+        board.sent.clear()
+        with self.assertRaisesRegex(SystemExit, 'model_store: TUNE failed: NO_SLOT'):
+            self.run_cli(board, 'tune')
+        self.assertEqual([op for _, op in board.sent], ['MODE', 'TUNE', 'MODE'])
         self.assertEqual(board.mode, 0)
 
 

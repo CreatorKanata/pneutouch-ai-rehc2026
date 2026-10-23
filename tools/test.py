@@ -18,10 +18,11 @@ C_TESTS = {
     "pressure_app": ("acquisition", "pressure_app", "pressure_features", "uart_text"),
     "pressure_features": ("pressure_features",),
     "ai_validation": ("ai_validation", "store_protocol", "uart_text") + STORE,
-    "pressure_model": ("pressure_model", "feature_select") + STORE,
+    "pressure_model": ("pressure_model", "model_tune", "feature_select") + STORE,
     "pressure_display": ("pressure_display",),
     "model_store": STORE,
     "feature_select": ("feature_select",),
+    "soft_spi": (),  # tests/test_soft_spi.c includes S_Bsp/SoftSpi.c with a fake Port 8
 }
 
 
@@ -35,7 +36,7 @@ def main():
             sources += [FIRMWARE + module + ".c" for module in modules]
             subprocess.run(shlex.split(os.environ.get("CC", "cc")) + [
                 "-std=c11", "-Wall", "-Wextra", "-Werror", "-pedantic",
-                "-Itests/ai_stubs", "-Isrc/pneutouch-solist/S_Driver",
+                "-Itests/ai_stubs", "-Isrc/pneutouch-solist/S_Driver", "-Isrc/pneutouch-solist/S_Bsp",
                 "-Isrc/pneutouch-solist/S_PneuTouch", "-I" + directory, *sources,
                 "-o", str(executable), "-lm"], cwd=ROOT, check=True)
             subprocess.run([str(executable)], check=True)

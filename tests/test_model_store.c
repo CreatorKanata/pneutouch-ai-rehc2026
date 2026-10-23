@@ -113,11 +113,85 @@ static void test_full_and_independent(void)
     fram_drop_writes = false;
 }
 
+static void fill_slot(uint8_t slot, uint8_t k, const char *name, unsigned count)
+{
+    float pool[PNEU_POOL_COUNT];
+    assert(pneu_store_open(slot, k, name));
+    for (unsigned i = 0; i < count; ++i) { pool_for(i, pool); assert(pneu_store_put(slot, (uint8_t)(i%4U+1U), pool)); }
+}
+
+static void test_tuning(void)
+{
+    static const uint8_t recall[4] = {100, 50, 255, 0}, bad[4] = {100, 101, 0, 0};
+    pneu_store_slot_t info;
+    memset(fram, 0xff, sizeof(fram));
+    assert(pneu_store_init());
+    assert(!pneu_store_set_tuning(0, 5, recall)); /* EMPTY (never written) */
+    fill_slot(0, 3, "tune", 4);
+    assert(pneu_store_slot_info(0, &info) && info.tuned_k == 0 && !info.recall[0] && !info.recall[3]);
+    assert(!pneu_store_set_tuning(0, 5, recall)); /* OPEN */
+    assert(pneu_store_commit(0));
+    assert(!pneu_store_set_tuning(0, 0, recall) && !pneu_store_set_tuning(0, 13, recall));
+    assert(!pneu_store_set_tuning(0, 5, bad) && !pneu_store_set_tuning(4, 5, recall));
+    assert(pneu_store_set_tuning(0, 5, recall));
+    assert(fram[SLOT_ADDR(0)+9] == 5 && !memcmp(fram+SLOT_ADDR(0)+20, recall, 4));
+    assert(le16(SLOT_ADDR(0)+24) == pneu_crc16(fram+SLOT_ADDR(0), 24));
+    assert(pneu_store_slot_info(0, &info) && info.tuned_k == 5 && !memcmp(info.recall, recall, 4));
+    assert(info.k == 3 && info.state == PNEU_SLOT_COMMITTED && info.count == 4 && !strcmp(info.name, "tune"));
+    assert(pneu_store_set_tuning(0, 12, recall) && pneu_store_slot_info(0, &info) && info.tuned_k == 12);
+    /* Byte 9 out of range (CRC fixed up) makes the header invalid; so does recall 101. */
+    fram[SLOT_ADDR(0)+9] = 13;
+    fram[SLOT_ADDR(0)+24] = (uint8_t)pneu_crc16(fram+SLOT_ADDR(0), 24);
+    fram[SLOT_ADDR(0)+25] = (uint8_t)(pneu_crc16(fram+SLOT_ADDR(0), 24) >> 8);
+    assert(!pneu_store_slot_info(0, &info) && !info.valid);
+    fram[SLOT_ADDR(0)+9] = 5; fram[SLOT_ADDR(0)+21] = 101;
+    fram[SLOT_ADDR(0)+24] = (uint8_t)pneu_crc16(fram+SLOT_ADDR(0), 24);
+    fram[SLOT_ADDR(0)+25] = (uint8_t)(pneu_crc16(fram+SLOT_ADDR(0), 24) >> 8);
+    assert(!pneu_store_slot_info(0, &info));
+    /* A new OPEN resets the tuning. */
+    fill_slot(0, 0, "again", 0);
+    assert(pneu_store_slot_info(0, &info) && info.tuned_k == 0 && !info.recall[0] && !info.recall[1]);
+    fram_drop_writes = true;
+    assert(!pneu_store_set_tuning(0, 5, recall));
+    fram_drop_writes = false;
+}
+
+static void test_header_cache(void)
+{
+    pneu_store_slot_t info;
+    float pool[PNEU_POOL_COUNT], back[PNEU_POOL_COUNT];
+    uint8_t label;
+    memset(fram, 0xff, sizeof(fram));
+    assert(pneu_store_init());
+    fill_slot(0, 0, "a", 4);
+    assert(pneu_store_get(0, 3, &label, back) && !pneu_store_get(0, 4, &label, back));
+    pool_for(9, pool); assert(pneu_store_put(0, 2, pool));
+    assert(pneu_store_get(0, 4, &label, back) && label == 2); /* put refreshed the count */
+    fill_slot(1, 0, "b", 4); /* cache swap: another slot's header written */
+    assert(pneu_store_get(0, 4, &label, back) && pneu_store_get(1, 3, &label, back));
+    assert(pneu_store_get(0, 0, &label, back) && label == 1);
+    assert(pneu_store_erase(0) && !pneu_store_get(0, 0, &label, back));
+    assert(pneu_store_get(1, 0, &label, back));
+    /* Header corrupted behind the store's back: slot_info re-reads and drops the cache. */
+    fram[SLOT_ADDR(1)+11] ^= 0x01U;
+    assert(pneu_store_get(1, 0, &label, back)); /* cached header still in use */
+    assert(!pneu_store_slot_info(1, &info));
+    assert(!pneu_store_get(1, 0, &label, back));
+    fram[SLOT_ADDR(1)+11] ^= 0x01U;
+    assert(pneu_store_get(1, 0, &label, back));
+    assert(pneu_store_init()); /* invalidates too */
+    fram[SLOT_ADDR(1)+11] ^= 0x01U;
+    assert(!pneu_store_get(1, 0, &label, back));
+    fram[SLOT_ADDR(1)+11] ^= 0x01U;
+}
+
 int main(void)
 {
     test_directory();
     test_round_trip();
     test_full_and_independent();
-    puts("Model store: directory, slot layout, CRC, state rules, full slot, erase, use, 4 independent slots PASS");
+    test_tuning();
+    test_header_cache();
+    puts("Model store: directory, slot layout, CRC, state rules, full slot, erase, use, 4 independent slots, tuning, header cache PASS");
     return 0;
 }

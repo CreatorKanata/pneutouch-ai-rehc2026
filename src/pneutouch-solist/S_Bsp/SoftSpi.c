@@ -1,7 +1,7 @@
 /*****************************************************************************
  * File: SoftSpi.c
  * Title: ソフトウェアSPIモジュール
- * LastUpdated: 2025.05.23
+ * LastUpdated: 2026.10.24
 ******************************************************************************/
 
 /**
@@ -31,10 +31,9 @@
 #define framCsOn()		( clear_bit( PORT8->P8DO, (1 << 2U) ) )
 #define framCsOff()		( set_bit( PORT8->P8DO, (1 << 2U) ) )
 
-#define mosiHigh()		( set_bit( PORT8->P8DO, (1 << 4U) ) )
-#define mosiLow()		( clear_bit( PORT8->P8DO, (1 << 4U) ) )
-#define clkHigh()		( set_bit( PORT8->P8DO, (1 << 5U) ) )
-#define clkLow()		( clear_bit( PORT8->P8DO, (1 << 5U) ) )
+#define MOSI_MASK		(1U << 4U)	/**< P84 */
+#define CLK_MASK		(1U << 5U)	/**< P85 */
+#define clkHigh()		( set_bit( PORT8->P8DO, CLK_MASK ) )
 
 #define MISO_BIT		( get_bit( PORT8->P8DI, (1 << 3U) ) )
 
@@ -45,7 +44,6 @@
 /*############################################################################*/
 /*#                               Prototype                                  #*/
 /*############################################################################*/
-static void oneClock(void);
 static uint8_t duplexByte(uint8_t data);
 
 /*############################################################################*/
@@ -141,31 +139,24 @@ void SoftSpiDuplex(
 /*#                                  Local                                   #*/
 /*############################################################################*/
 
-static void oneClock(void)
-{
-	// クロックパルス幅を稼ぐため
-	volatile int delay = 0;
-	clkLow();
-	delay++;
-	delay++;
-	clkHigh();
-	delay++;
-	delay++;
-}
-
+// 1バイトをMSBファーストで送受信する（モード3: SCKはHighで待機）
+// 1ビットにつきP8DOへの単純な書込み2回だけで済ませる（読み-変更-書きと遅延ループは廃止）。
+// CSなどSCK/MOSI以外のビットはバイト開始時の値のまま変えない。
+// MB85RS2MTAは40MHzまで対応し、48MHzで連続2回の書込みより十分速いので遅延は不要（RX4111は実機で要確認）。
 static uint8_t duplexByte(uint8_t data)
 {
+	uint32_t base = read_reg32(PORT8->P8DO) & ~(MOSI_MASK | CLK_MASK);
 	uint8_t read = 0;
+	int i;
 
-	// MSBファースト
-	for (int i = 7; 0 <= i; i--)
+	for (i = 7; i >= 0; i--)
 	{
-		if(data & (1U << i)){ mosiHigh(); }
-		else{ mosiLow(); }
-		oneClock();
-		if(MISO_BIT)
+		uint32_t mosi = ((data >> i) & 1U) ? MOSI_MASK : 0U;
+		write_reg32(PORT8->P8DO, base | mosi);				// SCK Low: 立下りでMOSIを変える（スレーブはMISOを出す）
+		write_reg32(PORT8->P8DO, base | mosi | CLK_MASK);	// SCK High: 立上りでスレーブがMOSIを取り込む
+		if (MISO_BIT)
 		{
-			read |= (1U << i);
+			read |= (uint8_t)(1U << i);
 		}
 	}
 	return read;
