@@ -204,7 +204,7 @@ void pneu_model_line2(const volatile pneu_model_status_t *status, char out[17])
     if (!count) return;
     for (i = 0; i < count && i < 12U; ++i)
         if (status->selected[i] < PNEU_POOL_COUNT) out[status->selected[i]] = (char)0xff;
-    if (count >= 10U) out[14] = (char)('0'+count/10U);
+    out[14] = count >= 10U ? (char)('0'+count/10U) : 'k'; /* "k4"; 10..12 have no room for k */
     out[15] = (char)('0'+count%10U);
 }
 

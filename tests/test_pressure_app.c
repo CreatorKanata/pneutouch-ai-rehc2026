@@ -24,7 +24,7 @@ static char idle_text[17], line2_text[17];
 void pneu_model_set_progress(pneu_model_progress_t callback) { progress = callback; }
 bool pneu_model_init(void)
 {
-    static const char selected[17] = "\xff   \xff     \xff    3";
+    static const char selected[17] = "\xff   \xff     \xff   k3";
     assert(store_inits == 1 && progress); /* FeRAM ready and progress hook registered first */
     pneutouch_model = (pneu_model_status_t){0};
     pneutouch_model.store_count = 8; pneutouch_model.fisher[0] = 45.0f; pneutouch_model.fisher[4] = 12.75f;
@@ -96,14 +96,14 @@ static void poll_at(uint32_t milliseconds)
 static void test_tune_progress(void)
 {
     char ready[17];
-    progress(2, 0, 20); assert(!strcmp(idle_text, "TUNE k4 r1/4    "));
-    progress(0, 0, 132); assert(!strcmp(idle_text, "TUNE k4 r1/4  0%"));
-    progress(2, 7, 20); assert(!strcmp(idle_text, "TUNE k5 r4/4    "));
-    progress(0, 66, 132); assert(!strcmp(idle_text, "TUNE k5 r4/4 50%"));
-    progress(1, 304, 528); assert(!strcmp(idle_text, "TUNE k5 r4/4 57%") && strlen(idle_text) == 16);
-    progress(1, 528, 528); assert(!strcmp(idle_text, "TUNE k5 r4/4100%"));
-    progress(2, 19, 20); assert(!strcmp(idle_text, "TUNE k8 r4/4    "));
-    progress(2, 20, 20); assert(!strcmp(idle_text, "TUNE k8 r4/4    ") && strlen(idle_text) == 16);
+    progress(2, 0, 20); assert(!strcmp(idle_text, "TUNE k4 r1      "));
+    progress(0, 0, 132); assert(!strcmp(idle_text, "TUNE k4 r1   0% "));
+    progress(2, 7, 20); assert(!strcmp(idle_text, "TUNE k5 r4      "));
+    progress(0, 66, 132); assert(!strcmp(idle_text, "TUNE k5 r4  50% "));
+    progress(1, 304, 528); assert(!strcmp(idle_text, "TUNE k5 r4  57% ") && strlen(idle_text) == 16);
+    progress(1, 528, 528); assert(!strcmp(idle_text, "TUNE k5 r4 100% ") && idle_text[10] == ' ');
+    progress(2, 19, 20); assert(!strcmp(idle_text, "TUNE k8 r4      "));
+    progress(2, 20, 20); assert(!strcmp(idle_text, "TUNE k8 r4      ") && strlen(idle_text) == 16);
     progress(1, 8, 704); assert(!strcmp(idle_text, "LEARN1    8/ 704")); /* tuning finished */
     progress(2, 3, 20); progress(1, 8, 704); assert(!strncmp(idle_text, "TUNE ", 5));
     pneu_ready_text(0, ready); assert(!strcmp(ready, "READY"));
@@ -116,9 +116,9 @@ int main(void)
 {
     pressure_app_init();
     assert(strstr(output, "PneutouchAi Live; PNEU1,seq,ms,raw; baud=115200") != NULL);
-    assert(strstr(output, "; fw=na4-margin\r\n") != NULL);
+    assert(strstr(output, "; fw=na6-k\r\n") != NULL);
     assert(saw_learn && !strcmp(idle_text, "READY"));
-    assert(!strcmp(line2_text, "\xff   \xff     \xff    3"));
+    assert(!strcmp(line2_text, "\xff   \xff     \xff   k3"));
     assert(strstr(output, "# PNEM1,READY,176,704,"));
     assert(strstr(output, "# PNEM2,NONE,0,0,single_instance\r\n"));
     assert(strstr(output, "# PNEM3,READY,slot=0,count=8,err=0,sel=0:4:10,fisher=45000:0:0:0:12750:0:0:0:0:0:0:0:0:0\r\n"));

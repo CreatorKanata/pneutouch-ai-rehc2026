@@ -41,7 +41,7 @@ pneu_demo_class_t pneu_model_predict(const float values[12], float positive_peak
                                      float trough_counts);
 const char *pneu_class_name(pneu_demo_class_t label);
 /* LCD line 2: one cell per pool feature (0xFF selected, ' ' not), then the
-   selected count in the last two columns; 16 spaces when nothing is selected
+   selected count in the last two columns ("k4"; 10..12 as two digits); 16 spaces when nothing is selected
    (an init failure blanks it). */
 void pneu_model_line2(const volatile pneu_model_status_t *status, char out[17]);
 #endif

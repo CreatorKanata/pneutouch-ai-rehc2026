@@ -109,15 +109,15 @@ static void digits(char *out, unsigned width, uint32_t value)
     while (i) out[--i] = ' ';
 }
 
-/* "TUNE k5 r3/4    " (phase 2) or "TUNE k5 r3/4 57%" (percent of the current phase):
+/* "TUNE k5 r3      " (phase 2) or "TUNE k5 r3  57% " (percent of the current phase):
    candidate k and round (fold+1) of the training that runs next. */
 static void tune_line(char line[17], bool with_percent, uint16_t done, uint16_t total)
 {
-    memcpy(line, "TUNE k  r /     ", 17);
+    memcpy(line, "TUNE k  r       ", 17);
     digits(line+6, 1, PNEU_TUNE_K_MIN+tune_done/PNEU_TUNE_FOLDS);
-    digits(line+9, 1, tune_done%PNEU_TUNE_FOLDS+1U); digits(line+11, 1, PNEU_TUNE_FOLDS);
-    if (!with_percent) return;
-    digits(line+12, 3, total ? (uint32_t)done*100U/total : 0U); line[15] = '%';
+    digits(line+9, 1, tune_done%PNEU_TUNE_FOLDS+1U);
+    if (!with_percent) return; /* column 10 stays a space even at 100% */
+    digits(line+11, 3, total ? (uint32_t)done*100U/total : 0U); line[14] = '%';
 }
 
 /* Training blocks for seconds: keep the LCD state machine and watchdog going.

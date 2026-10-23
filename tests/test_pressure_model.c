@@ -194,7 +194,7 @@ static void test_training(void)
         assert(fabs(pneutouch_model.fisher[j]-fix_primary_fisher[j]) <= 1e-4*fix_primary_fisher[j]+1e-5);
     /* Cells in pool order 0..13: 0, 4, 10, 13 selected; count " 4". */
     for (unsigned i = 0; i < 17; ++i) line[i] = pneutouch_model.lcd_line2[i];
-    assert(!memcmp(line, "\xff   \xff     \xff  \xff 4", 17));
+    assert(!memcmp(line, "\xff   \xff     \xff  \xffk4", 17));
 }
 
 static void test_line2_format(void)

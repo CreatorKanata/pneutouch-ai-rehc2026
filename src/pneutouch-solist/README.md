@@ -35,7 +35,7 @@ PneutouchAi Writeで書き込み、COM7から315点・実効39.72 SPS・欠番0�
 選んだ特徴と件数は起動時の `# PNEM3` で送る。`model_store.py tune` でチップ自身が4分割交差検証で特徴数kを決めてスロットに保存し、部位ごとの再現率と「どの部位を追加で取るか」を表示する（起動時は `# PNEM4`、LCDは `READY MORE <部位>`）。詳細は[FeRAMモデルストア](../../docs/model-store.md)。
 通常動作では実際のHX710B押下・解放から特徴抽出し、チップ上で推定する。
 LCDに `HEAD / BACK / LEGS / TAIL` を3秒表示し、`READY`へ戻る。表示中も計測は続く。
-学習中は1行目に `LEARN<段階> 済/全`（0=統計、1=学習）、2行目は14セル（特徴の順: rise, decay, width, area_width, slope, asym, rel_rise, recovery, rel_width, rel_area_width, trough_ratio, area_ratio, peak, trough）で選ばれた特徴を黒■、右端2桁に選んだ数。
+学習中は1行目に `LEARN<段階> 済/全`（0=統計、1=学習）、2行目は14セル（特徴の順: rise, decay, width, area_width, slope, asym, rel_rise, recovery, rel_width, rel_area_width, trough_ratio, area_ratio, peak, trough）で選ばれた特徴を黒■、右端2桁に選んだ数（`k4`、10以上は数字2桁）。
 スロットが無いと `NO MODEL`。
 新しい結果が出ると上書きして3秒を数え直す。約1秒押して離す操作を使う。
 明示的なPAI1検証中だけ実センサー取得を停止し、終了時に通常モデルを再学習して復帰する。

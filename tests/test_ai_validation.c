@@ -196,7 +196,7 @@ static void test_store_protocol(void)
 {
     float pool[PNEU_POOL_COUNT];
     memset(fram, 0xff, sizeof(fram));
-    packet("PST1,INFO,1"); assert(!strcmp(tx, "# PST1,INFO,1,0,0,0,0,0,na4-margin\r\n")); /* works in MODE 0 */
+    packet("PST1,INFO,1"); assert(!strcmp(tx, "# PST1,INFO,1,0,0,0,0,0,na6-k\r\n")); /* works in MODE 0 */
     packet("PST1,SELFTEST,2"); assert(!strcmp(tx, "# PST1,SELFTEST,2,0\r\n"));
     fram_selftest_result = -1; packet("PST1,SELFTEST,3"); assert(!strcmp(tx, "# PST1,SELFTEST,3,-1\r\n"));
     fram_selftest_result = 7; packet("PST1,SELFTEST,3"); assert(!strcmp(tx, "# PST1,SELFTEST,3,7\r\n"));
@@ -222,7 +222,7 @@ static void test_store_protocol(void)
     fram[0x2000+32+60+5] ^= 1; packet("PST1,GET,37,0,1"); assert(strstr(tx, "ERROR,CRC_RECORD"));
     fram[0x2000+32+60+5] ^= 1;
     packet("PST1,USE,38,1"); assert(!strcmp(tx, "# PST1,USE,38,1\r\n"));
-    packet("PST1,INFO,39"); assert(!strcmp(tx, "# PST1,INFO,39,1,4,0,0,0,na4-margin\r\n"));
+    packet("PST1,INFO,39"); assert(!strcmp(tx, "# PST1,INFO,39,1,4,0,0,0,na6-k\r\n"));
     packet("PST1,USE,38,7"); assert(strstr(tx, "ERROR,SLOT"));
     /* Full slot: fill through the store API, then one more over the wire. */
     assert(pneu_store_open(2, 0, "full"));
@@ -230,7 +230,7 @@ static void test_store_protocol(void)
     for (unsigned i = 0; i < PNEU_STORE_MAX_RECORDS; ++i) assert(pneu_store_put(2, 1, pool));
     put("40", 2, 1, 1.0f, "# PST1,ERROR,FULL");
     packet("PST1,ERASE,41,0"); assert(!strcmp(tx, "# PST1,ERASE,41,0\r\n"));
-    packet("PST1,INFO,42"); assert(!strcmp(tx, "# PST1,INFO,42,1,0,0,1000,0,na4-margin\r\n"));
+    packet("PST1,INFO,42"); assert(!strcmp(tx, "# PST1,INFO,42,1,0,0,1000,0,na6-k\r\n"));
     fram_drop_writes = true; packet("PST1,ERASE,43,3"); assert(strstr(tx, "ERROR,STORE")); fram_drop_writes = false;
     packet("PST1,TRAIN,44"); assert(!strcmp(tx, "# PST1,TRAIN,44,1,0,8,3,0:4:10,1234\r\n"));
     /* TRAIN re-initialized the chip: PAI1 INIT is required again, LIVEPREDICT is ready. */
