@@ -1,6 +1,7 @@
 /* k tuning: for every candidate k and fold, select features from the training
    records only, train instance 0 and predict the held-out records on the chip.
-   The k with the most held-out hits is stored in the slot header (ties: lower k). */
+   The k with the most held-out hits is stored in the slot header; a larger k
+   must win by more than PNEU_TUNE_MARGIN_PCT of the records (ties, noise: lower k). */
 #include "model_tune.h"
 #include "model_core.h"
 #include "model_store.h"
@@ -67,11 +68,19 @@ static uint8_t run_fold(uint8_t slot, uint16_t n, uint8_t k, uint8_t fold, tune_
     return error;
 }
 
+/* Rounded PNEU_TUNE_MARGIN_PCT of the records, at least 1. */
+static uint16_t margin(uint16_t count)
+{
+    uint32_t m = ((uint32_t)count*PNEU_TUNE_MARGIN_PCT+50U)/100U;
+    return (uint16_t)(m ? m : 1U);
+}
+
 static void keep_best(uint8_t k, const tune_score_t *score, uint16_t *best)
 {
     unsigned t, p;
     pneutouch_tune.correct[k] = score->correct;
-    if (k != PNEU_TUNE_K_MIN && score->correct <= *best) return; /* ties keep the lower k */
+    /* A one-record lead of a larger k is noise: it must beat the best by more than the margin. */
+    if (k != PNEU_TUNE_K_MIN && (uint32_t)score->correct <= (uint32_t)*best+margin(pneutouch_tune.count)) return;
     *best = score->correct;
     pneutouch_tune.best_k = k;
     for (t = 0; t < PNEU_CLASS_COUNT; ++t)

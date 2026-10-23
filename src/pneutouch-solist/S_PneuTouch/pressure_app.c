@@ -8,6 +8,7 @@
 #include "pressure_display.h"
 #include "uart_text.h"
 #include "firmware_tag.h"
+#include "model_tune.h"
 #include <string.h>
 
 volatile pneutouch_status_t pneutouch_status;
@@ -20,7 +21,7 @@ static bool pending;
 static bool was_validation;
 static bool lcd_ready_reported, lcd_failed_reported;
 static uint32_t lcd_updates_reported;
-static uint16_t tune_done, tune_total;
+static uint16_t tune_done; /* trainings finished (phase 2) */
 static bool tuning;
 
 /* UART text goes through uart_text.c: no printf, heap allocation or semihosting. */
@@ -108,13 +109,15 @@ static void digits(char *out, unsigned width, uint32_t value)
     while (i) out[--i] = ' ';
 }
 
-/* "TUNE  7/20     " (phase 2) or "TUNE  7/20  57% " (percent of the current phase). */
+/* "TUNE k5 r3/4    " (phase 2) or "TUNE k5 r3/4 57%" (percent of the current phase):
+   candidate k and round (fold+1) of the training that runs next. */
 static void tune_line(char line[17], bool with_percent, uint16_t done, uint16_t total)
 {
-    memcpy(line, "TUNE            ", 17);
-    digits(line+5, 2, tune_done); line[7] = '/'; digits(line+8, 2, tune_total);
+    memcpy(line, "TUNE k  r /     ", 17);
+    digits(line+6, 1, PNEU_TUNE_K_MIN+tune_done/PNEU_TUNE_FOLDS);
+    digits(line+9, 1, tune_done%PNEU_TUNE_FOLDS+1U); digits(line+11, 1, PNEU_TUNE_FOLDS);
     if (!with_percent) return;
-    digits(line+11, 3, total ? (uint32_t)done*100U/total : 0U); line[14] = '%';
+    digits(line+12, 3, total ? (uint32_t)done*100U/total : 0U); line[15] = '%';
 }
 
 /* Training blocks for seconds: keep the LCD state machine and watchdog going.
@@ -124,7 +127,8 @@ static void show_progress(uint8_t phase, uint16_t done, uint16_t total)
 {
     char line[17] = "LEARN0          ";
     if (phase == PNEU_PHASE_TUNE) {
-        tune_done = done; tune_total = total; tuning = done < total;
+        tuning = done < total;
+        tune_done = tuning ? done : (uint16_t)(done-1U); /* the end shows the last training */
         tune_line(line, false, done, total);
     } else if (tuning) tune_line(line, true, done, total);
     else {

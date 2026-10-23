@@ -10,6 +10,8 @@
 #define PNEU_TUNE_FOLDS 4U
 #define PNEU_TUNE_MIN_RECORDS 8U
 #define PNEU_ADVICE_RECALL_PCT 90U
+/* A larger k must beat the best by more than this share of the records (minimum 1). */
+#define PNEU_TUNE_MARGIN_PCT 1U
 
 typedef struct {
     bool done;                            /* last pneu_model_tune() completed */

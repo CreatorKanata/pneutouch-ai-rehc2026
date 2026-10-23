@@ -20,7 +20,7 @@ static int last_phase = -1;
 static uint16_t last_done, last_total;
 static unsigned phase_ends[2];
 /* Tune mode: ODL_Initialize starts fold (k, fold) = (4 + n/4, n%4) with n = inits so far. */
-static bool tune_mode;
+static bool tune_mode, tune_close; /* tune_close: k 5 and 6 only 1 ahead of k 4 */
 static unsigned tune_inits, tune_predicts, tune_calls;
 static uint8_t tune_k, tune_fold;
 static uint16_t tune_last_done = 0xFFFFU;
@@ -80,6 +80,9 @@ static unsigned scripted(uint8_t k, unsigned r)
     if (k >= 7U) return 0; /* only TAIL right */
     if (r == 2U && k <= 5U) return 0;     /* BACK -> TAIL at k 4, 5 */
     if (r == 7U && k != 5U) return 2;     /* HEAD -> LEGS at k 4, 6 */
+    if (r == 5U && k == 4U) return 3;     /* LEGS -> HEAD at k 4 */
+    if (tune_close && r == 3U && k == 5U) return 0; /* BACK -> TAIL */
+    if (tune_close && r == 4U && k == 6U) return 0; /* LEGS -> TAIL */
     return truth;
 }
 static void check_fold_predict(const bfloat16 *x)
@@ -292,7 +295,8 @@ static void test_tune(void)
     assert(tune_inits == 20 && tune_predicts == 40 && trained == 24);
     assert(tune_calls == 21 && tune_last_done == 20);
     assert(pneutouch_tune.slot == 0 && pneutouch_tune.count == 8);
-    assert(pneutouch_tune.correct[3] == 0 && pneutouch_tune.correct[4] == 6 && pneutouch_tune.correct[5] == 7);
+    /* margin 1 of 8: k 5 (7) beats k 4 (5) by 2; k 6 (7) only ties k 5. */
+    assert(pneutouch_tune.correct[3] == 0 && pneutouch_tune.correct[4] == 5 && pneutouch_tune.correct[5] == 7);
     assert(pneutouch_tune.correct[6] == 7 && pneutouch_tune.correct[7] == 2 && pneutouch_tune.correct[8] == 2);
     assert(pneutouch_tune.best_k == 5 && pneutouch_tune.advice == PNEU_CLASS_BACK);
     for (unsigned t = 0; t < 4; ++t) {
@@ -309,6 +313,14 @@ static void test_tune(void)
     assert(pneutouch_model.tuned_k == 5 && pneutouch_model.advice == PNEU_CLASS_BACK);
     assert(!memcmp((const uint8_t *)pneutouch_model.recall, recall, 4));
     for (unsigned c = 0; c < 4; ++c) assert(pneutouch_model.class_count[c] == 2);
+    /* k 5 and 6 one record ahead of k 4 (6 vs 5): within the margin, k 4 stays. */
+    tune_close = true;
+    assert(tune_scripted() && pneutouch_tune.correct[4] == 5 && pneutouch_tune.correct[5] == 6);
+    assert(pneutouch_tune.correct[6] == 6 && pneutouch_tune.best_k == 4);
+    assert(pneutouch_tune.recall[0] == 100 && pneutouch_tune.recall[1] == 50 && pneutouch_tune.recall[2] == 50);
+    assert(pneutouch_tune.recall[3] == 50 && pneutouch_tune.advice == PNEU_CLASS_BACK); /* tie: lower label */
+    assert(pneu_store_slot_info(0, &info) && info.tuned_k == 4);
+    tune_close = false;
 }
 
 static void test_tune_failures(void)
