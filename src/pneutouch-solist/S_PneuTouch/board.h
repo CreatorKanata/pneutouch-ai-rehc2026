@@ -1,4 +1,4 @@
-/* DT-EBML63Q2557 hardware boundary: clock, watchdog, CN3 GPIO, CN9 UART. */
+/* DT-EBML63Q2557 hardware boundary: clock, watchdog, CN3 GPIO, CN9 UART, FeRAM. */
 #ifndef PNEU_BOARD_H
 #define PNEU_BOARD_H
 #include <stdbool.h>
@@ -15,4 +15,9 @@ void board_lcd_init(void);
 /* Buffer must remain valid until status is nonzero. 0=busy, 1=ACK, -1=fault. */
 void board_lcd_start(uint8_t *buffer, uint16_t size);
 int board_lcd_status(void);
+/* MB85RS2MTA FeRAM on the software SPI (byte addresses, 256 KiB). */
+void board_store_init(void);
+void board_store_read(uint32_t addr, void *dst, unsigned n);
+void board_store_write(uint32_t addr, const void *src, unsigned n);
+int board_store_selftest(void); /* 0 = pass; FramTest-style codes otherwise */
 #endif

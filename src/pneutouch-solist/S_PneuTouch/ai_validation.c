@@ -1,6 +1,9 @@
 #include "ai_validation.h"
 #include "board.h"
 #include "pressure_model.h"
+#include "store_protocol.h"
+#include "uart_text.h"
+#include "crc16.h"
 #include "solistAi.h"
 #include "smpl_common.h"
 #include "irq.h"
@@ -18,51 +21,9 @@ static uint16_t input_size;
 static bfloat16 input[INPUT_CAPACITY], teacher[CLASS_COUNT], output[CLASS_COUNT];
 static bfloat16 reset_row[64];
 
-static void text(const char *p) { while (*p) board_putc(*p++); }
-static void number(uint32_t n)
-{
-    char s[10]; unsigned i = 0;
-    do { s[i++] = (char)('0'+n%10U); n /= 10U; } while (n);
-    while (i) board_putc(s[--i]);
-}
-static void hex16(uint16_t n)
-{
-    static const char digits[] = "0123456789abcdef";
-    int i;
-    for (i = 12; i >= 0; i -= 4) board_putc(digits[(n >> i)&15U]);
-}
-static int hex(char c)
-{
-    if (c >= '0' && c <= '9') return c-'0';
-    if (c >= 'a' && c <= 'f') return c-'a'+10;
-    if (c >= 'A' && c <= 'F') return c-'A'+10;
-    return -1;
-}
-static uint16_t crc16(const char *p, unsigned n)
-{
-    uint16_t crc = 0xffffU;
-    unsigned i;
-    while (n--) {
-        crc ^= (uint16_t)(uint8_t)*p++ << 8;
-        for (i = 0; i < 8; ++i) crc = (uint16_t)(crc & 0x8000U ? (crc << 1)^0x1021U : crc << 1);
-    }
-    return crc;
-}
-static bool integer(const char *s, uint32_t *n)
-{
-    uint32_t v = 0;
-    if (!*s) return false;
-    while (*s) {
-        unsigned digit = (unsigned)(*s++-'0');
-        if (digit > 9 || v > (UINT32_MAX-digit)/10U) return false;
-        v = v*10U+digit;
-    }
-    *n = v;
-    return true;
-}
 static void error(const char *why)
 {
-    text("# PAI1,ERROR,"); text(why); text("\r\n");
+    pneu_text("# PAI1,ERROR,"); pneu_text(why); pneu_text("\r\n");
 }
 static void command(void)
 {
@@ -72,11 +33,11 @@ static void command(void)
     uint32_t id, inputs, hidden, seed, activation, cls;
     if (!star || strlen(star+1) != 4U) { error("CRC_FORMAT"); return; }
     for (i = 1; i <= 4; ++i) {
-        int digit = hex(star[i]);
+        int digit = pneu_hex_digit(star[i]);
         if (digit < 0) { error("CRC_FORMAT"); return; }
         received = (uint16_t)((received << 4)|digit);
     }
-    if (crc16(line, (unsigned)(star-line)) != received) { error("CRC"); return; }
+    if (pneu_crc16(line, (unsigned)(star-line)) != received) { error("CRC"); return; }
     *star = '\0'; p = line; fields[n++] = p;
     while (*p) {
         if (*p == ',') {
@@ -86,24 +47,31 @@ static void command(void)
         }
         ++p;
     }
+    if (!strcmp(fields[0], "PST1")) {
+        if (job) { pneu_text("# PST1,ERROR,BUSY\r\n"); return; }
+        last_command_ms = board_millis();
+        /* TRAIN re-initializes both instances, so a PAI1 INIT is no longer valid. */
+        if (pneu_store_command(fields, n, validation)) { initialized = false; live_ready = pneutouch_model.ready; }
+        return;
+    }
     if (n < 3 || strcmp(fields[0], "PAI1")) { error("PROTOCOL"); return; }
     if (job) { error("BUSY"); return; }
     last_command_ms = board_millis();
-    if (!strcmp(fields[1], "MODE") && n == 3 && integer(fields[2], &id) && id <= 1) {
+    if (!strcmp(fields[1], "MODE") && n == 3 && pneu_integer(fields[2], &id) && id <= 1) {
         validation = id != 0;
         initialized = live_ready = false;
-        text("# PAI1,MODE,"); number(id); text("\r\n");
+        pneu_text("# PAI1,MODE,"); pneu_number(id); pneu_text("\r\n");
         return;
     }
     if (!validation) { error("MODE_REQUIRED"); return; }
-    if (!integer(fields[2], &id)) { error("TOKEN"); return; }
+    if (!pneu_integer(fields[2], &id)) { error("TOKEN"); return; }
     /* Explicit validation only: exercise both boot-trained instances without
        labelling these supplied vectors as physical sensor events. */
     if (!strcmp(fields[1], "LIVEINIT") && n == 3) {
         initialized = false;
         live_ready = pneu_model_init();
         if (!live_ready) { error("LIVE_INIT_FAILED"); return; }
-        text("# PAI1,LIVEINIT,"); number(id); text("\r\n");
+        pneu_text("# PAI1,LIVEINIT,"); pneu_number(id); pneu_text("\r\n");
         return;
     }
     if (!strcmp(fields[1], "LIVEPREDICT") && n == 4) {
@@ -111,30 +79,23 @@ static void command(void)
         pneu_demo_class_t label;
         if (!live_ready) { error("LIVE_INIT_REQUIRED"); return; }
         p = fields[3];
+        int parsed;
         if (strlen(p) != 13U*8U) { error("INPUT_SIZE"); return; }
-        for (i = 0; i < 13; ++i) {
-            uint32_t bits = 0;
-            for (j = 0; j < 8; ++j) {
-                int digit = hex(*p++);
-                if (digit < 0) { error("INPUT_HEX"); return; }
-                bits = (bits << 4)|(uint32_t)digit;
-            }
-            if ((bits & 0x7f800000U) == 0x7f800000U) { error("NONFINITE"); return; }
-            memcpy(&values[i], &bits, sizeof(bits));
-        }
+        parsed = pneu_parse_f32_hex(p, values, 13);
+        if (parsed) { error(parsed == 1 ? "INPUT_HEX" : "NONFINITE"); return; }
         /* Wire format stays 12 features + peak; trough = peak * trough/peak
-           ratio (input 10), the same rule tools/generate_pressure_model.py uses. */
+           ratio (input 10), the same rule tools/feature_select.py uses. */
         label = pneu_model_predict(values, values[12], values[12]*values[10]);
-        text("# PAI1,LIVEPREDICT,"); number(id); board_putc(','); number((uint32_t)label);
-        board_putc(','); number((uint32_t)pneutouch_model.primary_label);
-        board_putc(','); number(pneutouch_model.specialist_used ? 1U : 0U);
-        board_putc(','); number(pneutouch_model.inference_us);
-        for (i = 0; i < 4; ++i) { board_putc(','); hex16(pneutouch_model.scores[i]); }
-        text("\r\n");
+        pneu_text("# PAI1,LIVEPREDICT,"); pneu_number(id); board_putc(','); pneu_number((uint32_t)label);
+        /* Field count kept: primary label = label, specialist_used = 0 (single instance). */
+        board_putc(','); pneu_number((uint32_t)label); pneu_text(",0");
+        board_putc(','); pneu_number(pneutouch_model.inference_us);
+        for (i = 0; i < 4; ++i) { board_putc(','); pneu_hex16(pneutouch_model.scores[i]); }
+        pneu_text("\r\n");
         return;
     }
-    if (!strcmp(fields[1], "INIT") && n == 7 && integer(fields[3], &inputs) &&
-        integer(fields[4], &hidden) && integer(fields[5], &seed) && integer(fields[6], &activation)) {
+    if (!strcmp(fields[1], "INIT") && n == 7 && pneu_integer(fields[3], &inputs) &&
+        pneu_integer(fields[4], &hidden) && pneu_integer(fields[5], &seed) && pneu_integer(fields[6], &activation)) {
         ODL_Parameters parameters;
         if ((inputs != 12 && inputs != 64 && inputs != 128) || hidden < 8 || hidden > 64 ||
             seed > 65535 || activation > 3) { error("PARAMETER"); return; }
@@ -164,12 +125,12 @@ static void command(void)
         }
         irq_ai_clearIRQ();
         initialized = true;
-        text("# PAI1,INIT,"); number(id); board_putc(','); number(inputs);
-        board_putc(','); number(hidden); text(",4\r\n");
+        pneu_text("# PAI1,INIT,"); pneu_number(id); board_putc(','); pneu_number(inputs);
+        board_putc(','); pneu_number(hidden); pneu_text(",4\r\n");
         return;
     }
     if (!initialized) { error("INIT_REQUIRED"); return; }
-    if (!strcmp(fields[1], "TRAIN") && n == 5 && integer(fields[3], &cls) && cls >= 1 && cls <= CLASS_COUNT) {
+    if (!strcmp(fields[1], "TRAIN") && n == 5 && pneu_integer(fields[3], &cls) && cls >= 1 && cls <= CLASS_COUNT) {
         job = 1; p = fields[4];
     } else if (!strcmp(fields[1], "PREDICT") && n == 4) {
         job = 2; p = fields[3]; cls = 0; /* no test label is sent */
@@ -178,7 +139,7 @@ static void command(void)
     for (i = 0; i < input_size; ++i) {
         uint16_t bits = 0;
         for (j = 0; j < 4; ++j) {
-            int digit = hex(*p++);
+            int digit = pneu_hex_digit(*p++);
             if (digit < 0) { job = 0; error("INPUT_HEX"); return; }
             bits = (uint16_t)((bits << 4)|digit);
         }
@@ -201,13 +162,13 @@ bool pneu_ai_validation_poll(void)
     if (job && !ODL_IsBusy()) {
         uint32_t elapsed = board_micros()-started_us;
         unsigned i;
-        text(job == 1 ? "# PAI1,TRAIN," : "# PAI1,PREDICT,"); number(token);
-        board_putc(','); number(elapsed);
+        pneu_text(job == 1 ? "# PAI1,TRAIN," : "# PAI1,PREDICT,"); pneu_number(token);
+        board_putc(','); pneu_number(elapsed);
         if (job == 2) {
             ODL_GetResult(0, output);
-            for (i = 0; i < CLASS_COUNT; ++i) { board_putc(','); hex16((uint16_t)output[i]); }
+            for (i = 0; i < CLASS_COUNT; ++i) { board_putc(','); pneu_hex16((uint16_t)output[i]); }
         }
-        text("\r\n"); job = 0;
+        pneu_text("\r\n"); job = 0;
     }
     if (job && board_micros()-started_us > 4000000U) {
         job = 0; initialized = false; error("AI_TIMEOUT");
@@ -224,7 +185,7 @@ bool pneu_ai_validation_poll(void)
         }
     }
     if (validation && !job && board_millis()-last_command_ms > 60000U) {
-        validation = initialized = live_ready = false; text("# PAI1,MODE,0,IDLE_TIMEOUT\r\n");
+        validation = initialized = live_ready = false; pneu_text("# PAI1,MODE,0,IDLE_TIMEOUT\r\n");
     }
     return validation;
 }

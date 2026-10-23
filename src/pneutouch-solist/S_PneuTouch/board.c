@@ -9,6 +9,9 @@
 #include "Lcd.h"
 #include "LcdI2cf0.h"
 #include "Regulator5VOutput.h"
+#include "Fram.h"
+#include "SoftSpi.h"
+#include <string.h>
 
 static volatile uint32_t milliseconds;
 
@@ -128,4 +131,35 @@ int board_lcd_status(void)
         lcd_result = -1;
     }
     return lcd_result;
+}
+
+void board_store_init(void)
+{
+    SoftSpiPeripheralInit();
+    FramInit();
+}
+void board_store_read(uint32_t addr, void *dst, unsigned n) { FramReadBlock(addr, dst, (int)n); }
+void board_store_write(uint32_t addr, const void *src, unsigned n) { FramWriteBlock(addr, src, (int)n); }
+
+/* Same checks as FramTest(), but on the reserved scratch block at 0x3F000:
+   FramTest() itself writes at 200000 (0x30D40), inside model slot 3. */
+int board_store_selftest(void)
+{
+    static const uint8_t pattern[10] = {0x20, 0x22, 0x24, 0x26, 0x28, 0x2A, 0x2C, 0x2E, 0x30, 0x32};
+    const uint32_t top = 0x3F000U;
+    uint8_t back[10], byte;
+    uint16_t half;
+    uint32_t word;
+    FramWriteBlock(top, pattern, 10);
+    FramWriteByte(top+10U, 0x01); FramWriteByte(top+11U, 0x02);
+    FramWriteHalfWord(top+12U, 0x0304); FramWriteWord(top+14U, 0x05060708UL);
+    FramReadBlock(top, back, 10);
+    if (memcmp(back, pattern, sizeof(pattern))) return 1;
+    FramReadHalfWord(top, &half); if (half != 0x2220U) return 2;
+    FramReadWord(top, &word); if (word != 0x26242220UL) return 3;
+    FramReadByte(top+10U, &byte); if (byte != 0x01U) return 4;
+    FramReadByte(top+11U, &byte); if (byte != 0x02U) return 5;
+    FramReadHalfWord(top+12U, &half); if (half != 0x0304U) return 6;
+    FramReadWord(top+14U, &word); if (word != 0x05060708UL) return 7;
+    return FramInspectWp() ? 0 : -1;
 }

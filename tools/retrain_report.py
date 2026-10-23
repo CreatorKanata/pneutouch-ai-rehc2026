@@ -108,7 +108,7 @@ MODEL_PEAK_INPUT, MODEL_TROUGH_INPUT = 5, 10
 
 def model_inputs(kept, order):
     """Raw (pre-log) model inputs: features12 with input 5 = peak/1000 and
-    input 10 = trough/1000, trough = peak * trough_peak_ratio (as the firmware)."""
+    input 10 = trough/1000, trough = peak * trough_peak_ratio (earlier embedded-model firmware)."""
     x = np.array([e['features12'] for e in kept], dtype=float)
     peak = np.array([e['peak'] for e in kept], dtype=float)
     ratio = x[:, order.index('trough_peak_ratio')]
@@ -137,8 +137,9 @@ def loo_section(kept, names, order):
     labels = np.array([e['label'] for e in kept])
     shape = np.log(np.array([e['features12'] for e in kept], dtype=float))
     lines += loo_lines(shape, labels, names, '4 zones')
-    lines += ['', '*Model inputs as the firmware uses them: inputs 5/10 are log(peak/1000) and '
-              'log(trough/1000) instead of asymmetry and trough/peak.*', '']
+    lines += ['', '*Inputs of the earlier embedded-model firmware: inputs 5/10 are log(peak/1000) and '
+              'log(trough/1000) instead of asymmetry and trough/peak. The FeRAM firmware picks its own '
+              'features: preview with tools/feature_select.py.*', '']
     lines += loo_lines(np.log(model_inputs(kept, order)), labels, names,
                        '4 zones, model inputs (peak/trough replace inputs 5/10)')
     return lines
@@ -165,11 +166,12 @@ def readiness_section(ctx):
     lines = ['## Readiness', '']
     if not short and len(kept) <= ctx['max_events']:
         return lines + [f'- **ready**: {len(kept)} events. Next:', '', '```',
-                        f'.venv/bin/python tools/generate_pressure_model.py --input {ctx["training"]}', '```']
+                        f'.venv/bin/python tools/model_store.py --port PORT load --slot 0 '
+                        f'--input {ctx["training"]} --use', '```']
     if short:
         lines.append('- **not ready**: zones short of --min-events: ' + ', '.join(short))
     if len(kept) > ctx['max_events']:
-        lines.append(f'- **not ready**: {len(kept)} events > {ctx["max_events"]} (model limit); drop some files')
+        lines.append(f'- **not ready**: {len(kept)} events > {ctx["max_events"]} (FeRAM slot limit); drop some files')
     return lines
 
 

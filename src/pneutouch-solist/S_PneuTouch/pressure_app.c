@@ -6,6 +6,7 @@
 #include "ai_validation.h"
 #include "pressure_model.h"
 #include "pressure_display.h"
+#include "uart_text.h"
 
 volatile pneutouch_status_t pneutouch_status;
 volatile pneutouch_feature_status_t pneutouch_features;
@@ -18,25 +19,17 @@ static bool was_validation;
 static bool lcd_ready_reported, lcd_failed_reported;
 static uint32_t lcd_updates_reported;
 
-static void text(const char *s) { while (*s) board_putc(*s++); }
-
-/* Avoid printf, heap allocation and semihosting. */
-static void number(uint32_t value)
-{
-    char digits[10];
-    unsigned count = 0;
-    do { digits[count++] = (char)('0' + value % 10U); value /= 10U; } while (value);
-    while (count) board_putc(digits[--count]);
-}
+/* UART text goes through uart_text.c: no printf, heap allocation or semihosting. */
+#define FISHER_PRINT_LIMIT 4.0e9f
 
 static void send_sample(const pressure_sample_t *sample)
 {
-    text("PNEU1,"); number(sample->sequence); board_putc(',');
-    number(sample->milliseconds); board_putc(',');
+    pneu_text("PNEU1,"); pneu_number(sample->sequence); board_putc(',');
+    pneu_number(sample->milliseconds); board_putc(',');
     if (sample->raw < 0) {
-        board_putc('-'); number((uint32_t)(-sample->raw));
-    } else number((uint32_t)sample->raw);
-    text("\r\n");
+        board_putc('-'); pneu_number((uint32_t)(-sample->raw));
+    } else pneu_number((uint32_t)sample->raw);
+    pneu_text("\r\n");
 }
 
 /* Two short comment frames, one per acquired sample, preserve existing PNEU1
@@ -44,13 +37,13 @@ static void send_sample(const pressure_sample_t *sample)
 static void send_feature_part(void)
 {
     unsigned i, start = pending_part*6U;
-    text("# PNEF1,"); number(pending_features.id); board_putc(',');
-    number(pending_features.trigger_ms); board_putc(',');
-    number(pending_features.end_ms); board_putc(','); number(start);
+    pneu_text("# PNEF1,"); pneu_number(pending_features.id); board_putc(',');
+    pneu_number(pending_features.trigger_ms); board_putc(',');
+    pneu_number(pending_features.end_ms); board_putc(','); pneu_number(start);
     for (i = start; i < start+6U; ++i) {
-        board_putc(','); number((uint32_t)(pending_features.value[i]*1000.0f+0.5f));
+        board_putc(','); pneu_number((uint32_t)(pending_features.value[i]*1000.0f+0.5f));
     }
-    text("\r\n");
+    pneu_text("\r\n");
     if (++pending_part == 2) pending = false;
 }
 
@@ -64,8 +57,8 @@ static void process_features(const pressure_sample_t *sample)
     pneutouch_features.last_result = result;
     if (result == PNEU_EVENT_START) {
         ++pneutouch_features.started;
-        text("# PNEE1,"); number(features.event.id); text(",START,");
-        number(features.event.trigger_ms); text("\r\n");
+        pneu_text("# PNEE1,"); pneu_number(features.event.id); pneu_text(",START,");
+        pneu_number(features.event.trigger_ms); pneu_text("\r\n");
     } else if (result == PNEU_EVENT_COMPLETE) {
         ++pneutouch_features.completed;
         pneutouch_features.last_complete = features.event;
@@ -75,23 +68,89 @@ static void process_features(const pressure_sample_t *sample)
             static const char hex[] = "0123456789abcdef";
             pneu_demo_class_t label = pneu_model_predict(features.event.value, features.event.peak,
                                                          features.event.trough);
-            text("# PNEC1,"); number(features.event.id); board_putc(',');
-            number(board_millis()); board_putc(','); text(pneu_class_name(label));
-            board_putc(','); number(pneutouch_model.inference_us);
+            pneu_text("# PNEC1,"); pneu_number(features.event.id); board_putc(',');
+            pneu_number(board_millis()); board_putc(','); pneu_text(pneu_class_name(label));
+            board_putc(','); pneu_number(pneutouch_model.inference_us);
             for (i = 0; i < 4; ++i) {
                 int shift; board_putc(',');
                 for (shift = 12; shift >= 0; shift -= 4)
                     board_putc(hex[(pneutouch_model.scores[i] >> shift)&15U]);
             }
-            text("\r\n");
+            pneu_text("\r\n");
             pneu_display_result(label);
         }
     } else if (result == PNEU_EVENT_INVALID || result == PNEU_EVENT_TIMEOUT) {
         ++pneutouch_features.rejected;
-        text("# PNEE1,"); number(features.event.id);
-        text(result == PNEU_EVENT_TIMEOUT ? ",TIMEOUT," : ",INVALID,");
-        number(sample->milliseconds); text("\r\n");
+        pneu_text("# PNEE1,"); pneu_number(features.event.id);
+        pneu_text(result == PNEU_EVENT_TIMEOUT ? ",TIMEOUT," : ",INVALID,");
+        pneu_number(sample->milliseconds); pneu_text("\r\n");
     } else if (result == PNEU_EVENT_RESET) ++pneutouch_features.resets;
+}
+
+static void show_line2(void)
+{
+    char line[17];
+    unsigned i;
+    for (i = 0; i < sizeof(line); ++i) line[i] = pneutouch_model.lcd_line2[i];
+    line[16] = '\0';
+    pneu_display_line2(line);
+}
+
+/* Right-aligned decimal in width columns. */
+static void digits(char *out, unsigned width, uint32_t value)
+{
+    unsigned i = width;
+    do { out[--i] = (char)('0'+value%10U); value /= 10U; } while (value && i);
+    while (i) out[--i] = ' ';
+}
+
+/* Training blocks for seconds: keep the LCD state machine and watchdog going.
+   Line 1 "LEARN<phase> done/total"; line 2 as soon as the selection is known. */
+static void show_progress(uint8_t phase, uint16_t done, uint16_t total)
+{
+    char line[17] = "LEARN0          ";
+    line[5] = (char)('0'+phase%10U);
+    digits(line+7, 4, done); line[11] = '/'; digits(line+12, 4, total);
+    if (phase == 1U && done == 0U) show_line2();
+    pneu_display_idle(line);
+    pneu_display_poll();
+    board_watchdog();
+}
+
+static bool train_model(void)
+{
+    bool ready = pneu_model_init();
+    show_line2(); /* blank after a failure */
+    pneu_display_idle(ready ? "READY" :
+                      pneutouch_model.error == PNEU_MODEL_ERR_NO_SLOT ? "NO MODEL" : "AI ERROR");
+    return ready;
+}
+
+static void send_list(const volatile uint8_t *items, unsigned count)
+{
+    unsigned i;
+    for (i = 0; i < count; ++i) { if (i) board_putc(':'); pneu_number(items[i]); }
+}
+
+static void send_model_banner(void)
+{
+    unsigned i;
+    pneu_text(pneutouch_model.ready ? "# PNEM1,READY," : "# PNEM1,ERROR,");
+    pneu_number(pneutouch_model.training_examples); board_putc(',');
+    pneu_number(pneutouch_model.training_steps); board_putc(',');
+    pneu_number(pneutouch_model.training_us); pneu_text("\r\n");
+    pneu_text("# PNEM2,NONE,0,0,single_instance\r\n"); /* kept for older log readers */
+    pneu_text(pneutouch_model.ready ? "# PNEM3,READY,slot=" : "# PNEM3,ERROR,slot=");
+    pneu_number(pneutouch_model.slot); pneu_text(",count="); pneu_number(pneutouch_model.store_count);
+    pneu_text(",err="); pneu_number(pneutouch_model.error); pneu_text(",sel=");
+    send_list(pneutouch_model.selected, pneutouch_model.selected_count);
+    pneu_text(",fisher=");
+    for (i = 0; i < 14U; ++i) {
+        float scaled = pneutouch_model.fisher[i]*1000.0f+0.5f; /* x1000 */
+        if (i) board_putc(':');
+        pneu_number(scaled >= FISHER_PRINT_LIMIT ? (uint32_t)FISHER_PRINT_LIMIT : scaled > 0.0f ? (uint32_t)scaled : 0U);
+    }
+    pneu_text("\r\n");
 }
 
 void pressure_app_init(void)
@@ -101,21 +160,18 @@ void pressure_app_init(void)
     pneutouch_features = (pneutouch_feature_status_t){0};
     pneu_features_init(&features); pending = false;
     board_init();
+    board_store_init();
     pneu_ai_validation_init(); was_validation = false;
     pneu_display_init();
     lcd_ready_reported = lcd_failed_reported = false; lcd_updates_reported = 0;
-    if (!pneu_model_init()) pneu_display_idle("AI ERROR");
+    pneu_model_set_progress(show_progress); /* also used by PAI1 exit and PST1 TRAIN */
+    (void)train_model();
     acquisition_init(&acquisition, sensor, board_millis());
-    text("# PneutouchAi Live; PNEU1,seq,ms,raw; baud=");
-    number(PNEU_UART_BAUD); text("; nominal_sps="); number(PNEU_SAMPLE_RATE_HZ);
-    text("\r\n");
-    text("# PNEF1; version=1; features=12; units_x1000; classes=tail/back/legs/head; gesture=press_release_1s\r\n");
-    text(pneutouch_model.ready ? "# PNEM1,READY," : "# PNEM1,ERROR,");
-    number(pneutouch_model.training_examples); board_putc(',');
-    number(pneutouch_model.training_steps); board_putc(',');
-    number(pneutouch_model.training_us); text("\r\n");
-    text("# PNEM2,HEAD_LEGS,"); number(pneutouch_model.specialist_examples); board_putc(',');
-    number(pneutouch_model.specialist_steps); text(",input5=positive_peak_kcounts,input10=trough_kcounts\r\n");
+    pneu_text("# PneutouchAi Live; PNEU1,seq,ms,raw; baud=");
+    pneu_number(PNEU_UART_BAUD); pneu_text("; nominal_sps="); pneu_number(PNEU_SAMPLE_RATE_HZ);
+    pneu_text("\r\n");
+    pneu_text("# PNEF1; version=1; features=12; units_x1000; classes=tail/back/legs/head; gesture=press_release_1s\r\n");
+    send_model_banner();
     pneutouch_status.state = PNEU_SETTLING;
 }
 
@@ -125,16 +181,16 @@ void pressure_app_poll(void)
     board_watchdog();
     pneu_display_poll();
     if (pneutouch_display.ready && !lcd_ready_reported) {
-        text("# PNEL1,READY\r\n"); lcd_ready_reported = true;
+        pneu_text("# PNEL1,READY\r\n"); lcd_ready_reported = true;
     }
     if (pneutouch_display.failed && !lcd_failed_reported) {
-        text("# PNEL1,ERROR,I2C\r\n"); lcd_failed_reported = true;
+        pneu_text("# PNEL1,ERROR,I2C\r\n"); lcd_failed_reported = true;
     }
     if (pneutouch_display.updates != lcd_updates_reported) {
         lcd_updates_reported = pneutouch_display.updates;
-        text("# PNEL1,"); text(pneu_class_name(pneutouch_display.label)); board_putc(',');
-        number(pneutouch_display.label ? pneutouch_display.shown_ms : pneutouch_display.cleared_ms);
-        text("\r\n");
+        pneu_text("# PNEL1,"); pneu_text(pneu_class_name(pneutouch_display.label)); board_putc(',');
+        pneu_number(pneutouch_display.label ? pneutouch_display.shown_ms : pneutouch_display.cleared_ms);
+        pneu_text("\r\n");
     }
     if (pneu_ai_validation_poll()) {
         if (!was_validation) pneu_display_idle("VALIDATION");
@@ -142,11 +198,11 @@ void pressure_app_poll(void)
     }
     if (was_validation) {
         const hx710b_t sensor = {0, board_dout_high, board_sensor_pulse, PNEU_HX_PULSES};
-        /* PAI1 uses the same chip instance. Restore the fixed live model. */
-        pneu_display_idle(pneu_model_init() ? "READY" : "AI ERROR");
+        /* PAI1 uses the same chip instance. Retrain from the (maybe new) active slot. */
+        (void)train_model();
         acquisition_init(&acquisition, sensor, board_millis());
         pneu_features_reset(&features); pending = false; was_validation = false;
-        text("# PneutouchAi live acquisition resumed; sequence restarts\r\n");
+        pneu_text("# PneutouchAi live acquisition resumed; sequence restarts\r\n");
     }
     acquisition_result_t result = acquisition_poll(&acquisition, board_millis(), &sample);
     if (result == ACQ_SAMPLE) {
@@ -160,7 +216,7 @@ void pressure_app_poll(void)
     } else if (result == ACQ_TIMEOUT) {
         ++pneutouch_status.timeouts;
         pneutouch_status.state = PNEU_SENSOR_TIMEOUT;
-        text("# ERROR,HX710B_TIMEOUT\r\n");
+        pneu_text("# ERROR,HX710B_TIMEOUT\r\n");
         pneu_features_reset(&features); pending = false;
         ++pneutouch_features.resets;
     } else if (acquisition.mode_selected && acquisition.settling) {

@@ -15,7 +15,7 @@ except ImportError as exc:
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'tools'))
-import generate_pressure_model as gpm  # noqa: E402
+import feature_select as fs  # noqa: E402
 import prepare_retrain as pr  # noqa: E402
 import retrain_report as rr  # noqa: E402
 
@@ -113,18 +113,22 @@ class PrepareRetrainTests(unittest.TestCase):
         self.assertEqual(len(ctx['kept']), 4 * GOOD)
         self.assertTrue((self.out / 'waveforms.png').stat().st_size > 0)
 
-    def test_summary_and_generator_accept_output(self):
+    def test_summary_and_feature_select_accept_output(self):
         self.run_tool('--hidden', '64')
         summary = (self.out / 'summary.md').read_text(encoding='utf-8')
         self.assertIn('**ready**', summary)
-        self.assertIn('tools/generate_pressure_model.py --input', summary)
+        self.assertIn('tools/model_store.py --port PORT load --slot 0 --input', summary)
+        self.assertIn('--use', summary)
         # TAIL and LEGS predicted right, BACK and HEAD wrong -> 50 %.
         self.assertIn('accuracy: **50.0%**', summary)
         self.assertIn('decay_ms: HEAD', summary)
         self.assertIn('✔', summary)
-        header = gpm.generate(self.out / pr.TRAINING_NAME)
-        self.assertIn(f'PNEU_MODEL_EXAMPLES {4 * GOOD}U', header)
-        self.assertIn('PNEU_MODEL_HIDDEN 64U', header)
+        data = json.loads((self.out / pr.TRAINING_NAME).read_text(encoding='utf-8'))
+        self.assertEqual(data['model']['hidden'], 64)
+        events = data['events']
+        self.assertEqual(len(events), 4 * GOOD)
+        chosen = fs.select(fs.stats([e['label'] for e in events], fs.pool_rows(events)), 0xF, 0)
+        self.assertTrue(2 <= len(chosen['index']) <= 12)  # the chip's selection accepts the output
 
     def test_skips_unknown_names_and_missing_uart_log(self):
         rng = np.random.default_rng(1)

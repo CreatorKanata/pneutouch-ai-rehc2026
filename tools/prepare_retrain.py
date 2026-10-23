@@ -21,7 +21,7 @@ peak come from the host build of the firmware extractor run on each CSV
 (tests/replay_pressure_features.c) instead of the PNEF1 telemetry; the
 .uart.log is then optional and only supplies the old model's prediction.
 
-Writes pressure-demo-training.json (input of tools/generate_pressure_model.py),
+Writes pressure-demo-training.json (input of tools/model_store.py load),
 events.csv, summary.md and waveforms.png.
 """
 import argparse
@@ -46,7 +46,7 @@ SOURCE_SET = 'dino_85a_live'
 BASELINE_WINDOW_MS = (800, 300)
 BASELINE_MIN_SAMPLES = 5
 BASELINE_FALLBACK_SAMPLES = 20
-MAX_EVENTS = 255
+MAX_EVENTS = 1000  # PNEU_STORE_MAX_RECORDS: one FeRAM slot
 MODEL_SEED, MODEL_EPOCHS = 1, 4
 TRAINING_NAME = 'pressure-demo-training.json'
 

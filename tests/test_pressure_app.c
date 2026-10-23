@@ -11,12 +11,32 @@
 static uint32_t now, bits;
 static unsigned pulses, watchdogs;
 static bool ready;
-static char output[512];
+static char output[1024];
 static unsigned length;
 static unsigned predictions, displays;
 volatile pneu_model_status_t pneutouch_model;
 volatile pneu_display_status_t pneutouch_display;
-bool pneu_model_init(void) { pneutouch_model.ready = true; return true; }
+static pneu_model_progress_t progress;
+static bool model_fails, board_ready, saw_learn;
+static unsigned store_inits;
+static char idle_text[17], line2_text[17];
+void pneu_model_set_progress(pneu_model_progress_t callback) { progress = callback; }
+bool pneu_model_init(void)
+{
+    static const char selected[17] = "\xff   \xff     \xff    3";
+    assert(store_inits == 1 && progress); /* FeRAM ready and progress hook registered first */
+    pneutouch_model = (pneu_model_status_t){0};
+    pneutouch_model.store_count = 8; pneutouch_model.fisher[0] = 45.0f; pneutouch_model.fisher[4] = 12.75f;
+    if (model_fails) { pneutouch_model.error = PNEU_MODEL_ERR_NO_SLOT; memset((char *)pneutouch_model.lcd_line2, ' ', 16); return false; }
+    pneutouch_model.selected_count = 3;
+    pneutouch_model.selected[1] = 4; pneutouch_model.selected[2] = 10;
+    for (unsigned i = 0; i < 17; ++i) pneutouch_model.lcd_line2[i] = selected[i];
+    pneutouch_model.training_examples = 176; pneutouch_model.training_steps = 704;
+    progress(1, 8, 704);
+    assert(!strcmp(idle_text, "LEARN1    8/ 704"));
+    pneutouch_model.ready = true;
+    return true;
+}
 pneu_demo_class_t pneu_model_predict(const float values[12], float positive_peak, float trough)
 {
     assert(values[0] > 199 && values[0] < 201); /* Actual extracted rise time */
@@ -29,9 +49,15 @@ pneu_demo_class_t pneu_model_predict(const float values[12], float positive_peak
 const char *pneu_class_name(pneu_demo_class_t label) { (void)label; return "BACK"; }
 void pneu_display_init(void) {}
 void pneu_display_poll(void) {}
-void pneu_display_idle(const char *s) { (void)s; }
+void pneu_display_idle(const char *s)
+{
+    assert(strlen(s) <= 16); strcpy(idle_text, s);
+    if (!strncmp(s, "LEARN", 5)) saw_learn = true;
+}
+void pneu_display_line2(const char *s) { assert(strlen(s) == 16); strcpy(line2_text, s); }
 void pneu_display_result(pneu_demo_class_t label) { assert(label == PNEU_CLASS_BACK); ++displays; }
-void board_init(void) {}
+void board_init(void) { board_ready = true; }
+void board_store_init(void) { assert(board_ready); ++store_inits; }
 void pneu_ai_validation_init(void) {}
 bool pneu_ai_validation_poll(void) { return false; }
 uint32_t board_millis(void) { return now; }
@@ -65,6 +91,12 @@ int main(void)
 {
     pressure_app_init();
     assert(strstr(output, "PneutouchAi Live; PNEU1,seq,ms,raw; baud=115200") != NULL);
+    assert(saw_learn && !strcmp(idle_text, "READY"));
+    assert(!strcmp(line2_text, "\xff   \xff     \xff    3"));
+    assert(strstr(output, "# PNEM1,READY,176,704,"));
+    assert(strstr(output, "# PNEM2,NONE,0,0,single_instance\r\n"));
+    assert(strstr(output, "# PNEM3,READY,slot=0,count=8,err=0,sel=0:4:10,fisher=45000:0:0:0:12750:0:0:0:0:0:0:0:0:0\r\n"));
+    watchdogs = 0; /* the progress callback fed it once during init; count polls only */
     assert(pneutouch_status.state == PNEU_SETTLING);
     poll_at(PNEU_SENSOR_TIMEOUT_MS);
     assert(strcmp(output, "# ERROR,HX710B_TIMEOUT\r\n") == 0);
@@ -104,6 +136,11 @@ int main(void)
         poll_at(4000+i*25);
     }
     assert(predictions == 1 && displays == 1);
-    puts("Pressure app: UART framing, signed limits, debug status and no fake samples PASS");
+    /* A board without a loaded slot boots to NO MODEL with a blank line 2. */
+    model_fails = true; store_inits = 0; saw_learn = false; length = 0;
+    pressure_app_init();
+    assert(!strcmp(idle_text, "NO MODEL") && !saw_learn && !strcmp(line2_text, "                "));
+    assert(strstr(output, "# PNEM3,ERROR,slot=0,count=8,err=2,sel=,fisher=45000:"));
+    puts("Pressure app: UART framing, signed limits, debug status, no fake samples, FeRAM boot banner and LCD PASS");
     return 0;
 }

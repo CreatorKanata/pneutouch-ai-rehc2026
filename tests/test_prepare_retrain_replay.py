@@ -16,7 +16,7 @@ except ImportError as exc:
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'tools'))
 sys.path.insert(0, str(ROOT / 'tests'))
-import generate_pressure_model as gpm  # noqa: E402
+import feature_select as fs  # noqa: E402
 import prepare_retrain as pr  # noqa: E402
 import retrain_replay as rp  # noqa: E402
 from test_prepare_retrain import BASE, EVENT_SPACING_MS, GOOD, write_recording  # noqa: E402
@@ -92,7 +92,9 @@ class ReplayModeTests(unittest.TestCase):
         self.assertIn(data['source']['sha256'], summary)
         reasons = sorted(e['reason'] for e in ctx['events'] if e['reason'])
         self.assertEqual(reasons, sorted(['invalid', 'timeout'] * 3))
-        self.assertIn('PNEU_MODEL_EXAMPLES 36U', gpm.generate(self.out / pr.TRAINING_NAME))
+        self.assertEqual(len(data['events']), 36)
+        self.assertIsNotNone(fs.select(fs.stats([e['label'] for e in data['events']],
+                                                fs.pool_rows(data['events'])), 0xF, 0))
 
     def test_failing_replay_raises_with_file_name(self):
         write_recording(self.folder, 'back-1', 'back', np.random.default_rng(2))
