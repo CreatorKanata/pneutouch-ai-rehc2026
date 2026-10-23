@@ -15,9 +15,10 @@ typedef struct {
     uint16_t training_examples, training_steps;
     /* FeRAM slot and the pool features the chip selected from it. */
     uint8_t slot, error, selected_count, selected[12];
+    uint16_t mask;                      /* the selection in use as bits (bit j = pool feature j) */
     uint16_t store_count;
-    /* From the slot header (written by PST1 TUNE): k chosen by cross-validation (0 =
-       never tuned) and held-out recall percent per class (255 = class absent). */
+    /* From the slot header (written by PST1 TUNE): size of the feature mask chosen by
+       cross-validation (0 = never tuned) and held-out recall percent per class (255 = absent). */
     uint8_t tuned_k, recall[4], advice; /* advice: class 1..4 to collect more of, 0 none */
     uint16_t class_count[4];            /* records per class (label-1) of the last init */
     float fisher[14];
@@ -30,10 +31,12 @@ bool pneu_model_init(void);
 #define PNEU_PHASE_STATS 0U
 #define PNEU_PHASE_TRAIN 1U
 #define PNEU_PHASE_TUNE 2U
+#define PNEU_PHASE_FINAL 3U
 /* Progress while pneu_model_init / pneu_model_tune block: phase 0 statistics
    (records read), phase 1 training (steps), both at phase start, every 8
-   records/steps and at the end; phase 2 tuning (trainings finished of all,
-   at the start and after every fold). NULL = none. */
+   records/steps and at the end; phase 2 screening (candidate x pass trainings
+   finished of all) and phase 3 finals (candidates cross-validated of all),
+   both at the start and after every step. NULL = none. */
 typedef void (*pneu_model_progress_t)(uint8_t phase, uint16_t done, uint16_t total);
 void pneu_model_set_progress(pneu_model_progress_t callback);
 /* values: 12 event features; peak and trough magnitude in counts. */

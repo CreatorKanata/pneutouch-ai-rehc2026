@@ -16,6 +16,7 @@ typedef const char *(*handler_t)(uint32_t id, char *const f[], unsigned n);
 
 static void head(const char *op, uint32_t id) { pneu_text("# PST1,"); pneu_text(op); board_putc(','); pneu_number(id); }
 static void field(uint32_t v) { board_putc(','); pneu_number(v); }
+static void hex_field(uint16_t v) { board_putc(','); pneu_hex16(v); }
 static void end(void) { pneu_text("\r\n"); }
 
 static bool slot_arg(const char *s, uint8_t *slot)
@@ -62,7 +63,7 @@ static const char *slot_cmd(uint32_t id, char *const f[], unsigned n)
     (void)pneu_store_slot_info(s, &info);
     head("SLOT", id); field(s); field(info.state); field(info.count); field(info.pool_count);
     field(info.k); board_putc(','); pneu_text(info.name);
-    field(info.tuned_k); list(info.recall, 4U); end(); /* zeros for empty/invalid slots */
+    field(info.tuned_k); list(info.recall, 4U); hex_field(info.mask); end(); /* zeros for empty/invalid slots */
     return 0;
 }
 
@@ -158,7 +159,7 @@ static const char *train_cmd(uint32_t id, char *const f[], unsigned n)
     return 0;
 }
 
-/* Records per class = row sums of the confusion matrix (all folds of the best k). */
+/* Records per class = row sums of the confusion matrix (all folds of the chosen mask). */
 static void tune_counts(void)
 {
     uint16_t counts[4];
@@ -171,15 +172,29 @@ static void tune_counts(void)
     list16(counts, 4U);
 }
 
+/* "mask=screen=4-fold hits" per used finalist entry, ':'-separated. */
+static void finalists(void)
+{
+    unsigned i;
+    board_putc(',');
+    for (i = 0; i < PNEU_TUNE_FINALISTS && pneutouch_tune.finalist_mask[i]; ++i) {
+        if (i) board_putc(':');
+        pneu_hex16(pneutouch_tune.finalist_mask[i]); board_putc('=');
+        pneu_number(pneutouch_tune.finalist_screen[i]); board_putc('=');
+        pneu_number(pneutouch_tune.finalist_correct[i]);
+    }
+}
+
 static const char *tune_cmd(uint32_t id, char *const f[], unsigned n)
 {
     bool ok;
     (void)f;
     if (n != 3) return "FIELDS";
     ok = pneu_model_tune();
-    head("TUNE", id); field(ok ? 1U : 0U); field(pneutouch_tune.error);
-    field(pneutouch_tune.count); field(pneutouch_tune.best_k);
-    list16(pneutouch_tune.correct+PNEU_TUNE_K_MIN, PNEU_TUNE_K_MAX-PNEU_TUNE_K_MIN+1U);
+    head("TUNE", id); field(ok ? 1U : 0U); field(pneutouch_tune.error); field(pneutouch_tune.count);
+    hex_field(pneutouch_tune.mask); field(pneutouch_tune.best_k); field(pneutouch_tune.correct);
+    hex_field(pneutouch_tune.champion_mask); field(pneutouch_tune.champion_correct); finalists();
+    field(pneutouch_tune.candidates); field(pneutouch_tune.screened);
     list(pneutouch_tune.recall, 4U); tune_counts();
     list16(&pneutouch_tune.confusion[0][0], 16U);
     field(pneutouch_tune.advice); field(pneutouch_tune.elapsed_us); end();

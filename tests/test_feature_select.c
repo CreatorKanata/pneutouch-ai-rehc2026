@@ -84,6 +84,14 @@ static void test_auto_bounds(void)
     }
     assert(pneu_select(&s, 0xF, 0, &sel) && sel.count == 12 && sel.index[0] == 0 && sel.index[1] == 2);
     assert(sel.index[11] == 12);
+    /* Feature 3 is 2^1 for labels 1-2 and 2^2 for labels 3-4: no within-class spread. */
+    pneu_stats_reset(&s);
+    for (unsigned r = 0; r < FIX_RECORDS; ++r) {
+        fixture_pool(r, pool);
+        pool[3] = fix_labels[r] <= 2U ? 2.0f : 4.0f;
+        assert(pneu_stats_add(&s, fix_labels[r], pool));
+    }
+    assert(pneu_select(&s, 0xF, 0, &sel) && sel.index[0] == 3 && sel.fisher[3] == PNEU_FISHER_MAX);
 }
 
 static void test_degenerate(void)
@@ -121,6 +129,27 @@ static void test_degenerate(void)
     pool[4] = INFINITY; assert(!pneu_select_words(&sel, pool, words));
 }
 
+static void test_select_mask(void)
+{
+    pneu_stats_t s;
+    pneu_selection_t sel, all;
+    fixture_stats(&s);
+    assert(pneu_select(&s, 0xF, 0, &all));
+    /* Features 13, 0, 4 in Fisher order (0, 4, 13); statistics identical to pneu_select. */
+    assert(pneu_select_mask(&s, 0xF, (1U << 13) | (1U << 0) | (1U << 4), &sel));
+    assert(sel.count == 3 && sel.index[0] == 0 && sel.index[1] == 4 && sel.index[2] == 13);
+    assert(!memcmp(sel.fisher, all.fisher, sizeof(sel.fisher)) && !memcmp(sel.mean, all.mean, sizeof(sel.mean)));
+    assert(pneu_selection_mask(&sel) == 0x2011U && pneu_selection_mask(&all) == 0x2411U);
+    /* The constant feature 1 is dropped; one usable feature is not enough. */
+    assert(pneu_select_mask(&s, 0xF, 0x0013U, &sel) && sel.count == 2 && sel.index[0] == 0 && sel.index[1] == 4);
+    assert(!pneu_select_mask(&s, 0xF, 0x0012U, &sel) && !pneu_select_mask(&s, 0xF, 0, &sel));
+    assert(!pneu_select_mask(&s, 0xF, 0x4011U, &sel) && !pneu_select_mask(&s, 0xF, 0x8011U, &sel));
+    assert(pneu_select_mask(&s, 0xF, 0x3FBDU, &sel) && sel.count == 12 && sel.index[11] == 9);
+    assert(!pneu_select_mask(&s, 0xF, 0x3FFDU, &sel)); /* 13 usable features */
+    assert(!pneu_select_mask(&s, 0x1, 0x0011U, &sel)); /* one class */
+    assert(pneu_select_mask(&s, 0xC, 0x0011U, &sel) && sel.index[0] == 4 && sel.index[1] == 0);
+}
+
 static void test_train_order(void)
 {
     unsigned t = 0;
@@ -143,7 +172,8 @@ int main(void)
     test_fixture();
     test_auto_bounds();
     test_degenerate();
+    test_select_mask();
     test_train_order();
-    puts("Feature select: fixture Fisher/mean/scale/ranking/selection/words, bounds, degenerate input, order PASS");
+    puts("Feature select: fixture Fisher/mean/scale/ranking/selection/words, mask selection, perfect separator, bounds, degenerate input, order PASS");
     return 0;
 }

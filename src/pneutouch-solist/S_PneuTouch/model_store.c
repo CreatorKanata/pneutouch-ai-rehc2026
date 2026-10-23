@@ -12,10 +12,15 @@
 #define SLOT_SPAN 0xF000U
 #define SLOT_MAGIC 0x4C534E50UL /* 'PNSL' */
 #define HEADER_SIZE 32U
-#define HEADER_CRC_AT 24U
+#define HEADER_V1_CRC_AT 24U   /* version 1: CRC over bytes 0..23 */
+#define HEADER_CRC_AT 30U      /* version 2: CRC over bytes 0..29 */
+#define MASK_AT 24U
 #define RECORD_SIZE 60U
 #define RECORD_CRC_AT 58U
-#define STORE_VERSION 1U
+#define STORE_VERSION 1U       /* directory layout */
+#define SLOT_VERSION_1 1U      /* header without the feature mask (still read) */
+#define SLOT_VERSION 2U        /* header written by this firmware */
+#define POOL_BITS ((1U << PNEU_POOL_COUNT)-1U)
 #define SLOT_CAPACITY ((SLOT_SPAN-HEADER_SIZE)/RECORD_SIZE)
 #define MIN_COMMIT 4U
 #define MAX_K 12U
@@ -85,12 +90,33 @@ static bool recall_ok(const uint8_t recall[4])
     return true;
 }
 
+static unsigned popcount16(uint16_t v)
+{
+    unsigned n = 0;
+    for (; v; v = (uint16_t)(v & (v-1U))) ++n;
+    return n;
+}
+
+/* Pool features only, at most PNEU_SELECT_MAX of them (0 = none). */
+static bool mask_ok(uint16_t mask)
+{
+    return !(mask & ~POOL_BITS) && popcount16(mask) <= MAX_K;
+}
+
+/* Version 1 (CRC at 24, no mask) or version 2 (mask at 24, CRC at 30). */
+static bool version_ok(const uint8_t h[HEADER_SIZE])
+{
+    uint16_t version = get16(h+4);
+    if (version == SLOT_VERSION_1) return get16(h+HEADER_V1_CRC_AT) == pneu_crc16(h, HEADER_V1_CRC_AT);
+    return version == SLOT_VERSION && mask_ok(get16(h+MASK_AT)) &&
+           get16(h+HEADER_CRC_AT) == pneu_crc16(h, HEADER_CRC_AT);
+}
+
 static bool header_ok(const uint8_t h[HEADER_SIZE])
 {
-    return get32(h) == SLOT_MAGIC && get16(h+4) == STORE_VERSION && h[6] == PNEU_POOL_COUNT &&
+    return get32(h) == SLOT_MAGIC && h[6] == PNEU_POOL_COUNT &&
            h[7] <= MAX_K && h[8] <= PNEU_SLOT_COMMITTED && h[TUNED_AT] <= MAX_K &&
-           get16(h+10) <= SLOT_CAPACITY && recall_ok(h+RECALL_AT) &&
-           get16(h+HEADER_CRC_AT) == pneu_crc16(h, HEADER_CRC_AT);
+           get16(h+10) <= SLOT_CAPACITY && recall_ok(h+RECALL_AT) && version_ok(h);
 }
 
 /* Fills the cache on success and drops it on failure. */
@@ -106,6 +132,7 @@ static bool read_header(uint8_t slot, pneu_store_slot_t *info)
     info->pool_count = h[6]; info->k = h[7]; info->state = h[8]; info->tuned_k = h[TUNED_AT];
     memcpy(info->recall, h+RECALL_AT, sizeof(info->recall));
     info->count = get16(h+10);
+    info->mask = get16(h+4) == SLOT_VERSION_1 ? 0U : get16(h+MASK_AT);
     for (i = 0; i < PNEU_STORE_NAME; ++i) {
         info->name[i] = (char)h[12+i];
         if (h[12+i] != ' ') end = i+1U;
@@ -126,12 +153,13 @@ static bool write_header(uint8_t slot, const pneu_store_slot_t *info)
     uint8_t h[HEADER_SIZE] = {0};
     unsigned i;
     cached.valid = false;
-    put32(h, SLOT_MAGIC); put16(h+4, STORE_VERSION);
+    put32(h, SLOT_MAGIC); put16(h+4, SLOT_VERSION); /* a version 1 slot is upgraded here */
     h[6] = PNEU_POOL_COUNT; h[7] = info->k; h[8] = info->state; h[TUNED_AT] = info->tuned_k;
     put16(h+10, info->count);
     memcpy(h+RECALL_AT, info->recall, sizeof(info->recall));
     for (i = 0; i < PNEU_STORE_NAME; ++i) h[12+i] = ' ';
     for (i = 0; i < PNEU_STORE_NAME && info->name[i]; ++i) h[12+i] = (uint8_t)info->name[i];
+    put16(h+MASK_AT, info->mask); /* bytes 26..29 reserved, 0 */
     put16(h+HEADER_CRC_AT, pneu_crc16(h, HEADER_CRC_AT));
     return write_verified(header_addr(slot), h, HEADER_SIZE);
 }
@@ -197,12 +225,13 @@ bool pneu_store_erase(uint8_t slot)
     return slot < PNEU_STORE_SLOTS && write_header(slot, &empty);
 }
 
-bool pneu_store_set_tuning(uint8_t slot, uint8_t tuned_k, const uint8_t recall[4])
+bool pneu_store_set_tuning(uint8_t slot, uint16_t mask, const uint8_t recall[4])
 {
     pneu_store_slot_t info;
-    if (tuned_k < 1U || tuned_k > MAX_K || !recall_ok(recall) || !read_header(slot, &info) ||
+    if (!mask || !mask_ok(mask) || !recall_ok(recall) || !read_header(slot, &info) ||
         info.state != PNEU_SLOT_COMMITTED) return false;
-    info.tuned_k = tuned_k;
+    info.mask = mask;
+    info.tuned_k = (uint8_t)popcount16(mask);
     memcpy(info.recall, recall, sizeof(info.recall));
     return write_header(slot, &info);
 }

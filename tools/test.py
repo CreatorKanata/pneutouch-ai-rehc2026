@@ -11,6 +11,7 @@ from tools.generate_config import header
 ROOT = Path(__file__).resolve().parents[1]
 FIRMWARE = "src/pneutouch-solist/S_PneuTouch/"
 STORE = ("model_store", "crc16")
+SELECT = ("feature_select", "fast_log")
 # Firmware sources linked into each host test (hx710b.c is linked into all of them).
 C_TESTS = {
     "hx710b": (),
@@ -18,10 +19,12 @@ C_TESTS = {
     "pressure_app": ("acquisition", "pressure_app", "pressure_features", "uart_text"),
     "pressure_features": ("pressure_features",),
     "ai_validation": ("ai_validation", "store_protocol", "uart_text") + STORE,
-    "pressure_model": ("pressure_model", "model_tune", "feature_select") + STORE,
+    "pressure_model": ("pressure_model", "model_tune", "model_screen") + SELECT + STORE,
+    "model_tune": ("pressure_model", "model_tune", "model_screen") + SELECT + STORE,
     "pressure_display": ("pressure_display",),
     "model_store": STORE,
-    "feature_select": ("feature_select",),
+    "feature_select": SELECT,
+    "fast_log": ("fast_log",),
     "soft_spi": (),  # tests/test_soft_spi.c includes S_Bsp/SoftSpi.c with a fake Port 8
 }
 

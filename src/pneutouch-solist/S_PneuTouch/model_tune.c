@@ -1,21 +1,25 @@
-/* k tuning: for every candidate k and fold, select features from the training
-   records only, train instance 0 and predict the held-out records on the chip.
-   The k with the most held-out hits is stored in the slot header; a larger k
-   must win by more than PNEU_TUNE_MARGIN_PCT of the records (ties, noise: lower k). */
+/* Subset tuning: the Fisher-auto selection is the champion; stage 1
+   (model_screen.c) screens every subset of the Fisher shortlist, stage 2 runs the
+   4-fold cross-validation (statistics from the training folds only) on the
+   champion and the best screened subsets. A challenger replaces the champion
+   only when it wins by more than PNEU_TUNE_MARGIN_PCT of the records. */
 #include "model_tune.h"
+#include "model_screen.h"
 #include "model_core.h"
 #include "model_store.h"
 #include "board.h"
 #include "smpl_common.h"
 #include "irq.h"
-
-#define TUNE_TRAININGS ((PNEU_TUNE_K_MAX-PNEU_TUNE_K_MIN+1U)*PNEU_TUNE_FOLDS)
+#include <string.h>
 
 volatile pneu_tune_status_t pneutouch_tune;
 
 typedef struct {
-    uint16_t correct, confusion[PNEU_CLASS_COUNT][PNEU_CLASS_COUNT];
+    uint16_t mask, correct, confusion[PNEU_CLASS_COUNT][PNEU_CLASS_COUNT];
 } tune_score_t;
+
+/* The champion and the best challenger so far (only these two confusions are kept). */
+static tune_score_t champion, challenger;
 
 uint8_t pneu_model_advice(const uint8_t recall[4], const uint16_t counts[4])
 {
@@ -41,6 +45,25 @@ static uint8_t open_slot(uint16_t *n)
     return PNEU_MODEL_ERR_NONE;
 }
 
+/* All-record statistics, the champion (Fisher auto) and the shortlist of the best
+   ranked features with a nonzero score (a nonzero score implies a usable scale). */
+static uint8_t shortlist_of(uint8_t slot, uint16_t n, uint8_t shortlist[PNEU_TUNE_SHORTLIST], uint8_t *size)
+{
+    float fisher[PNEU_POOL_COUNT];
+    uint8_t order[PNEU_POOL_COUNT], error;
+    unsigned i;
+    *size = 0;
+    error = pneu_core_load_stats(slot, n, PNEU_NO_FOLD);
+    if (!error) error = pneu_core_choose(0);
+    if (error) return error;
+    pneutouch_tune.champion_mask = pneutouch_model.mask;
+    for (i = 0; i < PNEU_POOL_COUNT; ++i) fisher[i] = pneutouch_model.fisher[i];
+    pneu_rank(fisher, order);
+    for (i = 0; i < PNEU_POOL_COUNT && *size < PNEU_TUNE_SHORTLIST; ++i)
+        if (fisher[order[i]] > 0.0f) shortlist[(*size)++] = order[i];
+    return *size < PNEU_TUNE_MIN_SIZE ? PNEU_MODEL_ERR_SELECT : PNEU_MODEL_ERR_NONE;
+}
+
 /* Held-out records of fold, ascending, through the live prediction path. */
 static uint8_t predict_fold(uint8_t slot, uint16_t n, uint8_t fold, tune_score_t *score)
 {
@@ -59,13 +82,43 @@ static uint8_t predict_fold(uint8_t slot, uint16_t n, uint8_t fold, tune_score_t
     return PNEU_MODEL_ERR_NONE;
 }
 
-static uint8_t run_fold(uint8_t slot, uint16_t n, uint8_t k, uint8_t fold, tune_score_t *score)
+static uint8_t cross_validate(uint8_t slot, uint16_t n, uint16_t mask, tune_score_t *score)
 {
-    uint8_t error = pneu_core_load_stats(slot, n, fold);
-    if (!error) error = pneu_core_choose(k);
-    if (!error) error = pneu_core_train(slot, n, fold);
-    if (!error) error = predict_fold(slot, n, fold, score);
+    uint8_t fold, error = PNEU_MODEL_ERR_NONE;
+    *score = (tune_score_t){0};
+    score->mask = mask;
+    for (fold = 0; !error && fold < PNEU_TUNE_FOLDS; ++fold) {
+        error = pneu_core_load_stats(slot, n, fold);
+        if (!error) error = pneu_core_choose_mask(mask);
+        if (!error) error = pneu_core_train(slot, n, fold);
+        if (!error) error = predict_fold(slot, n, fold, score);
+    }
     return error;
+}
+
+/* Finals: champion + finalists not equal to it, best challenger kept with its confusion. */
+static uint8_t finals(uint8_t slot, uint16_t n)
+{
+    tune_score_t score;
+    uint16_t done = 0, total = 1;
+    uint8_t f, error;
+    for (f = 0; f < PNEU_TUNE_FINALISTS; ++f)
+        if (pneutouch_tune.finalist_mask[f] && pneutouch_tune.finalist_mask[f] != pneutouch_tune.champion_mask) ++total;
+    challenger = (tune_score_t){0};
+    pneu_core_progress(PNEU_PHASE_FINAL, 0, total);
+    if ((error = cross_validate(slot, n, pneutouch_tune.champion_mask, &champion)) != PNEU_MODEL_ERR_NONE) return error;
+    pneutouch_tune.champion_correct = champion.correct;
+    pneu_core_progress(PNEU_PHASE_FINAL, ++done, total);
+    for (f = 0; f < PNEU_TUNE_FINALISTS && pneutouch_tune.finalist_mask[f]; ++f) {
+        uint16_t mask = pneutouch_tune.finalist_mask[f];
+        if (mask == pneutouch_tune.champion_mask) { pneutouch_tune.finalist_correct[f] = champion.correct; continue; }
+        if ((error = cross_validate(slot, n, mask, &score)) != PNEU_MODEL_ERR_NONE) return error;
+        pneutouch_tune.finalist_correct[f] = score.correct;
+        if (!challenger.mask || pneu_tune_better(score.correct, mask, challenger.correct, challenger.mask))
+            challenger = score;
+        pneu_core_progress(PNEU_PHASE_FINAL, ++done, total);
+    }
+    return PNEU_MODEL_ERR_NONE;
 }
 
 /* Rounded PNEU_TUNE_MARGIN_PCT of the records, at least 1. */
@@ -75,48 +128,36 @@ static uint16_t margin(uint16_t count)
     return (uint16_t)(m ? m : 1U);
 }
 
-static void keep_best(uint8_t k, const tune_score_t *score, uint16_t *best)
+/* Chosen result, its rounded recall per class and the advice. */
+static void decide(uint8_t recall[4])
 {
+    const tune_score_t *chosen = challenger.mask &&
+        (uint32_t)challenger.correct > (uint32_t)champion.correct+margin(pneutouch_tune.count) ? &challenger : &champion;
+    uint16_t counts[PNEU_CLASS_COUNT];
     unsigned t, p;
-    pneutouch_tune.correct[k] = score->correct;
-    /* A one-record lead of a larger k is noise: it must beat the best by more than the margin. */
-    if (k != PNEU_TUNE_K_MIN && (uint32_t)score->correct <= (uint32_t)*best+margin(pneutouch_tune.count)) return;
-    *best = score->correct;
-    pneutouch_tune.best_k = k;
-    for (t = 0; t < PNEU_CLASS_COUNT; ++t)
-        for (p = 0; p < PNEU_CLASS_COUNT; ++p) pneutouch_tune.confusion[t][p] = score->confusion[t][p];
+    pneutouch_tune.mask = chosen->mask;
+    pneutouch_tune.best_k = pneu_mask_size(chosen->mask);
+    pneutouch_tune.correct = chosen->correct;
+    for (t = 0; t < PNEU_CLASS_COUNT; ++t) {
+        uint32_t row = 0;
+        for (p = 0; p < PNEU_CLASS_COUNT; ++p) {
+            pneutouch_tune.confusion[t][p] = chosen->confusion[t][p];
+            row += chosen->confusion[t][p];
+        }
+        counts[t] = (uint16_t)row;
+        recall[t] = row ? (uint8_t)((100U*chosen->confusion[t][t]+row/2U)/row) : (uint8_t)PNEU_RECALL_ABSENT;
+        pneutouch_tune.recall[t] = recall[t];
+    }
+    pneutouch_tune.advice = pneu_model_advice(recall, counts);
 }
 
 static uint8_t search(uint8_t slot, uint16_t n)
 {
-    tune_score_t score;
-    uint16_t best = 0, done = 0;
-    uint8_t k, fold, error;
-    pneu_core_progress(PNEU_PHASE_TUNE, 0, TUNE_TRAININGS);
-    for (k = PNEU_TUNE_K_MIN; k <= PNEU_TUNE_K_MAX; ++k) {
-        score = (tune_score_t){0};
-        for (fold = 0; fold < PNEU_TUNE_FOLDS; ++fold) {
-            if ((error = run_fold(slot, n, k, fold, &score)) != PNEU_MODEL_ERR_NONE) return error;
-            pneu_core_progress(PNEU_PHASE_TUNE, ++done, TUNE_TRAININGS);
-        }
-        keep_best(k, &score, &best);
-    }
-    return PNEU_MODEL_ERR_NONE;
-}
-
-/* Rounded held-out recall per class of the best k, then the advice. */
-static void finish(uint8_t recall[4])
-{
-    uint16_t counts[PNEU_CLASS_COUNT];
-    unsigned t, p;
-    for (t = 0; t < PNEU_CLASS_COUNT; ++t) {
-        uint32_t row = 0;
-        for (p = 0; p < PNEU_CLASS_COUNT; ++p) row += pneutouch_tune.confusion[t][p];
-        counts[t] = (uint16_t)row;
-        recall[t] = row ? (uint8_t)((100U*pneutouch_tune.confusion[t][t]+row/2U)/row) : (uint8_t)PNEU_RECALL_ABSENT;
-        pneutouch_tune.recall[t] = recall[t];
-    }
-    pneutouch_tune.advice = pneu_model_advice(recall, counts);
+    uint8_t shortlist[PNEU_TUNE_SHORTLIST] = {0}, size, error;
+    error = shortlist_of(slot, n, shortlist, &size);
+    if (!error) error = pneu_screen_run(slot, n, shortlist, size);
+    if (!error) error = finals(slot, n);
+    return error;
 }
 
 bool pneu_model_tune(void)
@@ -132,8 +173,8 @@ bool pneu_model_tune(void)
     error = open_slot(&n);
     if (!error) error = search(pneutouch_tune.slot, n);
     if (!error) {
-        finish(recall);
-        if (!pneu_store_set_tuning(pneutouch_tune.slot, pneutouch_tune.best_k, recall)) error = PNEU_MODEL_ERR_STORE;
+        decide(recall);
+        if (!pneu_store_set_tuning(pneutouch_tune.slot, pneutouch_tune.mask, recall)) error = PNEU_MODEL_ERR_STORE;
     }
     pneutouch_tune.error = error;
     pneutouch_tune.done = error == PNEU_MODEL_ERR_NONE;

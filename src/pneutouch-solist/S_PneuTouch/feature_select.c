@@ -1,12 +1,14 @@
 /* Fisher score per feature over the participating classes, computed from one
    streaming pass of per-class sums so 1000 FeRAM records need no RAM copy. */
 #include "feature_select.h"
+#include "fast_log.h"
 #include <math.h>
 #include <string.h>
 
 #define MIN_SCALE 1e-6f
 #define AUTO_DIVISOR 10.0f
 #define MIN_AUTO 2U
+#define MIN_MASK_FEATURES 2U
 
 static bool finite_positive(float v)
 {
@@ -26,12 +28,21 @@ bool pneu_stats_add(pneu_stats_t *s, uint8_t label, const float pool[PNEU_POOL_C
     if (label < 1U || label > PNEU_CLASS_COUNT || s->n[c] == UINT16_MAX) return false;
     for (j = 0; j < PNEU_POOL_COUNT; ++j) if (!finite_positive(pool[j])) return false;
     for (j = 0; j < PNEU_POOL_COUNT; ++j) {
-        float v = logf(pool[j]);
+        float v = pneu_log(pool[j]);
         s->sum[c][j] += v;
         s->sumsq[c][j] += v*v;
     }
     ++s->n[c];
     return true;
+}
+
+/* A constant feature cannot be normalized, so it is never ranked; a perfect
+   separator (no spread inside any class) ranks above every other feature. */
+static float fisher_of(float between, float within, float scale)
+{
+    if (!(scale > MIN_SCALE)) return 0.0f;
+    if (within > 0.0f) return between/within;
+    return between > 0.0f ? PNEU_FISHER_MAX : 0.0f;
 }
 
 /* Fisher, mean and population std of feature j. */
@@ -53,8 +64,7 @@ static void score(const pneu_stats_t *s, uint8_t mask, float count, unsigned j, 
     }
     var = squares/count-out->mean[j]*out->mean[j];
     out->scale[j] = sqrtf(var > 0.0f ? var : 0.0f);
-    /* A constant feature cannot be normalized, so it is never ranked. */
-    out->fisher[j] = out->scale[j] > MIN_SCALE && within > 0.0f ? between/within : 0.0f;
+    out->fisher[j] = fisher_of(between, within, out->scale[j]);
     out->inv_scale[j] = out->scale[j] > MIN_SCALE ? 1.0f/out->scale[j] : 0.0f;
 }
 
@@ -95,22 +105,54 @@ static void pick(pneu_selection_t *sel, uint8_t k)
         if (sel->scale[order[i]] > MIN_SCALE) sel->index[sel->count++] = order[i];
 }
 
-bool pneu_select(const pneu_stats_t *s, uint8_t class_mask, uint8_t k, pneu_selection_t *out)
+/* Scores every feature; false when fewer than 4 records or 2 classes take part. */
+static bool score_all(const pneu_stats_t *s, uint8_t class_mask, pneu_selection_t *out, float *best)
 {
     unsigned c, j, n = 0, classes = 0;
-    float best = 0.0f;
-    memset(out, 0, sizeof(*out));
-    if (k > PNEU_SELECT_MAX) return false;
+    *best = 0.0f;
     for (c = 0; c < PNEU_CLASS_COUNT; ++c)
         if ((class_mask & (1U << c)) && s->n[c]) { n += s->n[c]; ++classes; }
     if (n < 4U || classes < 2U) return false;
     for (j = 0; j < PNEU_POOL_COUNT; ++j) {
         score(s, class_mask, (float)n, j, out);
-        if (out->fisher[j] > best) best = out->fisher[j];
+        if (out->fisher[j] > *best) *best = out->fisher[j];
     }
-    if (!(best > 0.0f)) return false;
+    return true;
+}
+
+bool pneu_select(const pneu_stats_t *s, uint8_t class_mask, uint8_t k, pneu_selection_t *out)
+{
+    float best;
+    memset(out, 0, sizeof(*out));
+    if (k > PNEU_SELECT_MAX || !score_all(s, class_mask, out, &best) || !(best > 0.0f)) return false;
     pick(out, k);
     return true;
+}
+
+bool pneu_select_mask(const pneu_stats_t *s, uint8_t class_mask, uint16_t mask, pneu_selection_t *out)
+{
+    uint8_t order[PNEU_POOL_COUNT];
+    unsigned i;
+    float best;
+    memset(out, 0, sizeof(*out));
+    if ((mask & ~PNEU_POOL_MASK) || !score_all(s, class_mask, out, &best)) return false;
+    pneu_rank(out->fisher, order);
+    for (i = 0; i < PNEU_POOL_COUNT; ++i) {
+        unsigned j = order[i];
+        if (!(mask & (1U << j)) || !(out->scale[j] > MIN_SCALE)) continue;
+        if (out->count == PNEU_SELECT_MAX) return false;
+        out->index[out->count++] = (uint8_t)j;
+    }
+    return out->count >= MIN_MASK_FEATURES;
+}
+
+uint16_t pneu_selection_mask(const pneu_selection_t *sel)
+{
+    uint16_t mask = 0;
+    unsigned i;
+    for (i = 0; i < sel->count && i < PNEU_SELECT_MAX; ++i)
+        if (sel->index[i] < PNEU_POOL_COUNT) mask = (uint16_t)(mask | (1U << sel->index[i]));
+    return mask;
 }
 
 bool pneu_select_words(const pneu_selection_t *sel, const float pool[PNEU_POOL_COUNT],
@@ -124,7 +166,7 @@ bool pneu_select_words(const pneu_selection_t *sel, const float pool[PNEU_POOL_C
         uint32_t bits;
         float scaled;
         if (j >= PNEU_POOL_COUNT || !finite_positive(pool[j])) return false;
-        scaled = (logf(pool[j])-sel->mean[j])*sel->inv_scale[j];
+        scaled = (pneu_log(pool[j])-sel->mean[j])*sel->inv_scale[j];
         memcpy(&bits, &scaled, sizeof(bits));
         if ((bits & 0x7f800000U) == 0x7f800000U) return false;
         words[s] = (uint16_t)(bits >> 16);

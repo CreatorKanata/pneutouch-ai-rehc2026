@@ -8,7 +8,6 @@
 #include "pressure_display.h"
 #include "uart_text.h"
 #include "firmware_tag.h"
-#include "model_tune.h"
 #include <string.h>
 
 volatile pneutouch_status_t pneutouch_status;
@@ -21,7 +20,8 @@ static bool pending;
 static bool was_validation;
 static bool lcd_ready_reported, lcd_failed_reported;
 static uint32_t lcd_updates_reported;
-static uint16_t tune_done; /* trainings finished (phase 2) */
+static uint8_t tune_phase;             /* PNEU_PHASE_TUNE (screening) or PNEU_PHASE_FINAL */
+static uint16_t tune_done, tune_total; /* last count of that phase */
 static bool tuning;
 
 /* UART text goes through uart_text.c: no printf, heap allocation or semihosting. */
@@ -109,26 +109,38 @@ static void digits(char *out, unsigned width, uint32_t value)
     while (i) out[--i] = ' ';
 }
 
-/* "TUNE k5 r3      " (phase 2) or "TUNE k5 r3  57% " (percent of the current phase):
-   candidate k and round (fold+1) of the training that runs next. */
+/* "TUNE 37/198     " (screening) or "FINAL 3/6       " (finals, 2 digits each from 10). */
+static void tune_text(char line[17])
+{
+    unsigned width = tune_total >= 10U ? 2U : 1U;
+    if (tune_phase == PNEU_PHASE_FINAL) {
+        memcpy(line, "FINAL           ", 17);
+        digits(line+6, width, tune_done); line[6+width] = '/';
+        digits(line+7+width, width, tune_total);
+        return;
+    }
+    memcpy(line, "TUNE   /        ", 17);
+    digits(line+4, 3, tune_done); digits(line+8, 3, tune_total);
+}
+
+/* The tune line, plus the percent of the training or statistics pass that runs
+   inside it ("TUNE 37/198  57%"); columns 12..15 stay blank on the tune callbacks. */
 static void tune_line(char line[17], bool with_percent, uint16_t done, uint16_t total)
 {
-    memcpy(line, "TUNE k  r       ", 17);
-    digits(line+6, 1, PNEU_TUNE_K_MIN+tune_done/PNEU_TUNE_FOLDS);
-    digits(line+9, 1, tune_done%PNEU_TUNE_FOLDS+1U);
-    if (!with_percent) return; /* column 10 stays a space even at 100% */
-    digits(line+11, 3, total ? (uint32_t)done*100U/total : 0U); line[14] = '%';
+    tune_text(line);
+    if (!with_percent) return;
+    digits(line+12, 3, total ? (uint32_t)done*100U/total : 0U); line[15] = '%';
 }
 
 /* Training blocks for seconds: keep the LCD state machine and watchdog going.
-   Line 1 "LEARN<phase> done/total" (or the TUNE line while tuning); line 2 as
+   Line 1 "LEARN<phase> done/total" (or the TUNE/FINAL line while tuning); line 2 as
    soon as the selection is known. */
 static void show_progress(uint8_t phase, uint16_t done, uint16_t total)
 {
     char line[17] = "LEARN0          ";
-    if (phase == PNEU_PHASE_TUNE) {
-        tuning = done < total;
-        tune_done = tuning ? done : (uint16_t)(done-1U); /* the end shows the last training */
+    if (phase == PNEU_PHASE_TUNE || phase == PNEU_PHASE_FINAL) {
+        tune_phase = phase; tune_done = done; tune_total = total;
+        tuning = phase == PNEU_PHASE_TUNE || done < total; /* ends with the last final */
         tune_line(line, false, done, total);
     } else if (tuning) tune_line(line, true, done, total);
     else {
@@ -177,6 +189,7 @@ static void send_tune_banner(void)
 {
     unsigned i;
     pneu_text("# PNEM4,k="); pneu_number(pneutouch_model.tuned_k);
+    pneu_text(",mask="); pneu_hex16(pneutouch_model.mask);
     pneu_text(",recall="); send_list(pneutouch_model.recall, 4);
     pneu_text(",counts=");
     for (i = 0; i < 4U; ++i) { if (i) board_putc(':'); pneu_number(pneutouch_model.class_count[i]); }

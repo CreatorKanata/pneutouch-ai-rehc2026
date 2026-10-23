@@ -29,10 +29,14 @@ def fixture_training():
     return dict(feature_order=ms.FEATURE_ORDER, events=events)
 
 
-# ok, err, count, best_k, correct k=4..8, recall, counts, confusion (row-major), advice, us
-TUNE_OK = ('1,0,176,4,169:162:146:141:137,90:100:100:78,37:33:69:37,'
-           '33:2:2:0:0:33:0:0:0:0:69:0:0:0:8:29,4,61000000')
-TUNE_FAIL = '0,2,0,0,0:0:0:0:0,255:255:255:255,0:0:0:0,0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0,0,0'
+# ok, err, count, mask, best_k, correct, champion mask, champion correct, finalists (mask=screen=4-fold),
+# candidates, screened, recall, counts, confusion (row-major), advice, us
+FINALISTS = '3004=258=165:3104=255=170:3300=250=167:0007=240=150:3005=239=160'
+TUNE_OK = (f'1,0,176,3300,4,167,3300,167,{FINALISTS},99,136,97:100:94:89,37:33:69:37,'
+           '36:1:0:0:0:33:0:0:0:0:65:4:0:0:4:33,4,113200000')
+TUNE_CHALLENGER = (f'1,0,176,3104,4,172,3300,167,{FINALISTS.replace("=170", "=172")},99,136,'
+                   '100:100:97:92,37:33:69:37,37:0:0:0:0:33:0:0:0:0:67:2:0:0:3:34,0,113200000')
+TUNE_FAIL = '0,2,0,0000,0,0,0000,0,,0,0,255:255:255:255,0:0:0:0,0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0,0,0'
 
 
 class FakeBoard:
@@ -41,10 +45,14 @@ class FakeBoard:
     def __init__(self):
         self.rx, self.out = b'', []
         self.mode, self.active = 0, 0
-        self.slots = [dict(state=0, k=0, name='', records=[], tuned_k=0, recall='0:0:0:0') for _ in range(4)]
+        self.slots = [self.empty_slot() for _ in range(4)]
         self.sent, self.override, self.corrupt_get = [], {}, False
-        self.old_slot_reply = False  # firmware before TUNE: SLOT ends with the name
+        self.slot_extra = 3  # SLOT fields after the name: 3 now, 2 before the mask, 0 before TUNE
         self.tune_reply = TUNE_OK
+
+    @staticmethod
+    def empty_slot(**fields):
+        return dict(dict(state=0, k=0, name='', records=[], tuned_k=0, recall='0:0:0:0', mask='0000'), **fields)
 
     def write(self, data):
         self.rx += data
@@ -92,7 +100,7 @@ class FakeBoard:
             fields = self.tune_reply.split(',')
             if fields[0] == '1':
                 s = self.slots[self.active]
-                s['tuned_k'], s['recall'] = int(fields[3]), fields[5]
+                s['tuned_k'], s['recall'], s['mask'] = int(fields[4]), fields[11], fields[3]
             return self.reply('PST1', 'TUNE', token, *fields)
         if op == 'TRAIN':
             s = self.slots[self.active]
@@ -102,10 +110,10 @@ class FakeBoard:
             return 'SLOT'
         s = self.slots[slot]
         if op == 'SLOT':
-            extra = () if self.old_slot_reply else (s['tuned_k'], s['recall'])
+            extra = (s['tuned_k'], s['recall'], s['mask'])[:self.slot_extra]
             return self.reply('PST1', 'SLOT', token, slot, s['state'], len(s['records']), 14, s['k'], s['name'], *extra)
         if op == 'OPEN':
-            self.slots[slot] = dict(state=1, k=int(f[4]), name=f[5], records=[], tuned_k=0, recall='0:0:0:0')
+            self.slots[slot] = self.empty_slot(state=1, k=int(f[4]), name=f[5])
             return self.reply('PST1', 'OPEN', token, slot)
         if op == 'PUT':
             if s['state'] != 1:
@@ -124,7 +132,7 @@ class FakeBoard:
             if op == 'USE':
                 self.active = slot
             else:
-                self.slots[slot] = dict(state=0, k=0, name='', records=[], tuned_k=0, recall='0:0:0:0')
+                self.slots[slot] = self.empty_slot()
             return self.reply('PST1', op, token, slot)
         return 'COMMAND'
 
@@ -176,7 +184,7 @@ class SequencingTests(unittest.TestCase):
         ms.load(store, 1, training, k=5, name='x')
         data = ms.dump(store, 1)
         self.assertEqual(data['source'], dict(kind='fram', slot=1, name='x', k=5, state='committed',
-                                              tuned_k=0, recall=[0, 0, 0, 0]))
+                                              tuned_k=0, recall=[0, 0, 0, 0], mask=0))
         self.assertEqual(data['feature_order'], ms.FEATURE_ORDER)
         np.testing.assert_array_equal(fs.pool_rows(data['events']).view(np.uint32),
                                       fs.pool_rows(training['events']).view(np.uint32))
@@ -190,36 +198,66 @@ class SequencingTests(unittest.TestCase):
     def test_slot_with_and_without_tuning_fields(self):
         store, board = make_store()
         ms.load(store, 0, fixture_training(), use=True)
-        board.slots[0].update(tuned_k=5, recall='100:50:100:255')
+        board.slots[0].update(tuned_k=4, recall='100:50:100:255', mask='3104')
         info = store.slot(0)
-        self.assertEqual((info['tuned_k'], info['recall'], info['count']), (5, [100, 50, 100, 255], 8))
-        board.old_slot_reply = True
+        self.assertEqual((info['tuned_k'], info['recall'], info['mask'], info['count']),
+                         (4, [100, 50, 100, 255], 0x3104, 8))
+        board.slot_extra = 2
+        self.assertEqual((store.slot(0)['tuned_k'], store.slot(0)['mask']), (4, 0))
+        board.slot_extra = 0
         info = store.slot(0)
-        self.assertEqual((info['tuned_k'], info['recall'], info['count']), (0, [0, 0, 0, 0], 8))
-        board.old_slot_reply = False
+        self.assertEqual((info['tuned_k'], info['recall'], info['mask'], info['count']), (0, [0, 0, 0, 0], 0, 8))
+        board.slot_extra = 3
         source = ms.dump(store, 0)['source']
-        self.assertEqual((source['tuned_k'], source['recall']), (5, [100, 50, 100, 255]))
+        self.assertEqual((source['tuned_k'], source['recall'], source['mask']), (4, [100, 50, 100, 255], 0x3104))
 
     def test_tune_parses_the_reply(self):
         store, board = make_store()
         with store.paused():
             result = store.tune()
-        self.assertEqual(result['correct'], {4: 169, 5: 162, 6: 146, 7: 141, 8: 137})
-        self.assertEqual((result['ok'], result['error'], result['count'], result['best_k']), (True, 0, 176, 4))
-        self.assertEqual(result['recall'], [90, 100, 100, 78])
+        self.assertEqual((result['ok'], result['error'], result['count'], result['mask'], result['best_k']),
+                         (True, 0, 176, 0x3300, 4))
+        self.assertEqual((result['correct'], result['champion_mask'], result['champion_correct']), (167, 0x3300, 167))
+        self.assertEqual(result['finalists'][0], dict(mask=0x3004, screen=258, correct=165))
+        self.assertEqual([f['mask'] for f in result['finalists']], [0x3004, 0x3104, 0x3300, 0x0007, 0x3005])
+        self.assertEqual((result['candidates'], result['screened']), (99, 136))
+        self.assertEqual(result['recall'], [97, 100, 94, 89])
         self.assertEqual(result['counts'], [37, 33, 69, 37])
-        self.assertEqual(result['confusion'], [[33, 2, 2, 0], [0, 33, 0, 0], [0, 0, 69, 0], [0, 0, 8, 29]])
-        self.assertEqual((result['advice'], result['elapsed_us']), (4, 61000000))
-        lines = ms.describe_tune(result)
-        self.assertEqual(lines[0], 'tune: 176 records, 4-fold, best k = 4 (61.0 s)')
-        self.assertEqual(lines[1], '  k=4 96%  k=5 92%  k=6 83%  k=7 80%  k=8 78%')
-        self.assertEqual(lines[2], '  TAIL 90% (37)  BACK 100% (33)  LEGS 100% (69)  HEAD 78% (37)')
-        self.assertEqual(lines[3], '  提案: 頭（HEAD）のデータを追加してください（足（LEGS）と混同 8/37）')
+        self.assertEqual(result['confusion'], [[36, 1, 0, 0], [0, 33, 0, 0], [0, 0, 65, 4], [0, 0, 4, 33]])
+        self.assertEqual((result['advice'], result['elapsed_us']), (4, 113200000))
+        self.assertEqual(ms.describe_tune(result), [
+            'tune: 176 records, shortlist 7 features, 99 subsets screened (10/class × 2 passes), 5 finalists (113.2 s)',
+            '  champion (top-4): release_width_ms, release_area_width_ms, peak, trough  4-fold 167/176 = 94.9%',
+            '  finalists:  3 features width_ms, peak, trough   screen 258/272  4-fold 165/176',
+            '              4 features width_ms, release_width_ms, peak, trough   screen 255/272  4-fold 170/176',
+            '              4 features release_width_ms, release_area_width_ms, peak, trough   screen 250/272  '
+            '4-fold 167/176',
+            '              3 features rise_ms, decay_ms, width_ms   screen 240/272  4-fold 150/176',
+            '              4 features rise_ms, width_ms, peak, trough   screen 239/272  4-fold 160/176',
+            '  chosen: champion (no challenger beat it by more than 4 records)',
+            '  TAIL 97% (37)  BACK 100% (33)  LEGS 94% (69)  HEAD 89% (37)',
+            '  提案: 頭（HEAD）のデータを追加してください（足（LEGS）と混同 4/37）'])
         none = dict(result, advice=0, recall=[100, 255, 95, 90])
-        self.assertEqual(ms.describe_tune(none)[2:], ['  TAIL 100% (37)  BACK - (33)  LEGS 95% (69)  HEAD 90% (37)',
-                                                      '  提案: なし（すべての部位が 90% 以上）'])
+        self.assertEqual(ms.describe_tune(none)[-2:], ['  TAIL 100% (37)  BACK - (33)  LEGS 95% (69)  HEAD 90% (37)',
+                                                       '  提案: なし（すべての部位が 90% 以上）'])
         with self.assertRaisesRegex(RuntimeError, 'NO_SLOT'):
             ms.describe_tune(dict(result, ok=False, error=2))
+
+    def test_tune_challenger_chosen(self):
+        store, board = make_store()
+        board.tune_reply = TUNE_CHALLENGER
+        with store.paused():
+            result = store.tune()
+        self.assertEqual((result['mask'], result['correct'], result['finalists'][1]['correct']), (0x3104, 172, 172))
+        lines = ms.describe_tune(result)
+        self.assertEqual(lines[7], '  chosen: 4 features width_ms, release_width_ms, peak, trough (beat champion by 5)')
+        self.assertEqual(lines[-1], '  提案: なし（すべての部位が 90% 以上）')
+
+    def test_tune_helpers(self):
+        self.assertEqual([ms.shortlist_size(n) for n in (1, 5, 16, 42, 99, 7)], [3, 4, 5, 6, 7, 0])
+        self.assertEqual([ms.tune_margin(n) for n in (8, 48, 176, 1000)], [1, 1, 4, 20])
+        self.assertEqual(ms.mask_features(0x3104), [2, 8, 12, 13])
+        self.assertEqual(ms._finalists(''), [])
 
     def test_readback_mismatch_restores_live_mode(self):
         store, board = make_store()
@@ -300,10 +338,10 @@ class CliTests(unittest.TestCase):
         board.sent.clear()
         out = self.run_cli(board, 'tune')
         self.assertEqual([op for _, op in board.sent], ['MODE', 'TUNE', 'TRAIN', 'MODE'])
-        self.assertIn('best k = 4 (61.0 s)', out)
-        self.assertIn('提案: 頭（HEAD）のデータを追加してください（足（LEGS）と混同 8/37）', out)
+        self.assertIn('5 finalists (113.2 s)', out)
+        self.assertIn('提案: 頭（HEAD）のデータを追加してください（足（LEGS）と混同 4/37）', out)
         self.assertIn('READY: 8 records, 3 features selected', out)
-        self.assertEqual(board.slots[0]['tuned_k'], 4)
+        self.assertEqual((board.slots[0]['tuned_k'], board.slots[0]['mask']), (4, '3300'))
         board.tune_reply = TUNE_FAIL
         board.sent.clear()
         with self.assertRaisesRegex(SystemExit, 'model_store: TUNE failed: NO_SLOT'):

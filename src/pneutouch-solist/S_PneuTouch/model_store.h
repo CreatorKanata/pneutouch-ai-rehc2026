@@ -18,7 +18,8 @@ typedef struct {
     uint8_t state, k, pool_count;
     /* tuned_k 0 = never tuned; recall percent per class (label-1), only meaningful when tuned. */
     uint8_t tuned_k, recall[4];
-    uint16_t count;
+    /* Header version 2: bit j = pool feature j chosen by TUNE (0 = none; version 1 slots read 0). */
+    uint16_t mask, count;
     char name[PNEU_STORE_NAME+1U];
     bool valid;
 } pneu_store_slot_t;
@@ -36,8 +37,9 @@ bool pneu_store_open(uint8_t slot, uint8_t k, const char *name);
 bool pneu_store_put(uint8_t slot, uint8_t label, const float pool[PNEU_POOL_COUNT]);
 bool pneu_store_commit(uint8_t slot);       /* OPEN -> COMMITTED, count >= 4 */
 bool pneu_store_erase(uint8_t slot);        /* EMPTY, count 0 */
-/* COMMITTED slot only; tuned_k 1..12; recall percent 0..100 or 255. Keeps k/state/count/name. */
-bool pneu_store_set_tuning(uint8_t slot, uint8_t tuned_k, const uint8_t recall[4]);
+/* COMMITTED slot only; mask nonzero, pool bits 0..13 only, at most 12 set (tuned_k = its
+   popcount); recall percent 0..100 or 255. Keeps k/state/count/name; writes header version 2. */
+bool pneu_store_set_tuning(uint8_t slot, uint16_t mask, const uint8_t recall[4]);
 /* CRC checked; works for OPEN or COMMITTED slots. Uses a one-entry header cache
    (any header write or pneu_store_init drops it; pneu_store_slot_info always reads FeRAM). */
 bool pneu_store_get(uint8_t slot, uint16_t index, uint8_t *label, float pool[PNEU_POOL_COUNT]);

@@ -38,9 +38,12 @@ bool pneu_model_tune(void)
         for (unsigned c = 0; c < 4; ++c) pneutouch_tune.recall[c] = 255;
         return false;
     }
-    pneutouch_tune.done = true; pneutouch_tune.count = 8; pneutouch_tune.best_k = 5; pneutouch_tune.advice = 2;
-    static const uint16_t correct[5] = {6, 7, 7, 2, 2};
-    for (unsigned k = 4; k <= 8; ++k) pneutouch_tune.correct[k] = correct[k-4];
+    pneutouch_tune.done = true; pneutouch_tune.count = 8; pneutouch_tune.advice = 2;
+    pneutouch_tune.mask = 0x0015; pneutouch_tune.best_k = 3; pneutouch_tune.correct = 7;
+    pneutouch_tune.champion_mask = 0x2411; pneutouch_tune.champion_correct = 5;
+    pneutouch_tune.finalist_mask[0] = 0x0015; pneutouch_tune.finalist_screen[0] = 16; pneutouch_tune.finalist_correct[0] = 7;
+    pneutouch_tune.finalist_mask[1] = 0x3400; pneutouch_tune.finalist_screen[1] = 16; pneutouch_tune.finalist_correct[1] = 4;
+    pneutouch_tune.candidates = 99; pneutouch_tune.screened = 8;
     for (unsigned t = 0; t < 4; ++t) pneutouch_tune.confusion[t][t] = 2;
     pneutouch_tune.confusion[1][1] = 1; pneutouch_tune.confusion[1][0] = 1;
     pneutouch_tune.recall[0] = 100; pneutouch_tune.recall[1] = 50; pneutouch_tune.recall[2] = 100; pneutouch_tune.recall[3] = 100;
@@ -137,7 +140,7 @@ static void test_store_errors(void)
     char body[300], hex[PNEU_POOL_COUNT*8+1];
     pool_hex(hex, 1.0f);
     packet("PST1,OPEN,20,0,0,dino"); assert(!strcmp(tx, "# PST1,OPEN,20,0\r\n"));
-    packet("PST1,SLOT,21,0"); assert(!strcmp(tx, "# PST1,SLOT,21,0,1,0,14,0,dino,0,0:0:0:0\r\n"));
+    packet("PST1,SLOT,21,0"); assert(!strcmp(tx, "# PST1,SLOT,21,0,1,0,14,0,dino,0,0:0:0:0,0000\r\n"));
     put("22", 0, 1, 1.0f, "# PST1,PUT,22,0,1\r\n");
     put("23", 0, 5, 1.0f, "# PST1,ERROR,LABEL"); put("23", 4, 1, 1.0f, "# PST1,ERROR,SLOT");
     put("23", 1, 1, 1.0f, "# PST1,ERROR,STATE"); put("23", 0, 1, -1.0f, "# PST1,ERROR,RANGE");
@@ -169,7 +172,7 @@ static void test_tune_protocol(void)
     live_predict("60", "# PAI1,LIVEPREDICT,60,4,4,0,"); /* TRAIN left LIVE ready */
     packet("PST1,TUNE,61,0"); assert(strstr(tx, "ERROR,FIELDS"));
     packet("PST1,TUNE,62");
-    assert(!strcmp(tx, "# PST1,TUNE,62,1,0,8,5,6:7:7:2:2,100:50:100:100,2:2:2:2,"
+    assert(!strcmp(tx, "# PST1,TUNE,62,1,0,8,0015,3,7,2411,5,0015=16=7:3400=16=4,99,8,100:50:100:100,2:2:2:2,"
                        "2:0:0:0:1:1:0:0:0:0:2:0:0:0:0:2,2,61000000\r\n"));
     assert(model_tunes == 1);
     /* The idle budget restarts after the blocking command: still MODE 1. */
@@ -178,15 +181,15 @@ static void test_tune_protocol(void)
     live_predict("63", "LIVE_INIT_REQUIRED");
     packet("PAI1,TRAIN,64,1,3f8000000000000000000000000000000000000000000000"); assert(strstr(tx, "INIT_REQUIRED"));
     tune_fails = true; packet("PST1,TUNE,65");
-    assert(!strcmp(tx, "# PST1,TUNE,65,0,2,0,0,0:0:0:0:0,255:255:255:255,0:0:0:0,"
+    assert(!strcmp(tx, "# PST1,TUNE,65,0,2,0,0000,0,0,0000,0,,0,0,255:255:255:255,0:0:0:0,"
                        "0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0,0,0\r\n"));
     tune_fails = false;
     /* SLOT shows the tuning stored in the header. */
-    assert(!pneu_store_set_tuning(2, 6, recall)); /* OPEN slot refused */
-    packet("PST1,SLOT,66,2"); assert(!strcmp(tx, "# PST1,SLOT,66,2,1,1000,14,0,full,0,0:0:0:0\r\n")); /* still OPEN */
-    assert(pneu_store_commit(2) && pneu_store_set_tuning(2, 6, recall));
-    packet("PST1,SLOT,67,2"); assert(!strcmp(tx, "# PST1,SLOT,67,2,2,1000,14,0,full,6,100:50:100:255\r\n"));
-    packet("PST1,SLOT,68,1"); assert(!strcmp(tx, "# PST1,SLOT,68,1,0,0,0,0,,0,0:0:0:0\r\n")); /* never written */
+    assert(!pneu_store_set_tuning(2, 0x003F, recall)); /* OPEN slot refused */
+    packet("PST1,SLOT,66,2"); assert(!strcmp(tx, "# PST1,SLOT,66,2,1,1000,14,0,full,0,0:0:0:0,0000\r\n")); /* still OPEN */
+    assert(pneu_store_commit(2) && pneu_store_set_tuning(2, 0x003F, recall));
+    packet("PST1,SLOT,67,2"); assert(!strcmp(tx, "# PST1,SLOT,67,2,2,1000,14,0,full,6,100:50:100:255,003f\r\n"));
+    packet("PST1,SLOT,68,1"); assert(!strcmp(tx, "# PST1,SLOT,68,1,0,0,0,0,,0,0:0:0:0,0000\r\n")); /* never written */
     packet("PST1,TRAIN,69"); live_predict("70", "# PAI1,LIVEPREDICT,70,4,4,0,");
     now += 60001U; tx_pos = 0; tx[0] = 0;
     assert(!pneu_ai_validation_poll() && strstr(tx, "# PAI1,MODE,0,IDLE_TIMEOUT"));
@@ -196,7 +199,7 @@ static void test_store_protocol(void)
 {
     float pool[PNEU_POOL_COUNT];
     memset(fram, 0xff, sizeof(fram));
-    packet("PST1,INFO,1"); assert(!strcmp(tx, "# PST1,INFO,1,0,0,0,0,0,na6-k\r\n")); /* works in MODE 0 */
+    packet("PST1,INFO,1"); assert(!strcmp(tx, "# PST1,INFO,1,0,0,0,0,0,ss1-search\r\n")); /* works in MODE 0 */
     packet("PST1,SELFTEST,2"); assert(!strcmp(tx, "# PST1,SELFTEST,2,0\r\n"));
     fram_selftest_result = -1; packet("PST1,SELFTEST,3"); assert(!strcmp(tx, "# PST1,SELFTEST,3,-1\r\n"));
     fram_selftest_result = 7; packet("PST1,SELFTEST,3"); assert(!strcmp(tx, "# PST1,SELFTEST,3,7\r\n"));
@@ -222,7 +225,7 @@ static void test_store_protocol(void)
     fram[0x2000+32+60+5] ^= 1; packet("PST1,GET,37,0,1"); assert(strstr(tx, "ERROR,CRC_RECORD"));
     fram[0x2000+32+60+5] ^= 1;
     packet("PST1,USE,38,1"); assert(!strcmp(tx, "# PST1,USE,38,1\r\n"));
-    packet("PST1,INFO,39"); assert(!strcmp(tx, "# PST1,INFO,39,1,4,0,0,0,na6-k\r\n"));
+    packet("PST1,INFO,39"); assert(!strcmp(tx, "# PST1,INFO,39,1,4,0,0,0,ss1-search\r\n"));
     packet("PST1,USE,38,7"); assert(strstr(tx, "ERROR,SLOT"));
     /* Full slot: fill through the store API, then one more over the wire. */
     assert(pneu_store_open(2, 0, "full"));
@@ -230,7 +233,7 @@ static void test_store_protocol(void)
     for (unsigned i = 0; i < PNEU_STORE_MAX_RECORDS; ++i) assert(pneu_store_put(2, 1, pool));
     put("40", 2, 1, 1.0f, "# PST1,ERROR,FULL");
     packet("PST1,ERASE,41,0"); assert(!strcmp(tx, "# PST1,ERASE,41,0\r\n"));
-    packet("PST1,INFO,42"); assert(!strcmp(tx, "# PST1,INFO,42,1,0,0,1000,0,na6-k\r\n"));
+    packet("PST1,INFO,42"); assert(!strcmp(tx, "# PST1,INFO,42,1,0,0,1000,0,ss1-search\r\n"));
     fram_drop_writes = true; packet("PST1,ERASE,43,3"); assert(strstr(tx, "ERROR,STORE")); fram_drop_writes = false;
     packet("PST1,TRAIN,44"); assert(!strcmp(tx, "# PST1,TRAIN,44,1,0,8,3,0:4:10,1234\r\n"));
     /* TRAIN re-initialized the chip: PAI1 INIT is required again, LIVEPREDICT is ready. */

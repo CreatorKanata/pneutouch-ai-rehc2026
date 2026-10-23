@@ -33,7 +33,8 @@ bool pneu_model_init(void)
     pneutouch_model.selected[1] = 4; pneutouch_model.selected[2] = 10;
     for (unsigned i = 0; i < 17; ++i) pneutouch_model.lcd_line2[i] = selected[i];
     pneutouch_model.training_examples = 176; pneutouch_model.training_steps = 704;
-    pneutouch_model.tuned_k = model_advice ? 5 : 0; pneutouch_model.advice = model_advice;
+    pneutouch_model.tuned_k = model_advice ? 3 : 0; pneutouch_model.advice = model_advice;
+    pneutouch_model.mask = 0x0411; /* features 0, 4, 10 */
     for (unsigned c = 0; c < 4; ++c) {
         pneutouch_model.class_count[c] = (uint16_t)(37U+c);
         pneutouch_model.recall[c] = model_advice ? (uint8_t)(c == 3 ? 78 : 100) : 0;
@@ -96,16 +97,20 @@ static void poll_at(uint32_t milliseconds)
 static void test_tune_progress(void)
 {
     char ready[17];
-    progress(2, 0, 20); assert(!strcmp(idle_text, "TUNE k4 r1      "));
-    progress(0, 0, 132); assert(!strcmp(idle_text, "TUNE k4 r1   0% "));
-    progress(2, 7, 20); assert(!strcmp(idle_text, "TUNE k5 r4      "));
-    progress(0, 66, 132); assert(!strcmp(idle_text, "TUNE k5 r4  50% "));
-    progress(1, 304, 528); assert(!strcmp(idle_text, "TUNE k5 r4  57% ") && strlen(idle_text) == 16);
-    progress(1, 528, 528); assert(!strcmp(idle_text, "TUNE k5 r4 100% ") && idle_text[10] == ' ');
-    progress(2, 19, 20); assert(!strcmp(idle_text, "TUNE k8 r4      "));
-    progress(2, 20, 20); assert(!strcmp(idle_text, "TUNE k8 r4      ") && strlen(idle_text) == 16);
+    progress(2, 0, 198); assert(!strcmp(idle_text, "TUNE  0/198     "));
+    progress(0, 0, 176); assert(!strcmp(idle_text, "TUNE  0/198   0%"));
+    progress(1, 91, 160); assert(!strcmp(idle_text, "TUNE  0/198  56%") && strlen(idle_text) == 16);
+    progress(2, 37, 198); assert(!strcmp(idle_text, "TUNE 37/198     "));
+    progress(1, 160, 160); assert(!strcmp(idle_text, "TUNE 37/198 100%"));
+    progress(2, 198, 198); assert(!strcmp(idle_text, "TUNE198/198     ")); /* finals follow */
+    progress(3, 0, 6); assert(!strcmp(idle_text, "FINAL 0/6       "));
+    progress(1, 304, 528); assert(!strcmp(idle_text, "FINAL 0/6    57%"));
+    progress(3, 3, 6); progress(0, 66, 132); assert(!strcmp(idle_text, "FINAL 3/6    50%"));
+    progress(3, 10, 12); assert(!strcmp(idle_text, "FINAL 10/12     "));
+    progress(1, 1, 2); assert(!strcmp(idle_text, "FINAL 10/12  50%"));
+    progress(3, 6, 6); assert(!strcmp(idle_text, "FINAL 6/6       ") && strlen(idle_text) == 16);
     progress(1, 8, 704); assert(!strcmp(idle_text, "LEARN1    8/ 704")); /* tuning finished */
-    progress(2, 3, 20); progress(1, 8, 704); assert(!strncmp(idle_text, "TUNE ", 5));
+    progress(2, 3, 198); progress(1, 8, 704); assert(!strncmp(idle_text, "TUNE ", 5));
     pneu_ready_text(0, ready); assert(!strcmp(ready, "READY"));
     pneu_ready_text(1, ready); assert(!strcmp(ready, "READY MORE TAIL"));
     pneu_ready_text(4, ready); assert(!strcmp(ready, "READY MORE HEAD"));
@@ -116,13 +121,13 @@ int main(void)
 {
     pressure_app_init();
     assert(strstr(output, "PneutouchAi Live; PNEU1,seq,ms,raw; baud=115200") != NULL);
-    assert(strstr(output, "; fw=na6-k\r\n") != NULL);
+    assert(strstr(output, "; fw=ss1-search\r\n") != NULL);
     assert(saw_learn && !strcmp(idle_text, "READY"));
     assert(!strcmp(line2_text, "\xff   \xff     \xff   k3"));
     assert(strstr(output, "# PNEM1,READY,176,704,"));
     assert(strstr(output, "# PNEM2,NONE,0,0,single_instance\r\n"));
     assert(strstr(output, "# PNEM3,READY,slot=0,count=8,err=0,sel=0:4:10,fisher=45000:0:0:0:12750:0:0:0:0:0:0:0:0:0\r\n"));
-    assert(strstr(output, "\r\n# PNEM4,k=0,recall=0:0:0:0,counts=37:38:39:40,advice=NONE\r\n"));
+    assert(strstr(output, "\r\n# PNEM4,k=0,mask=0411,recall=0:0:0:0,counts=37:38:39:40,advice=NONE\r\n"));
     watchdogs = 0; /* the progress callback fed it once during init; count polls only */
     assert(pneutouch_status.state == PNEU_SETTLING);
     poll_at(PNEU_SENSOR_TIMEOUT_MS);
@@ -168,13 +173,13 @@ int main(void)
     pressure_app_init();
     assert(!strcmp(idle_text, "NO MODEL") && !saw_learn && !strcmp(line2_text, "                "));
     assert(strstr(output, "# PNEM3,ERROR,slot=0,count=8,err=2,sel=,fisher=45000:"));
-    assert(strstr(output, "# PNEM4,k=0,recall=0:0:0:0,counts=0:0:0:0,advice=NONE\r\n"));
+    assert(strstr(output, "# PNEM4,k=0,mask=0000,recall=0:0:0:0,counts=0:0:0:0,advice=NONE\r\n"));
     /* A tuned slot advising HEAD; a stale TUNE state (failed tune) is cleared by the boot. */
     test_tune_progress();
     model_fails = false; model_advice = 4; store_inits = 0; length = 0;
     pressure_app_init();
     assert(!strcmp(idle_text, "READY MORE HEAD"));
-    assert(strstr(output, "# PNEM4,k=5,recall=100:100:100:78,counts=37:38:39:40,advice=HEAD\r\n"));
+    assert(strstr(output, "# PNEM4,k=3,mask=0411,recall=100:100:100:78,counts=37:38:39:40,advice=HEAD\r\n"));
     puts("Pressure app: UART framing, signed limits, debug status, no fake samples, FeRAM boot banner and LCD PASS");
     return 0;
 }

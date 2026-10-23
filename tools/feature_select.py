@@ -17,6 +17,7 @@ from pathlib import Path
 import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+import make_log_table  # noqa: E402
 import prepare_retrain  # noqa: E402
 import retrain_report  # noqa: E402
 
@@ -29,7 +30,12 @@ TRAIN_PRIMES = (3, 5, 7, 11, 13, 17, 19, 23)
 TRAIN_EPOCHS = 4
 MIN_SCALE = np.float32(1e-6)
 AUTO_DIVISOR = np.float32(10)
+FISHER_MAX = np.float32(1e9)  # PNEU_FISHER_MAX
 F32 = np.float32
+LOG2_TABLE = make_log_table.table()  # the 257 float32 entries of fast_log_table.h
+LN2 = F32(0.69314718)
+FRACTION_SCALE = F32(1.0 / 32768.0)
+DENORMAL_SCALE = F32(2.0 ** 24)
 
 
 def trough_of(event):
@@ -42,9 +48,26 @@ def pool_rows(events):
     return np.array([list(e['features12']) + [e['peak'], trough_of(e)] for e in events], dtype=F32)
 
 
+def fast_log(x):
+    """Bit-exact mirror of pneu_log (fast_log.c): table log2 with linear interpolation, float32."""
+    x = np.array(x, dtype=F32)
+    bits = x.view(np.uint32)
+    e = ((bits >> 23) & 0xFF).astype(np.int32) - 127
+    denormal = e == -127
+    if denormal.any():
+        scaled = np.where(denormal, x * DENORMAL_SCALE, x).astype(F32)
+        bits = scaled.view(np.uint32)
+        e = np.where(denormal, ((bits >> 23) & 0xFF).astype(np.int32) - 151, e)
+    i = ((bits >> 15) & 0xFF).astype(np.intp)
+    f = (bits & 0x7FFF).astype(F32) * FRACTION_SCALE
+    step = (LOG2_TABLE[i + 1] - LOG2_TABLE[i]).astype(F32)
+    log2m = (LOG2_TABLE[i] + (step * f).astype(F32)).astype(F32)
+    return ((e.astype(F32) + log2m).astype(F32) * LN2).astype(F32)
+
+
 def log_pool(events):
     """float32 logarithm of every pool value (what the chip feeds the statistics)."""
-    return np.log(pool_rows(events))
+    return fast_log(pool_rows(events))
 
 
 def _valid_row(row):
@@ -60,7 +83,7 @@ def stats(labels, pool):
     for label, row in zip(labels, pool):
         if label not in (1, 2, 3, 4) or not _valid_row(row):
             raise ValueError(f'invalid record: label={label}')
-        logged = np.log(np.asarray(row, dtype=F32))
+        logged = fast_log(row)
         total[label - 1] = total[label - 1] + logged
         squares[label - 1] = squares[label - 1] + logged * logged
         n[label - 1] += 1
@@ -70,6 +93,15 @@ def stats(labels, pool):
 def rank(fisher):
     """Pool indices by Fisher score descending; ties keep the lower index first."""
     return sorted(range(POOL_COUNT), key=lambda j: (-float(fisher[j]), j))
+
+
+def _fisher(between, within, scale):
+    """A constant feature is never ranked; a perfect separator (no within-class spread) ranks first."""
+    if not scale > MIN_SCALE:
+        return F32(0)
+    if within > 0:
+        return F32(between / within)
+    return FISHER_MAX if between > 0 else F32(0)
 
 
 def _scores(s, classes):
@@ -91,7 +123,7 @@ def _scores(s, classes):
             between = F32(between + F32(F32(nc * d) * d))
         var = F32(F32(squares / count) - F32(mean[j] * mean[j]))
         scale[j] = F32(np.sqrt(max(var, F32(0)), dtype=F32))
-        fisher[j] = F32(between / within) if scale[j] > MIN_SCALE and within > 0 else F32(0)
+        fisher[j] = _fisher(between, within, scale[j])
     return fisher, mean, scale
 
 
@@ -123,7 +155,8 @@ def words(selection, pool_row):
         value = F32(pool_row[j])
         if not (np.isfinite(value) and value > 0):
             raise ValueError(f'invalid pool value {j}')
-        scaled = np.array([(np.log(value) - selection['mean'][j]) / selection['scale'][j]], dtype=F32)
+        inv_scale = F32(F32(1) / selection['scale'][j])  # the chip multiplies by inv_scale
+        scaled = np.array([F32(F32(fast_log(value)) - selection['mean'][j]) * inv_scale], dtype=F32)
         if not np.isfinite(scaled).all():
             raise ValueError(f'nonfinite word {j}')
         out[s] = int(scaled.view(np.uint32)[0] >> 16)

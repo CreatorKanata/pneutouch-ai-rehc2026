@@ -91,12 +91,23 @@ static uint8_t train_step(uint8_t label, const float pool[PNEU_POOL_COUNT])
     return wait_ai() ? PNEU_MODEL_ERR_NONE : PNEU_MODEL_ERR_AI;
 }
 
+bool pneu_core_chosen(const uint8_t *chosen, uint16_t index)
+{
+    return (chosen[index >> 3] & (1U << (index & 7U))) != 0U;
+}
+
+/* Training record: not held out by fold and, with a bitmap, inside it. */
+static bool trains(uint16_t index, uint8_t fold, const uint8_t *chosen)
+{
+    return !pneu_core_held(index, fold) && (!chosen || pneu_core_chosen(chosen, index));
+}
+
 /* Records are re-read from FeRAM in a fixed stride order: no RAM copy.
-   The held-out records of fold are skipped (PNEU_NO_FOLD: none). */
-uint8_t pneu_core_train(uint8_t slot, uint16_t n, uint8_t fold)
+   used = training records per epoch (for the progress total). */
+static uint8_t train_records(uint8_t slot, uint16_t n, uint8_t fold, const uint8_t *chosen, uint16_t used)
 {
     float pool[PNEU_POOL_COUNT];
-    uint16_t total = (uint16_t)(PNEU_TRAIN_EPOCHS*(n-held_count(n, fold))), steps = 0, index;
+    uint16_t total = (uint16_t)(PNEU_TRAIN_EPOCHS*used), steps = 0, index;
     uint8_t label, error;
     unsigned e, i;
     reset_instance();
@@ -104,13 +115,23 @@ uint8_t pneu_core_train(uint8_t slot, uint16_t n, uint8_t fold)
     for (e = 0; e < PNEU_TRAIN_EPOCHS; ++e)
         for (i = 0; i < n; ++i) {
             index = pneu_train_index(n, (uint8_t)e, (uint16_t)i);
-            if (pneu_core_held(index, fold)) continue;
+            if (!trains(index, fold, chosen)) continue;
             if (!pneu_store_get(slot, index, &label, pool)) return PNEU_MODEL_ERR_RECORD;
             if ((error = train_step(label, pool)) != PNEU_MODEL_ERR_NONE) return error;
             report(PNEU_PHASE_TRAIN, ++steps, total);
             pneutouch_model.training_steps = steps;
         }
     return PNEU_MODEL_ERR_NONE;
+}
+
+uint8_t pneu_core_train(uint8_t slot, uint16_t n, uint8_t fold)
+{
+    return train_records(slot, n, fold, 0, (uint16_t)(n-held_count(n, fold)));
+}
+
+uint8_t pneu_core_train_chosen(uint8_t slot, uint16_t n, const uint8_t *chosen, uint16_t used)
+{
+    return train_records(slot, n, PNEU_NO_FOLD, chosen, used);
 }
 
 uint8_t pneu_core_load_stats(uint8_t slot, uint16_t n, uint8_t fold)
@@ -140,16 +161,32 @@ static void publish_line2(bool blank)
     for (i = 0; i < sizeof(line); ++i) pneutouch_model.lcd_line2[i] = line[i];
 }
 
-uint8_t pneu_core_choose(uint8_t k)
+static uint8_t publish_selection(bool ok)
 {
     unsigned i;
-    /* class_mask stays a parameter of pneu_select; the firmware uses all four. */
-    if (!pneu_select(&stats, ALL_CLASSES, k, &selection)) return PNEU_MODEL_ERR_SELECT;
+    if (!ok) return PNEU_MODEL_ERR_SELECT;
     pneutouch_model.selected_count = selection.count;
+    pneutouch_model.mask = pneu_selection_mask(&selection);
     for (i = 0; i < selection.count; ++i) pneutouch_model.selected[i] = selection.index[i];
     for (i = 0; i < PNEU_POOL_COUNT; ++i) pneutouch_model.fisher[i] = selection.fisher[i];
     publish_line2(false);
     return PNEU_MODEL_ERR_NONE;
+}
+
+/* class_mask stays a parameter of pneu_select; the firmware uses all four. */
+uint8_t pneu_core_choose(uint8_t k) { return publish_selection(pneu_select(&stats, ALL_CLASSES, k, &selection)); }
+
+uint8_t pneu_core_choose_mask(uint16_t mask)
+{
+    return publish_selection(pneu_select_mask(&stats, ALL_CLASSES, mask, &selection));
+}
+
+/* Explicit header k, then the TUNE mask, then a version 1 tuned_k, then Fisher auto. */
+static uint8_t choose_from_header(const pneu_store_slot_t *info)
+{
+    if (info->k) return pneu_core_choose(info->k);
+    if (info->mask) return pneu_core_choose_mask(info->mask);
+    return pneu_core_choose(info->tuned_k);
 }
 
 /* Tuning result of the header and the class counts of the statistics pass. */
@@ -187,8 +224,7 @@ bool pneu_model_init(void)
     pneutouch_model = (pneu_model_status_t){0};
     irq_ai_dis(); smpl_enablePeripheral(AI_PERI);
     error = prepare(&info);
-    /* An explicit k in the header wins; then the tuned k; 0/0 = Fisher auto. */
-    if (!error) error = pneu_core_choose(info.k ? info.k : info.tuned_k);
+    if (!error) error = choose_from_header(&info);
     if (!error) error = pneu_core_train(pneutouch_model.slot, info.count, PNEU_NO_FOLD);
     pneutouch_model.error = error;
     pneutouch_model.ready = error == PNEU_MODEL_ERR_NONE;

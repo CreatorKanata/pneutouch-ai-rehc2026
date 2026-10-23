@@ -16,6 +16,7 @@ except ImportError as exc:
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'tools'))
 import feature_select as fs  # noqa: E402
+import make_log_table  # noqa: E402
 
 FIXTURE = json.loads((ROOT / 'tests/fixtures/feature_select_fixture.json').read_text(encoding='utf-8'))
 HEADER = (ROOT / 'tests/feature_select_fixture.h').read_text(encoding='utf-8')
@@ -82,6 +83,35 @@ class FixtureTests(unittest.TestCase):
         self.assertEqual(c_array('fix_train_order'), FIXTURE['train']['order'])
 
 
+class FastLogTests(unittest.TestCase):
+    def test_header_is_generated(self):
+        header = (ROOT / 'src/pneutouch-solist/S_PneuTouch/fast_log_table.h').read_text(encoding='utf-8')
+        self.assertEqual(header, make_log_table.header_text())
+        table = make_log_table.table()
+        self.assertEqual((table.dtype, table.shape, table[0], table[256]), (np.float32, (257,), 0.0, 1.0))
+
+    def test_accuracy_and_exact_points(self):
+        x = np.exp(np.linspace(np.log(1e-4), np.log(1e8), 50000)).astype(np.float32)
+        got = fs.fast_log(x)
+        self.assertEqual(got.dtype, np.float32)
+        self.assertLessEqual(float(np.max(np.abs(got.astype(np.float64) - np.log(x).astype(np.float32)))), 4e-6)
+        self.assertTrue(np.all(np.diff(got) >= 0))
+        powers = np.arange(-40, 61)
+        np.testing.assert_array_equal(fs.fast_log(np.ldexp(np.float32(1), powers).astype(np.float32)),
+                                      powers.astype(np.float32) * np.float32(0.69314718))
+        self.assertEqual(float(fs.fast_log(1.0)), 0.0)
+        self.assertAlmostEqual(float(fs.fast_log(np.float32(1.5) * np.float32(2.0 ** -140))),
+                               np.log(1.5 * 2.0 ** -140), delta=1e-4)  # denormal
+
+    def test_perfect_separator_ranks_first(self):
+        exponents = np.array(FIXTURE['exponents'], dtype=float)
+        exponents[:, 3] = [1, 1, 1, 1, 2, 2, 2, 2]
+        s = fs.stats(FIXTURE['labels'], (2.0 ** exponents).astype(np.float32))
+        chosen = fs.select(s, 0xF, 0)
+        self.assertEqual(float(chosen['fisher'][3]), float(np.float32(1e9)))
+        self.assertEqual(fs.rank(chosen['fisher'])[0], 3)
+
+
 class ReferenceTests(unittest.TestCase):
     def test_pool_rows_trough_rule(self):
         events = [dict(label=1, features12=[2.0] * 10 + [0.5, 3.0], peak=1000.0),
@@ -90,7 +120,8 @@ class ReferenceTests(unittest.TestCase):
         self.assertEqual(rows.dtype, np.float32)
         self.assertEqual(rows[0, 13], 500.0)
         self.assertEqual(rows[1, 13], 123.0)
-        np.testing.assert_array_equal(fs.log_pool(events), np.log(rows))
+        np.testing.assert_array_equal(fs.log_pool(events), fs.fast_log(rows))
+        np.testing.assert_allclose(fs.log_pool(events), np.log(rows), rtol=0, atol=4e-6)
 
     def test_rejects_like_the_chip(self):
         pool = np.ones((4, 14), dtype=np.float32)

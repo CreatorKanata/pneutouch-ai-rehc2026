@@ -16,6 +16,7 @@ Solist-AI from the active slot; see docs/model-store.md.
 import argparse
 import contextlib
 import json
+import math
 import os
 import sys
 from datetime import date
@@ -31,8 +32,9 @@ ZONE_NAMES = {1: 'TAIL', 2: 'BACK', 3: 'LEGS', 4: 'HEAD'}
 SLOTS, MAX_RECORDS, MIN_RECORDS, MAX_NAME = 4, 1000, 4, 8
 STATES = {0: 'empty', 1: 'open', 2: 'committed'}
 TRAIN_TIMEOUT_S = 120  # 1000 records x 4 epochs at ~1.5 ms per step, plus FeRAM reads
-TUNE_TIMEOUT_S = 900  # 1000 records x 20 trainings (k 4..8, 4 folds) worst case
-TUNE_K_MIN, TUNE_FOLDS, ADVICE_RECALL_PCT, RECALL_ABSENT = 4, 4, 90, 255
+TUNE_TIMEOUT_S = 900  # ~2 min at 176 records (99 subsets x 2 screening passes + 6 x 4 folds)
+TUNE_FOLDS, ADVICE_RECALL_PCT, RECALL_ABSENT = 4, 90, 255
+TUNE_MIN_SIZE, SCREEN_PER_CLASS, SCREEN_PASSES, TUNE_MARGIN_PCT = 3, 10, 2, 2  # model_tune.h
 MODEL_ERRORS = {1: 'STORE', 2: 'NO_SLOT', 3: 'RECORD', 4: 'SELECT', 5: 'AI'}
 ZONE_JA = {'TAIL': 'しっぽ', 'BACK': '背中', 'LEGS': '足', 'HEAD': '頭'}
 
@@ -68,6 +70,17 @@ def _indices(text):
     return [int(v) for v in text.split(':')] if text else []
 
 
+def mask_features(mask):
+    """Pool indices of a feature mask (bit j = pool feature j), ascending."""
+    return [j for j in range(fs.POOL_COUNT) if mask >> j & 1]
+
+
+def _finalists(text):
+    """'mask=screen=hits:...' -> [dict(mask, screen, correct)]."""
+    entries = [item.split('=') for item in text.split(':')] if text else []
+    return [dict(mask=int(m, 16), screen=int(sc), correct=int(c)) for m, sc, c in entries]
+
+
 class Store:
     """PST1 commands over a validate_solist_ai.Device (or any object with the same command())."""
 
@@ -96,10 +109,11 @@ class Store:
 
     def slot(self, slot):
         r = self._cmd('SLOT', check_slot(slot))
-        # tuned_k and recall were added with TUNE; older firmware stops after the name.
+        # tuned_k and recall were added with TUNE, mask with the subset search; older firmware stops earlier.
         return dict(slot=int(r[0]), state=int(r[1]), count=int(r[2]), pool=int(r[3]), k=int(r[4]), name=r[5],
                     tuned_k=int(r[6]) if len(r) > 6 else 0,
-                    recall=_indices(r[7]) if len(r) > 7 else [0, 0, 0, 0])
+                    recall=_indices(r[7]) if len(r) > 7 else [0, 0, 0, 0],
+                    mask=int(r[8], 16) if len(r) > 8 else 0)
 
     def open(self, slot, k, name):
         self._cmd('OPEN', check_slot(slot), k, check_name(name))
@@ -126,14 +140,15 @@ class Store:
                     selected=_indices(r[4]), training_us=int(r[5]))
 
     def tune(self):
-        """4-fold cross-validation of k on the chip; writes tuned_k/recall into the active slot header."""
+        """Subset search on the chip (screening + 4-fold finals); writes mask/recall into the active slot header."""
         r = self._cmd('TUNE', timeout=TUNE_TIMEOUT_S)
-        correct = _indices(r[4])
-        confusion = _indices(r[7])
-        return dict(ok=r[0] == '1', error=int(r[1]), count=int(r[2]), best_k=int(r[3]),
-                    correct={TUNE_K_MIN + i: n for i, n in enumerate(correct)}, recall=_indices(r[5]),
-                    counts=_indices(r[6]), confusion=[confusion[i:i + 4] for i in range(0, 16, 4)],
-                    advice=int(r[8]), elapsed_us=int(r[9]))
+        confusion = _indices(r[13])
+        return dict(ok=r[0] == '1', error=int(r[1]), count=int(r[2]), mask=int(r[3], 16), best_k=int(r[4]),
+                    correct=int(r[5]), champion_mask=int(r[6], 16), champion_correct=int(r[7]),
+                    finalists=_finalists(r[8]), candidates=int(r[9]), screened=int(r[10]),
+                    recall=_indices(r[11]), counts=_indices(r[12]),
+                    confusion=[confusion[i:i + 4] for i in range(0, 16, 4)],
+                    advice=int(r[14]), elapsed_us=int(r[15]))
 
     def selftest(self):
         return int(self._cmd('SELFTEST')[0])
@@ -183,7 +198,7 @@ def dump(store, slot):
                                peak=float(row[12]), trough=float(row[13])))
     return dict(feature_order=FEATURE_ORDER, events=events,
                 source=dict(kind='fram', slot=slot, name=info['name'], k=info['k'], state=STATES[info['state']],
-                            tuned_k=info['tuned_k'], recall=info['recall']))
+                            tuned_k=info['tuned_k'], recall=info['recall'], mask=info['mask']))
 
 
 def describe_training(result):
@@ -198,16 +213,50 @@ def _zone(label):
     return f'{ZONE_JA[name]}（{name}）'
 
 
+def _names(mask):
+    return ', '.join(fs.FEATURE_NAMES[j] for j in mask_features(mask)) or 'none'
+
+
+def shortlist_size(candidates):
+    """Shortlist size whose subsets of TUNE_MIN_SIZE.. members number `candidates` (0 if none)."""
+    for size in range(TUNE_MIN_SIZE, fs.SELECT_MAX + 1):
+        if sum(math.comb(size, k) for k in range(TUNE_MIN_SIZE, size + 1)) == candidates:
+            return size
+    return 0
+
+
+def tune_margin(count):
+    """Records a challenger must win by more than (model_tune.c margin())."""
+    return max(1, (count * TUNE_MARGIN_PCT + 50) // 100)
+
+
+def _tune_summary(result):
+    count, champion = result['count'], result['champion_mask']
+    finals = 1 + sum(f['mask'] != champion for f in result['finalists'])
+    judged = result['screened'] * SCREEN_PASSES
+    lines = [f'tune: {count} records, shortlist {shortlist_size(result["candidates"])} features, '
+             f'{result["candidates"]} subsets screened ({SCREEN_PER_CLASS}/class × {SCREEN_PASSES} passes), '
+             f'{finals} finalists ({result["elapsed_us"] / 1e6:.1f} s)',
+             f'  champion (top-{len(mask_features(champion))}): {_names(champion)}  4-fold '
+             f'{result["champion_correct"]}/{count} = {100 * result["champion_correct"] / count:.1f}%']
+    for i, f in enumerate(result['finalists']):
+        lines.append(f'  {"finalists:" if i == 0 else "":<10}  {len(mask_features(f["mask"]))} features '
+                     f'{_names(f["mask"])}   screen {f["screen"]}/{judged}  4-fold {f["correct"]}/{count}')
+    if result['mask'] == champion:
+        lines.append(f'  chosen: champion (no challenger beat it by more than {tune_margin(count)} records)')
+    else:
+        lines.append(f'  chosen: {result["best_k"]} features {_names(result["mask"])} '
+                     f'(beat champion by {result["correct"] - result["champion_correct"]})')
+    return lines
+
+
 def describe_tune(result):
     """Lines for the CLI; RuntimeError (error code name) when the chip could not tune."""
     if not result['ok']:
         raise RuntimeError(f'TUNE failed: {MODEL_ERRORS.get(result["error"], result["error"])}')
-    count = result['count']
-    lines = [f'tune: {count} records, {TUNE_FOLDS}-fold, best k = {result["best_k"]} '
-             f'({result["elapsed_us"] / 1e6:.1f} s)',
-             '  ' + '  '.join(f'k={k} {round(100 * n / count) if count else 0}%' for k, n in result['correct'].items()),
-             '  ' + '  '.join(f'{ZONE_NAMES[c + 1]} {"-" if r == RECALL_ABSENT else f"{r}%"} ({n})'
-                              for c, (r, n) in enumerate(zip(result['recall'], result['counts'])))]
+    lines = _tune_summary(result) + [
+        '  ' + '  '.join(f'{ZONE_NAMES[c + 1]} {"-" if r == RECALL_ABSENT else f"{r}%"} ({n})'
+                         for c, (r, n) in enumerate(zip(result['recall'], result['counts'])))]
     advice = result['advice']
     if not advice:
         return lines + [f'  提案: なし（すべての部位が {ADVICE_RECALL_PCT}% 以上）']

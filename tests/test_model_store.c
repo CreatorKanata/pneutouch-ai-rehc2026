@@ -47,8 +47,9 @@ static void test_round_trip(void)
     assert(pneu_store_open(0, 3, "dino"));
     assert(!memcmp(fram+SLOT_ADDR(0), "PNSL", 4) && fram[SLOT_ADDR(0)+6] == 14 && fram[SLOT_ADDR(0)+7] == 3);
     assert(!memcmp(fram+SLOT_ADDR(0)+12, "dino    ", 8));
-    assert(le16(SLOT_ADDR(0)+24) == pneu_crc16(fram+SLOT_ADDR(0), 24));
-    assert(pneu_store_slot_info(0, &info) && info.state == PNEU_SLOT_OPEN && info.count == 0);
+    assert(le16(SLOT_ADDR(0)+4) == 2 && le16(SLOT_ADDR(0)+24) == 0); /* header version 2, mask 0 */
+    assert(le16(SLOT_ADDR(0)+30) == pneu_crc16(fram+SLOT_ADDR(0), 30));
+    assert(pneu_store_slot_info(0, &info) && info.state == PNEU_SLOT_OPEN && info.count == 0 && info.mask == 0);
     assert(info.k == 3 && info.pool_count == 14 && !strcmp(info.name, "dino"));
     assert(!pneu_store_put(0, 0, pool) && !pneu_store_put(0, 5, pool));
     pool[3] = NAN; assert(!pneu_store_put(0, 1, pool));
@@ -120,40 +121,77 @@ static void fill_slot(uint8_t slot, uint8_t k, const char *name, unsigned count)
     for (unsigned i = 0; i < count; ++i) { pool_for(i, pool); assert(pneu_store_put(slot, (uint8_t)(i%4U+1U), pool)); }
 }
 
+/* Rewrites the header CRC at crc_at (24: version 1, 30: version 2) after a hand edit. */
+static void fix_crc(uint8_t slot, unsigned crc_at)
+{
+    uint16_t crc = pneu_crc16(fram+SLOT_ADDR(slot), crc_at);
+    fram[SLOT_ADDR(slot)+crc_at] = (uint8_t)crc; fram[SLOT_ADDR(slot)+crc_at+1U] = (uint8_t)(crc >> 8);
+}
+
 static void test_tuning(void)
 {
     static const uint8_t recall[4] = {100, 50, 255, 0}, bad[4] = {100, 101, 0, 0};
     pneu_store_slot_t info;
     memset(fram, 0xff, sizeof(fram));
     assert(pneu_store_init());
-    assert(!pneu_store_set_tuning(0, 5, recall)); /* EMPTY (never written) */
+    assert(!pneu_store_set_tuning(0, 0x0031, recall)); /* EMPTY (never written) */
     fill_slot(0, 3, "tune", 4);
-    assert(pneu_store_slot_info(0, &info) && info.tuned_k == 0 && !info.recall[0] && !info.recall[3]);
-    assert(!pneu_store_set_tuning(0, 5, recall)); /* OPEN */
+    assert(pneu_store_slot_info(0, &info) && info.tuned_k == 0 && info.mask == 0 && !info.recall[0]);
+    assert(!pneu_store_set_tuning(0, 0x0031, recall)); /* OPEN */
     assert(pneu_store_commit(0));
-    assert(!pneu_store_set_tuning(0, 0, recall) && !pneu_store_set_tuning(0, 13, recall));
-    assert(!pneu_store_set_tuning(0, 5, bad) && !pneu_store_set_tuning(4, 5, recall));
-    assert(pneu_store_set_tuning(0, 5, recall));
-    assert(fram[SLOT_ADDR(0)+9] == 5 && !memcmp(fram+SLOT_ADDR(0)+20, recall, 4));
-    assert(le16(SLOT_ADDR(0)+24) == pneu_crc16(fram+SLOT_ADDR(0), 24));
-    assert(pneu_store_slot_info(0, &info) && info.tuned_k == 5 && !memcmp(info.recall, recall, 4));
+    assert(!pneu_store_set_tuning(0, 0, recall) && !pneu_store_set_tuning(0, 0x4001, recall));
+    assert(!pneu_store_set_tuning(0, 0x8001, recall) && !pneu_store_set_tuning(0, 0x1FFF, recall)); /* 13 set */
+    assert(!pneu_store_set_tuning(0, 0x0031, bad) && !pneu_store_set_tuning(4, 0x0031, recall));
+    assert(pneu_store_set_tuning(0, 0x2031, recall)); /* features 0, 4, 5, 13 */
+    assert(fram[SLOT_ADDR(0)+9] == 4 && le16(SLOT_ADDR(0)+24) == 0x2031 && !memcmp(fram+SLOT_ADDR(0)+20, recall, 4));
+    assert(le16(SLOT_ADDR(0)+30) == pneu_crc16(fram+SLOT_ADDR(0), 30));
+    for (unsigned i = 26; i < 30; ++i) assert(fram[SLOT_ADDR(0)+i] == 0); /* reserved */
+    assert(pneu_store_slot_info(0, &info) && info.tuned_k == 4 && info.mask == 0x2031 && !memcmp(info.recall, recall, 4));
     assert(info.k == 3 && info.state == PNEU_SLOT_COMMITTED && info.count == 4 && !strcmp(info.name, "tune"));
-    assert(pneu_store_set_tuning(0, 12, recall) && pneu_store_slot_info(0, &info) && info.tuned_k == 12);
-    /* Byte 9 out of range (CRC fixed up) makes the header invalid; so does recall 101. */
-    fram[SLOT_ADDR(0)+9] = 13;
-    fram[SLOT_ADDR(0)+24] = (uint8_t)pneu_crc16(fram+SLOT_ADDR(0), 24);
-    fram[SLOT_ADDR(0)+25] = (uint8_t)(pneu_crc16(fram+SLOT_ADDR(0), 24) >> 8);
+    assert(pneu_store_set_tuning(0, 0x0FFF, recall) && pneu_store_slot_info(0, &info) && info.tuned_k == 12);
+    /* Byte 9 out of range (CRC fixed up) makes the header invalid; so do recall 101 and mask bit 14. */
+    fram[SLOT_ADDR(0)+9] = 13; fix_crc(0, 30);
     assert(!pneu_store_slot_info(0, &info) && !info.valid);
-    fram[SLOT_ADDR(0)+9] = 5; fram[SLOT_ADDR(0)+21] = 101;
-    fram[SLOT_ADDR(0)+24] = (uint8_t)pneu_crc16(fram+SLOT_ADDR(0), 24);
-    fram[SLOT_ADDR(0)+25] = (uint8_t)(pneu_crc16(fram+SLOT_ADDR(0), 24) >> 8);
+    fram[SLOT_ADDR(0)+9] = 12; fram[SLOT_ADDR(0)+21] = 101; fix_crc(0, 30);
     assert(!pneu_store_slot_info(0, &info));
+    fram[SLOT_ADDR(0)+21] = 50; fram[SLOT_ADDR(0)+25] = 0x4F; fix_crc(0, 30);
+    assert(!pneu_store_slot_info(0, &info));
+    fram[SLOT_ADDR(0)+25] = 0x0F; fix_crc(0, 30);
+    assert(pneu_store_slot_info(0, &info) && info.mask == 0x0FFF);
     /* A new OPEN resets the tuning. */
     fill_slot(0, 0, "again", 0);
-    assert(pneu_store_slot_info(0, &info) && info.tuned_k == 0 && !info.recall[0] && !info.recall[1]);
+    assert(pneu_store_slot_info(0, &info) && info.tuned_k == 0 && info.mask == 0 && !info.recall[1]);
     fram_drop_writes = true;
-    assert(!pneu_store_set_tuning(0, 5, recall));
+    assert(!pneu_store_set_tuning(0, 0x0031, recall));
     fram_drop_writes = false;
+}
+
+/* A slot written by version 1 firmware (CRC at 24, no mask) still loads and is upgraded on the next write. */
+static void test_version1_header(void)
+{
+    static const uint8_t recall[4] = {90, 80, 70, 60};
+    pneu_store_slot_t info;
+    float back[PNEU_POOL_COUNT];
+    uint8_t label;
+    memset(fram, 0xff, sizeof(fram));
+    assert(pneu_store_init());
+    fill_slot(1, 0, "old", 5);
+    assert(pneu_store_commit(1));
+    fram[SLOT_ADDR(1)+4] = 1; fram[SLOT_ADDR(1)+9] = 6; /* version 1 with tuned_k 6 */
+    memset(fram+SLOT_ADDR(1)+24, 0, 8); fix_crc(1, 24);
+    assert(pneu_store_slot_info(1, &info) && info.tuned_k == 6 && info.mask == 0 && info.count == 5);
+    assert(pneu_store_get(1, 4, &label, back) && label == 1);
+    fram[SLOT_ADDR(1)+24] = 0x77; /* the CRC field of version 1 */
+    assert(!pneu_store_slot_info(1, &info));
+    fix_crc(1, 24);
+    fram[SLOT_ADDR(1)+4] = 3; fix_crc(1, 30); /* unknown version */
+    assert(!pneu_store_slot_info(1, &info));
+    fram[SLOT_ADDR(1)+4] = 1; memset(fram+SLOT_ADDR(1)+24, 0, 8); fix_crc(1, 24);
+    assert(pneu_store_set_tuning(1, 0x0006, recall));
+    assert(le16(SLOT_ADDR(1)+4) == 2 && le16(SLOT_ADDR(1)+30) == pneu_crc16(fram+SLOT_ADDR(1), 30));
+    assert(pneu_store_slot_info(1, &info) && info.mask == 0x0006 && info.tuned_k == 2 && info.count == 5);
+    assert(!strcmp(info.name, "old") && !memcmp(info.recall, recall, 4) && info.state == PNEU_SLOT_COMMITTED);
+    assert(pneu_store_get(1, 4, &label, back) && label == 1);
 }
 
 static void test_header_cache(void)
@@ -191,7 +229,8 @@ int main(void)
     test_round_trip();
     test_full_and_independent();
     test_tuning();
+    test_version1_header();
     test_header_cache();
-    puts("Model store: directory, slot layout, CRC, state rules, full slot, erase, use, 4 independent slots, tuning, header cache PASS");
+    puts("Model store: directory, slot layout, CRC, state rules, full slot, erase, use, 4 independent slots, tuning mask (header v2), v1 headers, header cache PASS");
     return 0;
 }
