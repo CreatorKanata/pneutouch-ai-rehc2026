@@ -149,7 +149,6 @@ static void poll_at(uint32_t milliseconds)
 }
 static void test_tune_progress(void)
 {
-    char ready[17];
     progress(2, 0, 198); assert(!strcmp(idle_text, "TUNE  0/198     "));
     progress(0, 0, 176); assert(!strcmp(idle_text, "TUNE  0/198   0%"));
     progress(1, 91, 160); assert(!strcmp(idle_text, "TUNE  0/198  56%") && strlen(idle_text) == 16);
@@ -164,10 +163,6 @@ static void test_tune_progress(void)
     progress(3, 6, 6); assert(!strcmp(idle_text, "FINAL 6/6       ") && strlen(idle_text) == 16);
     progress(1, 8, 704); assert(!strcmp(idle_text, "LEARN1    8/ 704")); /* tuning finished */
     progress(2, 3, 198); progress(1, 8, 704); assert(!strncmp(idle_text, "TUNE ", 5));
-    pneu_ready_text(0, ready); assert(!strcmp(ready, "READY"));
-    pneu_ready_text(1, ready); assert(!strcmp(ready, "READY MORE TAIL"));
-    pneu_ready_text(4, ready); assert(!strcmp(ready, "READY MORE HEAD"));
-    pneu_ready_text(5, ready); assert(!strcmp(ready, "READY"));
 }
 
 /* Polls every 10 ms over [from, to) with the given button mask. */
@@ -258,7 +253,7 @@ int main(void)
 {
     pressure_app_init();
     assert(strstr(output, "PneutouchAi Live; PNEU1,seq,ms,raw; baud=115200") != NULL);
-    assert(strstr(output, "; fw=ss3-record\r\n") != NULL);
+    assert(strstr(output, "; fw=ss4-lcd\r\n") != NULL);
     assert(saw_learn && !strcmp(idle_text, "SLOT 0    8  k3 ")); /* 2 s notice, then READY */
     assert(!strcmp(line2_text, "\xff   \xff     \xff   k3"));
     assert(strstr(output, "# PNEM1,READY,176,704,"));
@@ -318,7 +313,7 @@ int main(void)
     pressure_app_init();
     assert(strstr(output, "# PNEM4,k=3,mask=0411,recall=100:100:100:78,counts=37:38:39:40,advice=HEAD\r\n"));
     poll_at(now+1999); assert(!strcmp(idle_text, "SLOT 0    8  k3 "));
-    poll_at(now+1); assert(!strcmp(idle_text, "READY MORE HEAD"));
+    poll_at(now+1); assert(!strcmp(idle_text, "READY")); /* advice is UART-only (PNEM4) */
     test_buttons();
     puts("Pressure app: UART framing, signed limits, debug status, no fake samples, FeRAM boot banner and LCD PASS");
     return 0;

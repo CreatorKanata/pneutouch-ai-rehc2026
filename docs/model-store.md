@@ -21,7 +21,7 @@ MODE 0 に戻るとファームウェアがもう一度学習し直すので、�
 
 | やりたいこと | コマンド |
 |---|---|
-| 各スロットの件数と有効スロット | `model_store.py --port COM7 info` |
+| 各スロットの件数と有効スロット、調整結果 | `model_store.py --port COM7 info`（INFO のあと、件数のあるスロットごとに SLOT を送る。どちらも取得停止中。件数のあるスロットは `slot 2: 176 records  k=4 [release_width_ms, release_area_width_ms, peak, trough]  recall TAIL 100% BACK 97% LEGS 94% HEAD 89%  提案: 頭（HEAD）` の形で 1 行。特徴名は mask のビット順（候補の順）、再現率 255（記録なし）は `-`、提案は再現率だけから: 90% 未満で最も低い部位（同じなら番号の小さい部位）、なければ `提案: なし`。未調整なら `slot 0: 141 records  (未調整)`） |
 | スロット切替 | `model_store.py --port COM7 use --slot 1`（MODE 0 復帰時に再学習） |
 | 吸い出し | `model_store.py --port COM7 dump --slot 0 --out slot0.json`（`prepare_retrain` と同じ JSON 形。`feature_select.py` にそのまま渡せる） |
 | 消去 | `model_store.py --port COM7 erase --slot 1` |
@@ -34,7 +34,7 @@ MODE 0 に戻るとファームウェアがもう一度学習し直すので、�
 - UART 起動行 `# PneutouchAi Live; …; fw=<ビルド名>`。`model_store.py info` の `firmware:` にも同じ名前が出る。ファームを変えたら `S_PneuTouch/firmware_tag.h` の名前を手で更新し、書き込み後に一致を確認する（古い .elf が書き込まれたままだと気づける）。
 - UART: `# PNEM3,READY,slot=0,count=176,err=0,sel=0:4:10:13:12,fisher=45000:0:...`（fisher は ×1000 の整数、14 個、プール順）。`err`: 0 なし、1 FeRAM 異常、2 有効スロットなし、3 記録の CRC/値異常、4 選択不能、5 Solist-AI 異常。`# PNEM1` は従来どおり（件数、ステップ数、学習時間 us）、`# PNEM2,NONE,0,0,single_instance` は旧ツール互換のためだけに残す。
 - UART: `# PNEM4,k=<tuned_k>,mask=<hex4>,recall=<r1:r2:r3:r4>,counts=<n1:n2:n3:n4>,advice=<TAIL|BACK|LEGS|HEAD|NONE>`（PNEM3 の次の行）。tuned_k 0 = 未調整（recall は意味なし、advice は常に NONE）。mask は今使っている選択（ビット j = プール特徴 j、k や自動で選んだときも同じ形、失敗時 0000）。recall は TUNE 時の held-out 再現率 %（255 = その部位の記録なし）、counts は今回の学習に使った部位ごとの件数（統計の前に失敗したら 0）。
-- LCD 1 行目: 学習中は `LEARN<段階> 済/全`（例 `LEARN1  123/ 704`、0 = 統計、1 = 学習）。学習に成功するたび（起動、PAI1 MODE 0 復帰、SW3 のスロット切替、SW2 の TUNE 後）まず 2 秒間 `SLOT 2  176  k4 `（スロット番号、件数を右詰め 4 桁、選んだ数。10..12 は `k` なしの 2 桁で `SLOT 2  176  12 `）を出し、そのあと `READY`。調整済みで提案があれば `READY MORE <部位>`（例 `READY MORE HEAD`）。スロットが無ければ `NO MODEL`、その他の失敗は `AI ERROR`。
+- LCD 1 行目: 学習中は `LEARN<段階> 済/全`（例 `LEARN1  123/ 704`、0 = 統計、1 = 学習）。学習に成功するたび（起動、PAI1 MODE 0 復帰、SW3 のスロット切替、SW2 の TUNE 後）まず 2 秒間 `SLOT 2  176  k4 `（スロット番号、件数を右詰め 4 桁、選んだ数。10..12 は `k` なしの 2 桁で `SLOT 2  176  12 `）を出し、そのあと `READY`（TUNE の提案は LCD には出さず、`# PNEM4` の `advice=` と `model_store.py info` / `tune` で見る）。スロットが無ければ `NO MODEL`、その他の失敗は `AI ERROR`。
 - LCD 1 行目（TUNE 中）: 段階 1 は `TUNE 37/198  57%`（"TUNE" + 済んだ学習数を右詰め 3 桁 + "/" + 全数 3 桁 + 空白 + % 3 桁 + "%"。全数 = 候補数 × 2 パス。198 回目は `TUNE198/198`）、段階 2 は `FINAL 3/6    57%`（済んだ候補 / 候補数、10 以上なら 2 桁ずつ `FINAL 10/12  57%`）。% = 今の段階（統計または学習）の進み。各回の始まり（段階 2/3 の通知そのもの）は列 12..15 が空白。最後の FINAL が終わると `READY` などに戻る。候補の選択が決まるたびに 2 行目のセルが切り替わる。
 - LCD 2 行目: 選ばれた特徴を黒■（0xFF）、選ばれなければ空白。右端 2 桁は選んだ数（`k4` の形、10 以上は数字 2 桁）。選択が決まった時点（学習開始時）で表示する。
 
@@ -169,7 +169,7 @@ CRC は CRC-16/CCITT-FALSE（UART と同じ）。書き込みはすべて読み�
 2. SW5 を短く押して部位を選ぶ（TAIL → BACK → LEGS → HEAD）。
 3. 恐竜のその部位を約 1 秒押して離す。1 回ごとに `+TAIL 1` などが出て 1 件記録される。間違えたら SW5 を 2 秒長押しで最後の 1 件を取り消す。
 4. 部位ごとに 2〜4 を繰り返し、SW4 を短く押して終了（4 件以上で確定 → 再学習 → `SLOT …` → `READY`）。やり直したいときは SW4 長押しで今回の記録をすべて取り消し（`DISCARDED`、記録を始める前に戻る）。
-5. SW2 を 2 秒長押しで TUNE（特徴の組を選び直してスロットに保存）。足りない部位は `READY MORE <部位>` で分かるので、SW4 短押しで追記する。
+5. SW2 を 2 秒長押しで TUNE（特徴の組を選び直してスロットに保存）。足りない部位は PC の `model_store.py info`（`提案:`）か UART の `# PNEM4,…,advice=` で分かるので、SW4 短押しで追記する。
 
 波形を見る学習ツール（PC）は今までどおり使えるが、なくても学習できる。
 - PAI1 MODE 0 での復帰も同じ処理（`resume_live()`）になったので、resumed 行の前に `# PNEM1..4` が出る。

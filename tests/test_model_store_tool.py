@@ -343,6 +343,31 @@ class CliTests(unittest.TestCase):
                 self.run_cli(board, 'selftest')
         self.assertEqual(board.mode, 0)
 
+    def test_info_shows_tuning_per_slot(self):
+        board = FakeBoard()
+        records = [(1, 'x')] * 8
+        board.slots[0] = FakeBoard.empty_slot(state=2, records=records)
+        board.slots[2] = FakeBoard.empty_slot(state=2, records=records * 22, tuned_k=4, recall='100:97:94:89',
+                                              mask='3300')  # pool features 8, 9, 12, 13
+        board.slots[3] = FakeBoard.empty_slot(state=1, records=records[:5], tuned_k=3, recall='100:255:90:95',
+                                              mask='0007')
+        info = self.run_cli(board, 'info')
+        self.assertIn('slot 1: 0 records\n', info)
+        self.assertIn('slot 0: 8 records  (未調整)', info)
+        self.assertIn('slot 2: 176 records  k=4 [release_width_ms, release_area_width_ms, peak, trough]  '
+                      'recall TAIL 100% BACK 97% LEGS 94% HEAD 89%  提案: 頭（HEAD）', info)
+        self.assertIn('slot 3: 5 records  k=3 [rise_ms, decay_ms, width_ms]  '
+                      'recall TAIL 100% BACK - LEGS 90% HEAD 95%  提案: なし', info)
+        self.assertNotIn('slot 1: 0 records  ', info)
+        self.assertEqual([op for _, op in board.sent], ['MODE', 'INFO', 'SLOT', 'SLOT', 'SLOT', 'MODE'])
+        self.assertEqual(board.mode, 0)
+
+    def test_recall_advice(self):
+        self.assertEqual(ms.recall_advice([100, 97, 94, 89]), 4)
+        self.assertEqual(ms.recall_advice([80, 97, 80, 89]), 1)  # tie -> lower label
+        self.assertEqual(ms.recall_advice([255, 90, 95, 100]), 0)
+        self.assertEqual(ms.recall_advice([255, 255, 255, 255]), 0)
+
     def test_tune_then_train(self):
         board = FakeBoard()
         store, _ = make_store(board)

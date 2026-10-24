@@ -26,9 +26,6 @@ typedef struct {
 extern volatile pneutouch_feature_status_t pneutouch_features;
 
 void pressure_app_init(void);
-/* LCD line 1 after a successful training: "READY", or "READY MORE <ZONE>" when
-   the tuning advises collecting more of class advice (1..4). */
-void pneu_ready_text(uint8_t advice, char out[17]);
 /* Call repeatedly from main; no fabricated samples when the sensor is busy. */
 void pressure_app_poll(void);
 #endif

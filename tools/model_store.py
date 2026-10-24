@@ -264,6 +264,38 @@ def describe_tune(result):
     return lines + _advice_lines(result['confusion'], advice)
 
 
+def recall_advice(recall):
+    """Class 1..4 with the lowest recall below ADVICE_RECALL_PCT (ties -> lower label), 0 = none.
+
+    From the slot header alone (no record counts), so a tie does not use the counts as model_tune.c does.
+    """
+    present = [(r, c + 1) for c, r in enumerate(recall) if r != RECALL_ABSENT]
+    if not present:
+        return 0
+    lowest, label = min(present)
+    return label if lowest < ADVICE_RECALL_PCT else 0
+
+
+def describe_slot(slot):
+    """One `info` line from a SLOT reply: count, tuned feature set, recall per class and advice."""
+    head = f'slot {slot["slot"]}: {slot["count"]} records'
+    if not slot['tuned_k'] and not slot['mask']:
+        return f'{head}  (未調整)'
+    names = ', '.join(fs.FEATURE_NAMES[j] for j in mask_features(slot['mask']))
+    recall = ' '.join(f'{ZONE_NAMES[c + 1]} {"-" if r == RECALL_ABSENT else f"{r}%"}'
+                      for c, r in enumerate(slot['recall']))
+    advice = recall_advice(slot['recall'])
+    return (f'{head}  k={slot["tuned_k"]} [{names}]  recall {recall}  '
+            f'提案: {_zone(advice) if advice else "なし"}')
+
+
+def describe_info(store):
+    """INFO, then SLOT for every slot with records (call inside paused())."""
+    i = store.info()
+    lines = [f'firmware: {i["firmware"] or "unknown (older build)"}', f'active slot: {i["active"]}']
+    return lines + [describe_slot(store.slot(n)) if c else f'slot {n}: 0 records' for n, c in enumerate(i['counts'])]
+
+
 def confusion_table(confusion):
     """Chosen set's 4x4 matrix: rows = true class, columns = predicted class."""
     names = [ZONE_NAMES[c + 1] for c in range(4)]
@@ -293,9 +325,7 @@ def run(args, store):
     """
     if args.command == 'info':
         with store.paused():
-            i = store.info()
-        return ([f'firmware: {i["firmware"] or "unknown (older build)"}', f'active slot: {i["active"]}']
-                + [f'slot {n}: {c} records' for n, c in enumerate(i['counts'])])
+            return describe_info(store)
     if args.command == 'selftest':
         with store.paused():
             result = store.selftest()

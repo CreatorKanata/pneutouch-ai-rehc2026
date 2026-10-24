@@ -174,22 +174,13 @@ static const char *const zone_names[] = {"NONE", "TAIL", "BACK", "LEGS", "HEAD"}
 
 static const char *zone_name(uint8_t label) { return zone_names[label <= 4U ? label : 0U]; }
 
-void pneu_ready_text(uint8_t advice, char out[17])
-{
-    memcpy(out, "READY", 6);
-    if (advice < 1U || advice > 4U) return;
-    memcpy(out+5, " MORE ", 6);
-    memcpy(out+11, zone_name(advice), 5); /* 4 letters + NUL: 15 characters */
-}
-
 /* LCD line 1 when nothing else is shown: the REC line while recording, else
-   READY (MORE <ZONE>), NO MODEL or AI ERROR. */
+   READY, NO MODEL or AI ERROR. The TUNE advice goes to UART only (# PNEM4). */
 static void show_idle(void)
 {
     char text[17];
     if (app_record.active) { app_record_line(text); pneu_display_idle(text); return; }
-    pneu_ready_text(pneutouch_model.advice, text);
-    pneu_display_idle(pneutouch_model.ready ? text :
+    pneu_display_idle(pneutouch_model.ready ? "READY" :
                       pneutouch_model.error == PNEU_MODEL_ERR_NO_SLOT ? "NO MODEL" : "AI ERROR");
 }
 
