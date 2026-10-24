@@ -20,4 +20,7 @@ void board_store_init(void);
 void board_store_read(uint32_t addr, void *dst, unsigned n);
 void board_store_write(uint32_t addr, const void *src, unsigned n);
 int board_store_selftest(void); /* 0 = pass; FramTest-style codes otherwise */
+/* Push switches SW2..SW5 = P50..P53 (board pull-ups, pressed = low). */
+void board_buttons_init(void);
+uint8_t board_buttons(void); /* pressed mask: bit 0 = SW2 ... bit 3 = SW5 */
 #endif

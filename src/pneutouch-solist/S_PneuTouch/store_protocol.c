@@ -185,19 +185,24 @@ static void finalists(void)
     }
 }
 
+void pneu_store_tune_fields(bool ok)
+{
+    field(ok ? 1U : 0U); field(pneutouch_tune.error); field(pneutouch_tune.count);
+    hex_field(pneutouch_tune.mask); field(pneutouch_tune.best_k); field(pneutouch_tune.correct);
+    hex_field(pneutouch_tune.champion_mask); field(pneutouch_tune.champion_correct); finalists();
+    field(pneutouch_tune.candidates); field(pneutouch_tune.screened);
+    list(pneutouch_tune.recall, 4U); tune_counts();
+    list16(&pneutouch_tune.confusion[0][0], 16U);
+    field(pneutouch_tune.advice); field(pneutouch_tune.elapsed_us);
+}
+
 static const char *tune_cmd(uint32_t id, char *const f[], unsigned n)
 {
     bool ok;
     (void)f;
     if (n != 3) return "FIELDS";
     ok = pneu_model_tune();
-    head("TUNE", id); field(ok ? 1U : 0U); field(pneutouch_tune.error); field(pneutouch_tune.count);
-    hex_field(pneutouch_tune.mask); field(pneutouch_tune.best_k); field(pneutouch_tune.correct);
-    hex_field(pneutouch_tune.champion_mask); field(pneutouch_tune.champion_correct); finalists();
-    field(pneutouch_tune.candidates); field(pneutouch_tune.screened);
-    list(pneutouch_tune.recall, 4U); tune_counts();
-    list16(&pneutouch_tune.confusion[0][0], 16U);
-    field(pneutouch_tune.advice); field(pneutouch_tune.elapsed_us); end();
+    head("TUNE", id); pneu_store_tune_fields(ok); end();
     return 0;
 }
 

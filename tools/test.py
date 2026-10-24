@@ -16,7 +16,10 @@ SELECT = ("feature_select", "fast_log")
 C_TESTS = {
     "hx710b": (),
     "acquisition": ("acquisition",),
-    "pressure_app": ("acquisition", "pressure_app", "pressure_features", "uart_text"),
+    "pressure_app": ("acquisition", "pressure_app", "app_buttons", "app_record", "store_protocol", "pressure_features",
+                     "uart_text"),
+    "app_buttons": ("acquisition", "pressure_app", "app_buttons", "app_record", "store_protocol", "pressure_features",
+                    "uart_text") + STORE,
     "pressure_features": ("pressure_features",),
     "ai_validation": ("ai_validation", "store_protocol", "uart_text") + STORE,
     "pressure_model": ("pressure_model", "model_tune", "model_screen") + SELECT + STORE,

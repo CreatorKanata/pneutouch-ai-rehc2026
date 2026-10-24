@@ -68,11 +68,16 @@ void board_init(void)
     write_reg32(UARTF1->UAF0IER, 0U); /* Poll TX, no UART interrupt needed. */
     (void)uartf1_getStatus();
     (void)uartf1_getIntCause();
+    board_buttons_init();
     if (SysTick_Config(PNEU_CPU_HZ / 1000U) != 0U) {
         for (;;) {} /* WDT resets if the configuration is invalid. */
     }
     __enable_irq();
 }
+
+/* Same P5MOD0 setting as the vendor SwInit(): P50..P53 inputs. */
+void board_buttons_init(void) { set_reg32(PORT5->P5MOD0, 0x01010101U); }
+uint8_t board_buttons(void) { return (uint8_t)(~PORT5->P5DI & 0x0fU); }
 
 bool board_dout_high(void *context)
 {

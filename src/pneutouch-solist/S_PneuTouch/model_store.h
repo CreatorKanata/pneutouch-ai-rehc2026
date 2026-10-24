@@ -37,6 +37,12 @@ bool pneu_store_open(uint8_t slot, uint8_t k, const char *name);
 bool pneu_store_put(uint8_t slot, uint8_t label, const float pool[PNEU_POOL_COUNT]);
 bool pneu_store_commit(uint8_t slot);       /* OPEN -> COMMITTED, count >= 4 */
 bool pneu_store_erase(uint8_t slot);        /* EMPTY, count 0 */
+/* COMMITTED -> OPEN (SW4 recording appends), keeping count, name, k, mask, tuned_k, recall. */
+bool pneu_store_reopen(uint8_t slot);
+/* OPEN with count >= 1: count - 1 (header rewrite only; the record bytes stay). */
+bool pneu_store_undo(uint8_t slot);
+/* OPEN slot, count <= current count: header rewrite only (SW4 discard). */
+bool pneu_store_truncate(uint8_t slot, uint16_t count);
 /* COMMITTED slot only; mask nonzero, pool bits 0..13 only, at most 12 set (tuned_k = its
    popcount); recall percent 0..100 or 255. Keeps k/state/count/name; writes header version 2. */
 bool pneu_store_set_tuning(uint8_t slot, uint16_t mask, const uint8_t recall[4]);

@@ -37,6 +37,8 @@ PneutouchAi Writeで書き込み、COM7から315点・実効39.72 SPS・欠番0�
 LCDに `HEAD / BACK / LEGS / TAIL` を3秒表示し、`READY`へ戻る。表示中も計測は続く。
 学習中は1行目に `LEARN<段階> 済/全`（0=統計、1=学習）、2行目は14セル（特徴の順: rise, decay, width, area_width, slope, asym, rel_rise, recovery, rel_width, rel_area_width, trough_ratio, area_ratio, peak, trough）で選ばれた特徴を黒■、右端2桁に選んだ数（`k4`、10以上は数字2桁）。
 スロットが無いと `NO MODEL`。
+PC なしでも操作できる: SW2 を 2 秒長押しでチップ上の TUNE、SW3 を短く押すと次のスロットに切り替えて再学習（[ボタン操作](../../docs/model-store.md)）。
+PC なしで学習データも取れる: SW4 長押し（新スロット）か短押し（追記）で記録開始、SW5 で部位を選んで押すと 1 回ごとに FeRAM に記録、SW4 で確定して再学習（[PC なしの学習手順](../../docs/model-store.md)）。
 新しい結果が出ると上書きして3秒を数え直す。約1秒押して離す操作を使う。
 明示的なPAI1検証中だけ実センサー取得を停止し、終了時に通常モデルを再学習して復帰する。
 詳細は[ライブデモの操作・検証記録](../../docs/live-pressure-demo-20260920.md)。

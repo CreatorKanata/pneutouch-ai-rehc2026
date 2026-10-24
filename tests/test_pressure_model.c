@@ -182,6 +182,21 @@ static void test_predict(void)
     check_predict = false;
 }
 
+/* SW4 recording stores exactly the pool the prediction would use; no model needed. */
+static void test_pool(void)
+{
+    float values[12], pool[PNEU_POOL_COUNT];
+    for (unsigned i = 0; i < 12; ++i) values[i] = (float)i+0.5f;
+    pneutouch_model.ready = false;
+    assert(pneu_model_pool(values, 2000.0f, 300.0f, pool));
+    for (unsigned i = 0; i < 12; ++i) assert(pool[i] == values[i]);
+    assert(pool[12] == 2000.0f && pool[13] == 300.0f);
+    assert(!pneu_model_pool(values, 0.0f, 300.0f, pool) && !pneu_model_pool(values, 2000.0f, 1e9f, pool));
+    values[5] = NAN; assert(!pneu_model_pool(values, 2000.0f, 300.0f, pool));
+    values[5] = 1e6f; assert(!pneu_model_pool(values, 2000.0f, 300.0f, pool));
+    values[5] = -1.0f; assert(!pneu_model_pool(values, 2000.0f, 300.0f, pool));
+}
+
 static void test_failures(void)
 {
     static const uint8_t one_class[FIX_RECORDS] = {1, 1, 1, 1, 1, 1, 1, 1};
@@ -256,8 +271,9 @@ int main(void)
     test_predict();
     test_failures();
     test_mask_boot();
+    test_pool();
     assert(!strcmp(pneu_class_name(PNEU_CLASS_HEAD), "HEAD") && !strcmp(pneu_class_name((pneu_demo_class_t)9), "UNKNOWN"));
-    puts("Pressure model: FeRAM training order/words/labels, selection, LCD line 2, progress, predict, faults, "
+    puts("Pressure model: FeRAM training order/words/labels, selection, LCD line 2, progress, predict, pool, faults, "
          "header mask / v1 tuned_k / explicit k at boot PASS");
     return 0;
 }

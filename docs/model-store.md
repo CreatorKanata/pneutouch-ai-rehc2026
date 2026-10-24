@@ -32,7 +32,7 @@ MODE 0 に戻るとファームウェアがもう一度学習し直すので、�
 - UART 起動行 `# PneutouchAi Live; …; fw=<ビルド名>`。`model_store.py info` の `firmware:` にも同じ名前が出る。ファームを変えたら `S_PneuTouch/firmware_tag.h` の名前を手で更新し、書き込み後に一致を確認する（古い .elf が書き込まれたままだと気づける）。
 - UART: `# PNEM3,READY,slot=0,count=176,err=0,sel=0:4:10:13:12,fisher=45000:0:...`（fisher は ×1000 の整数、14 個、プール順）。`err`: 0 なし、1 FeRAM 異常、2 有効スロットなし、3 記録の CRC/値異常、4 選択不能、5 Solist-AI 異常。`# PNEM1` は従来どおり（件数、ステップ数、学習時間 us）、`# PNEM2,NONE,0,0,single_instance` は旧ツール互換のためだけに残す。
 - UART: `# PNEM4,k=<tuned_k>,mask=<hex4>,recall=<r1:r2:r3:r4>,counts=<n1:n2:n3:n4>,advice=<TAIL|BACK|LEGS|HEAD|NONE>`（PNEM3 の次の行）。tuned_k 0 = 未調整（recall は意味なし、advice は常に NONE）。mask は今使っている選択（ビット j = プール特徴 j、k や自動で選んだときも同じ形、失敗時 0000）。recall は TUNE 時の held-out 再現率 %（255 = その部位の記録なし）、counts は今回の学習に使った部位ごとの件数（統計の前に失敗したら 0）。
-- LCD 1 行目: 学習中は `LEARN<段階> 済/全`（例 `LEARN1  123/ 704`、0 = 統計、1 = 学習）、終わると `READY`。調整済みで提案があれば `READY MORE <部位>`（例 `READY MORE HEAD`）。スロットが無ければ `NO MODEL`、その他の失敗は `AI ERROR`。
+- LCD 1 行目: 学習中は `LEARN<段階> 済/全`（例 `LEARN1  123/ 704`、0 = 統計、1 = 学習）。学習に成功するたび（起動、PAI1 MODE 0 復帰、SW3 のスロット切替、SW2 の TUNE 後）まず 2 秒間 `SLOT 2  176  k4 `（スロット番号、件数を右詰め 4 桁、選んだ数。10..12 は `k` なしの 2 桁で `SLOT 2  176  12 `）を出し、そのあと `READY`。調整済みで提案があれば `READY MORE <部位>`（例 `READY MORE HEAD`）。スロットが無ければ `NO MODEL`、その他の失敗は `AI ERROR`。
 - LCD 1 行目（TUNE 中）: 段階 1 は `TUNE 37/198  57%`（"TUNE" + 済んだ学習数を右詰め 3 桁 + "/" + 全数 3 桁 + 空白 + % 3 桁 + "%"。全数 = 候補数 × 2 パス。198 回目は `TUNE198/198`）、段階 2 は `FINAL 3/6    57%`（済んだ候補 / 候補数、10 以上なら 2 桁ずつ `FINAL 10/12  57%`）。% = 今の段階（統計または学習）の進み。各回の始まり（段階 2/3 の通知そのもの）は列 12..15 が空白。最後の FINAL が終わると `READY` などに戻る。候補の選択が決まるたびに 2 行目のセルが切り替わる。
 - LCD 2 行目: 選ばれた特徴を黒■（0xFF）、選ばれなければ空白。右端 2 桁は選んだ数（`k4` の形、10 以上は数字 2 桁）。選択が決まった時点（学習開始時）で表示する。
 
@@ -83,11 +83,18 @@ tune: 176 records, shortlist 7 features, 99 subsets screened (10/class × 2 pass
               …
   chosen: champion (no challenger beat it by more than 4 records)
   TAIL 97% (37)  BACK 100% (33)  LEGS 94% (69)  HEAD 89% (37)
-  提案: 頭（HEAD）のデータを追加してください（足（LEGS）と混同 4/37）
+  混同行列（行 = 正解、列 = 判定）
+        TAIL BACK LEGS HEAD
+  TAIL    36    1    0    0
+  BACK     0   33    0    0
+  LEGS     0    0   65    4
+  HEAD     0    0    4   33
+  提案: 頭（HEAD）のデータを追加してください。HEAD → LEGS 4 件、LEGS → HEAD 4 件（件数 HEAD 37 対 LEGS 69）
+  （件数の少ない部位に境界が不利になるので、まず HEAD を LEGS と同程度まで増やす）
 READY: 176 records, 4 features selected (…), training …
 ```
 
-挑戦者が勝ったときの行は `chosen: 4 features width_ms, release_width_ms, peak, trough (beat champion by 5)`。shortlist の数は候補数から逆算、特徴名はプール順（Fisher 順ではない）、screen の分母は（件数 − 学習セット）× 2 パス。決勝の数はチャンピオンを含む。
+提案は再現率が最低の部位 A と、A の行で誤りが最多の部位 B を両方向の件数つきで示す。A の件数が B より少なければ「まず A を B と同程度まで増やす」、そうでなければ「境界付近の押し方（弱め・位置違い）を増やす」と添える（最小二乗の学習器は件数の多いクラス側に境界が寄るため）。挑戦者が勝ったときの行は `chosen: 4 features width_ms, release_width_ms, peak, trough (beat champion by 5)`。shortlist の数は候補数から逆算、特徴名はプール順（Fisher 順ではない）、screen の分母は（件数 − 学習セット）× 2 パス。決勝の数はチャンピオンを含む。
 
 ## FeRAM レイアウト（リトルエンディアン）
 
@@ -120,6 +127,50 @@ READY: 176 records, 4 features selected (…), training …
 version 1（`na6-k` まで）のヘッダーは 24–25 が CRC16（先頭 24 B）で mask が無い。そのまま読めて mask = 0（tuned_k があれば上位 tuned_k 個で起動）、次にヘッダーを書いたとき（TUNE など）に version 2 になる。
 
 CRC は CRC-16/CCITT-FALSE（UART と同じ）。書き込みはすべて読み返して比較する。記録 1 件でも CRC が合わなければ学習は失敗（`err=3`）し、黙って飛ばさない。
+
+## ボタン操作（PC なし）
+
+ボードの押しボタン SW2..SW5（P50..P53、プルアップ、押すと L）を `board_buttons()` で読み、`app_buttons.c` が 30 ms 安定したら確定とする（チャタリング除去）。通常取得中だけ見る。PAI1/PST1 の検証モード中は無視し、状態も消す（押したまま MODE 0 に戻っても、一度離すまで何も起きない。起動時に押していた場合も同じ）。
+
+| 操作 | 動作 | LCD 1 行目 | UART |
+|---|---|---|---|
+| SW2 を押す | 長押しの案内 | `HOLD 2s: TUNE   `（2 秒前に離すと元の `READY` などに戻る） | なし |
+| SW2 を 2 秒押し続ける | 有効スロットで TUNE（PST1 TUNE と同じ、約 2 分）→ 再学習 → 取得再開。1 回押すと 1 回だけ（押したままでも繰り返さない） | `TUNE …` / `FINAL …` → `LEARN…` → `SLOT …` 2 秒 → `READY …` | `# PNET1,START`、終了時 `# PNET1,<ok>,<err>,…`（PST1 TUNE 返信の id より後ろと同じ並び）、`# PNEM1..4`、`# PneutouchAi live acquisition resumed; sequence restarts` |
+| SW3 を短く押す（1 秒以内に離す） | 有効スロットの次（巡回、COMMITTED で 4 件以上）を有効にして再学習 → 取得再開 | `SLOT 1   141    `（スロット、件数を右詰め 4 桁）→ `LEARN…` → `SLOT …` 2 秒 → `READY …` | `# PNES1,slot=<n>,count=<件数>`、`# PNEM1..4`、resumed 行 |
+| SW3（ほかに使えるスロットなし） | 何もしない | `SLOT 2 ONLY     `（今の有効スロット）を 2 秒 | `# PNES1,ERROR,NO_OTHER_SLOT` |
+| SW3（ディレクトリ書込み失敗） | 何もしない | `STORE ERROR` を 2 秒 | `# PNES1,ERROR,STORE` |
+| SW4 を短く押す（記録していないとき） | 有効スロットに**追記する記録**を始める。COMMITTED は OPEN に戻す（`pneu_store_reopen`、件数・名前・k・mask・tuned_k・再現率はそのまま）。OPEN ならそのまま続け、EMPTY（またはヘッダーが読めない）なら `BTN` で新しく開く。部位ごとの件数をラベル 1 巡で数える | `REC TAIL   2/  8`（部位、その部位の件数を右詰め 3 桁、`/`、全件数を右詰め 3 桁） | `# PNER1,START,<slot>,<件数>,<新規 0/1>` |
+| SW4 を 2 秒押し続ける（記録していないとき） | 最初の EMPTY スロット（ヘッダーが読めないスロットも EMPTY 扱い）を `pneu_store_open(slot, 0, "BTN")` で開き、有効にして（`pneu_store_use`）記録を始める | `REC TAIL   0/  0` | `# PNER1,START,<slot>,0,1` |
+| SW4 長押し（EMPTY なし） | 何もしない | `NO EMPTY SLOT   ` を 2 秒 | `# PNER1,ERROR,NO_EMPTY_SLOT` |
+| 記録中に押して離す（押下イベント完了） | 今の部位で 14 候補値を記録（`pneu_store_put`）。`# PNEC1` の推定は記録前のモデルで続くが、LCD の結果表示の代わりに件数を出す | `+HEAD 39        `（部位と新しい件数）を 1 秒 → `REC …` | `# PNER1,REC,<slot>,<部位>,<全件数>` |
+| 記録の書込み失敗（満杯・FeRAM 不良） / 特徴が範囲外 | 記録しない（記録の開始・終了で FeRAM を読み書きできないときも `STORE ERROR`） | `STORE ERROR     ` / `BAD PRESS       ` を 2 秒 | `# PNER1,ERROR,STORE` / `# PNER1,ERROR,POOL` |
+| SW5 を短く押す（記録中のみ） | 次の部位 TAIL → BACK → LEGS → HEAD → TAIL。起動直後は TAIL、同じ起動中は最後の部位を覚えている | `REC BACK   2/  9` | なし |
+| SW5 を 2 秒押し続ける（記録中のみ） | 最後の 1 件を取り消す（`pneu_store_undo`: 件数 −1、ヘッダーだけ書き直し）。今回の記録で足した分だけ | `UNDO TAIL 2     ` を 1 秒（取り消した記録の部位と残り件数） | `# PNER1,UNDO,<slot>,<部位>,<全件数>` |
+| SW5 長押し（今回足した記録なし） | 何もしない | `NOTHING TO UNDO ` を 2 秒 | なし |
+| SW4 を短く押す（記録中） | 確定（`pneu_store_commit`）→ 再学習 → 取得再開 | `LEARN…` → `SLOT 2  180  k4 ` 2 秒 → `READY …` | `# PNER1,STOP,<slot>,<件数>,<今回足した数>`、`# PNEM1..4`、resumed 行 |
+| SW4 短押し（記録中、4 件未満） | 記録を続ける | `NEED 4 RECORDS  ` を 2 秒 | なし |
+| 記録中の SW2 長押し / SW3 | 何もしない（TUNE とスロット切替は確定済みスロットが必要）。SW2 の `HOLD 2s` 案内も出さない | `STOP REC FIRST  ` を 2 秒 | なし |
+| SW4 を 2 秒押し続ける（記録中） | 今回の記録を取り消す: 今回足した記録をすべて消し（`pneu_store_truncate` で開始時の件数に戻す、ヘッダーだけ書き直し）、新しく開いたスロット（SW4 長押し・EMPTY から）は消して（`pneu_store_erase`）前の有効スロットに戻す。COMMITTED から追記していたスロットは確定し直す。もともと OPEN（4 件未満）なら OPEN のまま。スロットが戻ったときと確定し直したときは再学習 → 取得再開 | （`LEARN…` →）`DISCARDED       ` を 2 秒 | `# PNER1,DISCARD,<slot>,<消した件数>`（再学習時は `# PNEM1..4`、resumed 行） |
+| 記録中に PAI1/PST1 検証（MODE 1）に入る | 記録を終える: 4 件以上なら確定（通常の終了と同じ）、4 件未満なら OPEN のまま。MODE 0 に戻ると再学習するので、確定した場合はそのスロットで学習される | `VALIDATION` | `# PNER1,STOP,<slot>,<件数>,<今回足した数>` / `# PNER1,ABORT,<slot>,<件数>` |
+| 記録外の SW5 | 何もしない | — | — |
+
+- SW3 のスロット切替（ディレクトリの有効スロット）と SW2 の TUNE（スロットのヘッダーに mask を書く）は、直後に再学習して取得を最初からやり直すので、書込み中に取得が止まっても問題にならない。SW4 の記録開始・終了も同じ（開始時のラベル 1 巡の読み出しと reopen、終了時の commit と再学習）。
+- **例外**: 記録中は取得を続けたまま FeRAM に書く。書くのは押下イベントが完了したときに 1 回だけ（記録 60 B とヘッダー 32 B、それぞれ書いて読み戻して比較、今の SPI 速度でおよそ 1 ms）で、サンプリングのループの中では書かない。SW5 の取り消しもヘッダー 32 B を 1 回書くだけ。
+- 記録中も推定（`# PNEC1`）は記録前に学習したモデル（インスタンス 0）で続く。スロットのヘッダーは OPEN になるが、インスタンス 0 はそのまま。PAI1/PST1 の検証に入ると記録は先に終わる（上の表）。
+- 記録中に電源が落ちると有効スロットは OPEN のまま残る。起動時（学習の前）に有効スロットが OPEN で 4 件以上なら確定して `# PNER1,AUTOCOMMIT,<slot>,<件数>` を送り、そのまま学習する。4 件未満なら何もしない（今までどおり `NO MODEL`。SW4 短押しで続きを記録できる）。
+- 2 秒（記録の `+…`・`UNDO …` は 1 秒）の表示は `notice_until`（ミリ秒）を毎回の poll で確認して戻す。止まるのは TUNE と学習そのものだけ。記録中の待ち受け表示は `REC …` 行。
+- ボタンの判定は 1 つの表で: 押した時刻を押しボタンごとに覚え、1 秒以内に離せば短押し、2 秒押し続けると長押し（押している間 1 回だけ）。1〜2 秒で離すと何もしない（SW2 は離すと案内を消す）。
+
+### PC なしの学習手順
+
+1. SW4 を 2 秒長押し（空きスロットに新しく記録）、または SW4 を短く押す（有効スロットに追記）。LCD は `REC TAIL   0/  0`。
+2. SW5 を短く押して部位を選ぶ（TAIL → BACK → LEGS → HEAD）。
+3. 恐竜のその部位を約 1 秒押して離す。1 回ごとに `+TAIL 1` などが出て 1 件記録される。間違えたら SW5 を 2 秒長押しで最後の 1 件を取り消す。
+4. 部位ごとに 2〜4 を繰り返し、SW4 を短く押して終了（4 件以上で確定 → 再学習 → `SLOT …` → `READY`）。やり直したいときは SW4 長押しで今回の記録をすべて取り消し（`DISCARDED`、記録を始める前に戻る）。
+5. SW2 を 2 秒長押しで TUNE（特徴の組を選び直してスロットに保存）。足りない部位は `READY MORE <部位>` で分かるので、SW4 短押しで追記する。
+
+波形を見る学習ツール（PC）は今までどおり使えるが、なくても学習できる。
+- PAI1 MODE 0 での復帰も同じ処理（`resume_live()`）になったので、resumed 行の前に `# PNEM1..4` が出る。
 
 ## UART プロトコル PST1
 
@@ -154,5 +205,5 @@ INFO・SLOT・SELFTEST 以外は `PAI1,MODE,1`（取得停止）中だけ受け�
 | 特徴 1 個の `logf` + 正規化（`pneu_select_words`） | 約 0.30 ms（`ss1-search` で表引き `pneu_log` に置換。置換後は**要実測**） |
 
   つまり logf のころは k = 4 の学習 1 ステップ ≈ 1.6 + 1.2 + 1.3 ≈ 4.1 ms、統計は 1 件 ≈ 5.8 ms（logf 14 回）。高速化として (1) `pneu_store_get` はヘッダーを 1 件分キャッシュして記録 60 B だけ読む、(2) `S_Bsp/SoftSpi.c` は 1 ビットにつき P8DO への単純書込み 2 回（読み-変更-書きと遅延ループを廃止）、(3) 正規化は割り算をやめ 1/scale を掛ける、を入れた。高速化後の数値は**要実測**。
-- 取得中（MODE 0）は FeRAM に書かない。
+- 取得中（MODE 0）は FeRAM に書かない。例外は SW2（TUNE）、SW3（スロット切替）、SW4 の記録開始・終了で、どれも取得を止めてから書き、終わったら取得を最初から再開する。記録中の押下ごとの書込み（1 回 約 1 ms、サンプリングのループの外）だけは取得を止めない（上の「ボタン操作」）。
 - スケールは母標準偏差 ×1。3σ では隠れ層が線形のままになり、振幅軸で中間にある TAIL を学習できなかった（2026-10-23 実機実験）。

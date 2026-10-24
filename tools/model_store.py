@@ -257,13 +257,32 @@ def describe_tune(result):
     lines = _tune_summary(result) + [
         '  ' + '  '.join(f'{ZONE_NAMES[c + 1]} {"-" if r == RECALL_ABSENT else f"{r}%"} ({n})'
                          for c, (r, n) in enumerate(zip(result['recall'], result['counts'])))]
+    lines += confusion_table(result['confusion'])
     advice = result['advice']
     if not advice:
         return lines + [f'  提案: なし（すべての部位が {ADVICE_RECALL_PCT}% 以上）']
-    row = result['confusion'][advice - 1]
-    wrong = max((p for p in range(4) if p != advice - 1), key=lambda p: (row[p], -p))
-    return lines + [f'  提案: {_zone(advice)}のデータを追加してください'
-                    f'（{_zone(wrong + 1)}と混同 {row[wrong]}/{result["counts"][advice - 1]}）']
+    return lines + _advice_lines(result['confusion'], advice)
+
+
+def confusion_table(confusion):
+    """Chosen set's 4x4 matrix: rows = true class, columns = predicted class."""
+    names = [ZONE_NAMES[c + 1] for c in range(4)]
+    return (['  混同行列（行 = 正解、列 = 判定）', '        ' + ' '.join(names)]
+            + [f'  {names[t]:<4}  ' + ' '.join(f'{n:>4}' for n in row) for t, row in enumerate(confusion)])
+
+
+def _advice_lines(confusion, advice):
+    """Both directions of the advised class A and its main partner B, then what to collect."""
+    a = advice - 1
+    row = confusion[a]
+    b = max((p for p in range(4) if p != a), key=lambda p: (row[p], -p))
+    counts = [sum(r) for r in confusion]
+    name_a, name_b = ZONE_NAMES[a + 1], ZONE_NAMES[b + 1]
+    first = (f'  提案: {_zone(advice)}のデータを追加してください。{name_a} → {name_b} {row[b]} 件、'
+             f'{name_b} → {name_a} {confusion[b][a]} 件（件数 {name_a} {counts[a]} 対 {name_b} {counts[b]}）')
+    if counts[a] < counts[b]:
+        return [first, f'  （件数の少ない部位に境界が不利になるので、まず {name_a} を {name_b} と同程度まで増やす）']
+    return [first, '  （件数は足りているので、境界付近の押し方（弱め・位置違い）を増やす）']
 
 
 def run(args, store):

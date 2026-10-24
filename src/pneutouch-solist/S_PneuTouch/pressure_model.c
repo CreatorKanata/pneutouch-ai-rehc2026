@@ -280,8 +280,7 @@ static bool amplitude_ok(float counts)
     return counts > 0.0f && counts < AMPLITUDE_LIMIT;
 }
 
-/* Pool order: 12 event features, positive peak, trough magnitude (counts). */
-static bool build_pool(const float values[12], float peak, float trough, float pool[PNEU_POOL_COUNT])
+bool pneu_model_pool(const float values[12], float peak, float trough, float pool[PNEU_POOL_COUNT])
 {
     unsigned i;
     for (i = 0; i < 12; ++i) {
@@ -300,7 +299,7 @@ pneu_demo_class_t pneu_model_predict(const float values[12], float positive_peak
     pneu_demo_class_t label;
     pneutouch_model.label = PNEU_CLASS_UNKNOWN;
     pneutouch_model.inference_us = 0;
-    if (!pneutouch_model.ready || !build_pool(values, positive_peak_counts, trough_counts, pool))
+    if (!pneutouch_model.ready || !pneu_model_pool(values, positive_peak_counts, trough_counts, pool))
         return PNEU_CLASS_UNKNOWN;
     label = pneu_core_classify(pool);
     if (label == PNEU_CLASS_UNKNOWN) return label;

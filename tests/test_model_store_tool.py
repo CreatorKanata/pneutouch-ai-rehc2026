@@ -236,10 +236,22 @@ class SequencingTests(unittest.TestCase):
             '              4 features rise_ms, width_ms, peak, trough   screen 239/272  4-fold 160/176',
             '  chosen: champion (no challenger beat it by more than 4 records)',
             '  TAIL 97% (37)  BACK 100% (33)  LEGS 94% (69)  HEAD 89% (37)',
-            '  提案: 頭（HEAD）のデータを追加してください（足（LEGS）と混同 4/37）'])
+            '  混同行列（行 = 正解、列 = 判定）',
+            '        TAIL BACK LEGS HEAD',
+            '  TAIL    36    1    0    0',
+            '  BACK     0   33    0    0',
+            '  LEGS     0    0   65    4',
+            '  HEAD     0    0    4   33',
+            '  提案: 頭（HEAD）のデータを追加してください。HEAD → LEGS 4 件、LEGS → HEAD 4 件（件数 HEAD 37 対 LEGS 69）',
+            '  （件数の少ない部位に境界が不利になるので、まず HEAD を LEGS と同程度まで増やす）'])
+        enough = dict(result, advice=1)  # TAIL 37 records vs its partner BACK 33
+        self.assertEqual(ms.describe_tune(enough)[-2:], [
+            '  提案: しっぽ（TAIL）のデータを追加してください。TAIL → BACK 1 件、BACK → TAIL 0 件（件数 TAIL 37 対 BACK 33）',
+            '  （件数は足りているので、境界付近の押し方（弱め・位置違い）を増やす）'])
         none = dict(result, advice=0, recall=[100, 255, 95, 90])
-        self.assertEqual(ms.describe_tune(none)[-2:], ['  TAIL 100% (37)  BACK - (33)  LEGS 95% (69)  HEAD 90% (37)',
-                                                       '  提案: なし（すべての部位が 90% 以上）'])
+        lines = ms.describe_tune(none)
+        self.assertEqual(lines[8], '  TAIL 100% (37)  BACK - (33)  LEGS 95% (69)  HEAD 90% (37)')
+        self.assertEqual(lines[-1], '  提案: なし（すべての部位が 90% 以上）')
         with self.assertRaisesRegex(RuntimeError, 'NO_SLOT'):
             ms.describe_tune(dict(result, ok=False, error=2))
 
@@ -339,7 +351,8 @@ class CliTests(unittest.TestCase):
         out = self.run_cli(board, 'tune')
         self.assertEqual([op for _, op in board.sent], ['MODE', 'TUNE', 'TRAIN', 'MODE'])
         self.assertIn('5 finalists (113.2 s)', out)
-        self.assertIn('提案: 頭（HEAD）のデータを追加してください（足（LEGS）と混同 4/37）', out)
+        self.assertIn('提案: 頭（HEAD）のデータを追加してください。HEAD → LEGS 4 件、LEGS → HEAD 4 件', out)
+        self.assertIn('  HEAD     0    0    4   33', out)
         self.assertIn('READY: 8 records, 3 features selected', out)
         self.assertEqual((board.slots[0]['tuned_k'], board.slots[0]['mask']), (4, '3300'))
         board.tune_reply = TUNE_FAIL

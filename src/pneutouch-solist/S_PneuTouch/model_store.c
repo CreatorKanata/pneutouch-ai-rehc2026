@@ -219,6 +219,30 @@ bool pneu_store_commit(uint8_t slot)
     return write_header(slot, &info);
 }
 
+bool pneu_store_reopen(uint8_t slot)
+{
+    pneu_store_slot_t info;
+    if (!read_header(slot, &info) || info.state != PNEU_SLOT_COMMITTED) return false;
+    info.state = PNEU_SLOT_OPEN;
+    return write_header(slot, &info);
+}
+
+bool pneu_store_undo(uint8_t slot)
+{
+    pneu_store_slot_t info;
+    if (!read_header(slot, &info) || info.state != PNEU_SLOT_OPEN || info.count == 0U) return false;
+    --info.count;
+    return write_header(slot, &info);
+}
+
+bool pneu_store_truncate(uint8_t slot, uint16_t count)
+{
+    pneu_store_slot_t info;
+    if (!read_header(slot, &info) || info.state != PNEU_SLOT_OPEN || count > info.count) return false;
+    info.count = count;
+    return write_header(slot, &info);
+}
+
 bool pneu_store_erase(uint8_t slot)
 {
     const pneu_store_slot_t empty = {0};

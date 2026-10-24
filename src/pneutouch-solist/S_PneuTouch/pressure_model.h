@@ -39,6 +39,10 @@ bool pneu_model_init(void);
    both at the start and after every step. NULL = none. */
 typedef void (*pneu_model_progress_t)(uint8_t phase, uint16_t done, uint16_t total);
 void pneu_model_set_progress(pneu_model_progress_t callback);
+/* Pool order (PNEU_POOL_COUNT = 14): 12 event features, positive peak, trough magnitude
+   (counts). false when a feature is not in (0, 1e5) or an amplitude not in (0, 1e8).
+   Used by pneu_model_predict and by the SW4 recording (app_record.c). */
+bool pneu_model_pool(const float values[12], float peak, float trough, float pool[14]);
 /* values: 12 event features; peak and trough magnitude in counts. */
 pneu_demo_class_t pneu_model_predict(const float values[12], float positive_peak_counts,
                                      float trough_counts);

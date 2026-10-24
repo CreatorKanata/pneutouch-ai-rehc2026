@@ -223,6 +223,59 @@ static void test_header_cache(void)
     fram[SLOT_ADDR(1)+11] ^= 0x01U;
 }
 
+/* SW4 recording: reopen a committed slot to append, undo the last record. */
+static void test_reopen_undo(void)
+{
+    static const uint8_t recall[4] = {100, 50, 255, 0};
+    pneu_store_slot_t info;
+    float pool[PNEU_POOL_COUNT], back[PNEU_POOL_COUNT];
+    uint8_t label;
+    memset(fram, 0xff, sizeof(fram));
+    assert(pneu_store_init());
+    assert(!pneu_store_reopen(0) && !pneu_store_undo(0)); /* EMPTY */
+    fill_slot(0, 2, "keep", 5);
+    assert(!pneu_store_reopen(0)); /* already OPEN */
+    assert(pneu_store_undo(0) && pneu_store_slot_info(0, &info) && info.count == 4);
+    assert(pneu_store_commit(0) && pneu_store_set_tuning(0, 0x2031, recall));
+    assert(!pneu_store_undo(0)); /* COMMITTED */
+    assert(pneu_store_reopen(0) && pneu_store_slot_info(0, &info) && info.state == PNEU_SLOT_OPEN);
+    assert(info.count == 4 && info.k == 2 && info.mask == 0x2031 && info.tuned_k == 4);
+    assert(!memcmp(info.recall, recall, 4) && !strcmp(info.name, "keep"));
+    pool_for(20, pool); assert(pneu_store_put(0, 3, pool));
+    assert(pneu_store_get(0, 4, &label, back) && label == 3 && !memcmp(pool, back, sizeof(pool)));
+    assert(pneu_store_undo(0) && !pneu_store_get(0, 4, &label, back) && fram[RECORD_ADDR(0, 4)] == 3);
+    for (unsigned i = 0; i < 4; ++i) assert(pneu_store_undo(0));
+    assert(pneu_store_slot_info(0, &info) && info.count == 0 && !pneu_store_undo(0)); /* count 0 */
+    assert(!pneu_store_reopen(4) && !pneu_store_undo(4));
+    fill_slot(1, 0, "x", 4); assert(pneu_store_commit(1));
+    assert(pneu_store_put(0, 1, pool));
+    fram_drop_writes = true;
+    assert(!pneu_store_reopen(1) && !pneu_store_undo(0));
+    fram_drop_writes = false;
+    assert(pneu_store_slot_info(1, &info) && info.state == PNEU_SLOT_COMMITTED);
+    assert(pneu_store_slot_info(0, &info) && info.count == 1);
+}
+
+/* SW4 long while recording discards the session: truncate back to the start count. */
+static void test_truncate(void)
+{
+    pneu_store_slot_t info;
+    float back[PNEU_POOL_COUNT];
+    uint8_t label;
+    memset(fram, 0xff, sizeof(fram));
+    assert(pneu_store_init());
+    assert(!pneu_store_truncate(0, 0)); /* EMPTY */
+    fill_slot(0, 1, "cut", 7);
+    assert(!pneu_store_truncate(0, 8) && !pneu_store_truncate(4, 0));
+    assert(pneu_store_truncate(0, 7) && pneu_store_truncate(0, 5));
+    assert(pneu_store_slot_info(0, &info) && info.count == 5 && info.state == PNEU_SLOT_OPEN && info.k == 1);
+    assert(!strcmp(info.name, "cut") && !pneu_store_get(0, 5, &label, back) && pneu_store_get(0, 4, &label, back));
+    assert(pneu_store_commit(0) && !pneu_store_truncate(0, 4)); /* COMMITTED */
+    assert(pneu_store_reopen(0));
+    fram_drop_writes = true; assert(!pneu_store_truncate(0, 4)); fram_drop_writes = false;
+    assert(pneu_store_truncate(0, 0) && pneu_store_slot_info(0, &info) && info.count == 0);
+}
+
 int main(void)
 {
     test_directory();
@@ -231,6 +284,8 @@ int main(void)
     test_tuning();
     test_version1_header();
     test_header_cache();
-    puts("Model store: directory, slot layout, CRC, state rules, full slot, erase, use, 4 independent slots, tuning mask (header v2), v1 headers, header cache PASS");
+    test_reopen_undo();
+    test_truncate();
+    puts("Model store: directory, slot layout, CRC, state rules, full slot, erase, use, 4 independent slots, tuning mask (header v2), v1 headers, header cache, reopen/undo/truncate PASS");
     return 0;
 }

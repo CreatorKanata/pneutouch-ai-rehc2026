@@ -8,6 +8,8 @@
 #include "pressure_display.h"
 #include "uart_text.h"
 #include "firmware_tag.h"
+#include "app_buttons.h"
+#include "app_record.h"
 #include <string.h>
 
 volatile pneutouch_status_t pneutouch_status;
@@ -23,6 +25,8 @@ static uint32_t lcd_updates_reported;
 static uint8_t tune_phase;             /* PNEU_PHASE_TUNE (screening) or PNEU_PHASE_FINAL */
 static uint16_t tune_done, tune_total; /* last count of that phase */
 static bool tuning;
+static bool notice_active; /* an LCD notice is up until notice_until */
+static uint32_t notice_until;
 
 /* UART text goes through uart_text.c: no printf, heap allocation or semihosting. */
 #define FISHER_PRINT_LIMIT 4.0e9f
@@ -52,6 +56,42 @@ static void send_feature_part(void)
     if (++pending_part == 2) pending = false;
 }
 
+static void show_notice(const char *text, uint32_t ms)
+{
+    pneu_display_idle(text);
+    notice_active = true; notice_until = board_millis()+ms;
+}
+
+/* "# PNEC1" with the prediction of the model in use (also while recording). */
+static pneu_demo_class_t send_prediction(void)
+{
+    unsigned i;
+    static const char hex[] = "0123456789abcdef";
+    pneu_demo_class_t label = pneu_model_predict(features.event.value, features.event.peak,
+                                                 features.event.trough);
+    pneu_text("# PNEC1,"); pneu_number(features.event.id); board_putc(',');
+    pneu_number(board_millis()); board_putc(','); pneu_text(pneu_class_name(label));
+    board_putc(','); pneu_number(pneutouch_model.inference_us);
+    for (i = 0; i < 4; ++i) {
+        int shift; board_putc(',');
+        for (shift = 12; shift >= 0; shift -= 4)
+            board_putc(hex[(pneutouch_model.scores[i] >> shift)&15U]);
+    }
+    pneu_text("\r\n");
+    return label;
+}
+
+/* While recording the LCD shows the saved count ("+HEAD 39") instead of the result. */
+static void complete_event(void)
+{
+    char notice[17];
+    pneu_demo_class_t label = send_prediction();
+    if (!app_record.active) { pneu_display_result(label); return; }
+    if (app_record_event(features.event.value, features.event.peak, features.event.trough, notice))
+        show_notice(notice, APP_BRIEF_MS);
+    else show_notice(notice, APP_NOTICE_MS);
+}
+
 static void process_features(const pressure_sample_t *sample)
 {
     uint32_t before = board_millis(), elapsed;
@@ -68,22 +108,7 @@ static void process_features(const pressure_sample_t *sample)
         ++pneutouch_features.completed;
         pneutouch_features.last_complete = features.event;
         pending_features = features.event; pending_part = 0; pending = true;
-        {
-            unsigned i;
-            static const char hex[] = "0123456789abcdef";
-            pneu_demo_class_t label = pneu_model_predict(features.event.value, features.event.peak,
-                                                         features.event.trough);
-            pneu_text("# PNEC1,"); pneu_number(features.event.id); board_putc(',');
-            pneu_number(board_millis()); board_putc(','); pneu_text(pneu_class_name(label));
-            board_putc(','); pneu_number(pneutouch_model.inference_us);
-            for (i = 0; i < 4; ++i) {
-                int shift; board_putc(',');
-                for (shift = 12; shift >= 0; shift -= 4)
-                    board_putc(hex[(pneutouch_model.scores[i] >> shift)&15U]);
-            }
-            pneu_text("\r\n");
-            pneu_display_result(label);
-        }
+        complete_event();
     } else if (result == PNEU_EVENT_INVALID || result == PNEU_EVENT_TIMEOUT) {
         ++pneutouch_features.rejected;
         pneu_text("# PNEE1,"); pneu_number(features.event.id);
@@ -101,26 +126,18 @@ static void show_line2(void)
     pneu_display_line2(line);
 }
 
-/* Right-aligned decimal in width columns. */
-static void digits(char *out, unsigned width, uint32_t value)
-{
-    unsigned i = width;
-    do { out[--i] = (char)('0'+value%10U); value /= 10U; } while (value && i);
-    while (i) out[--i] = ' ';
-}
-
 /* "TUNE 37/198     " (screening) or "FINAL 3/6       " (finals, 2 digits each from 10). */
 static void tune_text(char line[17])
 {
     unsigned width = tune_total >= 10U ? 2U : 1U;
     if (tune_phase == PNEU_PHASE_FINAL) {
         memcpy(line, "FINAL           ", 17);
-        digits(line+6, width, tune_done); line[6+width] = '/';
-        digits(line+7+width, width, tune_total);
+        app_digits(line+6, width, tune_done); line[6+width] = '/';
+        app_digits(line+7+width, width, tune_total);
         return;
     }
     memcpy(line, "TUNE   /        ", 17);
-    digits(line+4, 3, tune_done); digits(line+8, 3, tune_total);
+    app_digits(line+4, 3, tune_done); app_digits(line+8, 3, tune_total);
 }
 
 /* The tune line, plus the percent of the training or statistics pass that runs
@@ -129,7 +146,7 @@ static void tune_line(char line[17], bool with_percent, uint16_t done, uint16_t 
 {
     tune_text(line);
     if (!with_percent) return;
-    digits(line+12, 3, total ? (uint32_t)done*100U/total : 0U); line[15] = '%';
+    app_digits(line+12, 3, total ? (uint32_t)done*100U/total : 0U); line[15] = '%';
 }
 
 /* Training blocks for seconds: keep the LCD state machine and watchdog going.
@@ -145,7 +162,7 @@ static void show_progress(uint8_t phase, uint16_t done, uint16_t total)
     } else if (tuning) tune_line(line, true, done, total);
     else {
         line[5] = (char)('0'+phase%10U);
-        digits(line+7, 4, done); line[11] = '/'; digits(line+12, 4, total);
+        app_digits(line+7, 4, done); line[11] = '/'; app_digits(line+12, 4, total);
     }
     if (phase == PNEU_PHASE_TRAIN && done == 0U) show_line2();
     pneu_display_idle(line);
@@ -165,17 +182,30 @@ void pneu_ready_text(uint8_t advice, char out[17])
     memcpy(out+11, zone_name(advice), 5); /* 4 letters + NUL: 15 characters */
 }
 
+/* LCD line 1 when nothing else is shown: the REC line while recording, else
+   READY (MORE <ZONE>), NO MODEL or AI ERROR. */
+static void show_idle(void)
+{
+    char text[17];
+    if (app_record.active) { app_record_line(text); pneu_display_idle(text); return; }
+    pneu_ready_text(pneutouch_model.advice, text);
+    pneu_display_idle(pneutouch_model.ready ? text :
+                      pneutouch_model.error == PNEU_MODEL_ERR_NO_SLOT ? "NO MODEL" : "AI ERROR");
+}
+
+/* Success shows "SLOT 2  176  k4 " for 2 s, then the idle text (poll_buttons). */
 static bool train_model(void)
 {
     char text[17];
     bool ready;
     tuning = false; /* a failed PST1 TUNE never sent its last phase 2 */
+    notice_active = false;
     ready = pneu_model_init();
     show_line2(); /* blank after a failure */
-    pneu_ready_text(pneutouch_model.advice, text);
-    pneu_display_idle(ready ? text :
-                      pneutouch_model.error == PNEU_MODEL_ERR_NO_SLOT ? "NO MODEL" : "AI ERROR");
-    return ready;
+    if (!ready) { show_idle(); return false; }
+    app_slot_notice(text, pneutouch_model.slot, pneutouch_model.store_count, pneutouch_model.selected_count);
+    show_notice(text, APP_NOTICE_MS);
+    return true;
 }
 
 static void send_list(const volatile uint8_t *items, unsigned count)
@@ -218,6 +248,60 @@ static void send_model_banner(void)
     send_tune_banner();
 }
 
+/* After PAI1/PST1 (same chip instance), a TUNE or a slot switch: retrain from the
+   (maybe new) active slot and restart acquisition, which the blocking work starved. */
+static void resume_live(void)
+{
+    const hx710b_t sensor = {0, board_dout_high, board_sensor_pulse, PNEU_HX_PULSES};
+    (void)train_model();
+    acquisition_init(&acquisition, sensor, board_millis());
+    pneu_features_reset(&features); pending = false;
+    send_model_banner();
+    pneu_text("# PneutouchAi live acquisition resumed; sequence restarts\r\n");
+}
+
+/* SW4/SW5 (app_record.c decides); stop commits and retrains. */
+static void record_button(app_button_event_t event)
+{
+    char line[17];
+    switch (app_record_button(event, line)) {
+    case APP_REC_IDLE: notice_active = false; show_idle(); break;
+    case APP_REC_NOTICE: show_notice(line, APP_NOTICE_MS); break;
+    case APP_REC_BRIEF: show_notice(line, APP_BRIEF_MS); break;
+    case APP_REC_RETRAIN: resume_live(); break;
+    case APP_REC_DISCARD: resume_live(); show_notice(line, APP_NOTICE_MS); break;
+    default: break;
+    }
+}
+
+/* SW2 TUNE and SW3 slot switch need a committed slot: refused while recording. */
+static void slot_button(app_button_event_t event)
+{
+    char line[17];
+    if (app_record.active) { show_notice("STOP REC FIRST  ", APP_NOTICE_MS); return; }
+    if (event == APP_BUTTON_TUNE) { app_run_tune(); resume_live(); }
+    else if (app_next_slot(line)) { pneu_display_idle(line); resume_live(); }
+    else show_notice(line, APP_NOTICE_MS);
+}
+
+/* Normal (non-validation) path only. Only TUNE and the retraining block. */
+static void poll_buttons(void)
+{
+    uint32_t now = board_millis();
+    app_button_event_t event = app_buttons_poll(board_buttons(), now);
+    switch (event) {
+    case APP_BUTTON_HOLD:
+        if (!app_record.active) { notice_active = false; pneu_display_idle("HOLD 2s: TUNE   "); }
+        break;
+    case APP_BUTTON_CANCEL: if (!app_record.active) show_idle(); break;
+    case APP_BUTTON_TUNE: case APP_BUTTON_NEXT: slot_button(event); break;
+    case APP_BUTTON_NONE:
+        if (notice_active && (int32_t)(now-notice_until) >= 0) { notice_active = false; show_idle(); }
+        break;
+    default: record_button(event); break;
+    }
+}
+
 void pressure_app_init(void)
 {
     const hx710b_t sensor = {0, board_dout_high, board_sensor_pulse, PNEU_HX_PULSES};
@@ -230,7 +314,9 @@ void pressure_app_init(void)
     pneu_display_init();
     lcd_ready_reported = lcd_failed_reported = false; lcd_updates_reported = 0;
     pneu_model_set_progress(show_progress); /* also used by PAI1 exit and PST1 TRAIN */
+    app_record_boot(); /* commits a slot left OPEN by a power loss while recording */
     (void)train_model();
+    app_buttons_reset(board_buttons(), board_millis()); /* held at boot: ignored until released */
     acquisition_init(&acquisition, sensor, board_millis());
     pneu_text("# PneutouchAi Live; PNEU1,seq,ms,raw; baud=");
     pneu_number(PNEU_UART_BAUD); pneu_text("; nominal_sps="); pneu_number(PNEU_SAMPLE_RATE_HZ);
@@ -258,17 +344,12 @@ void pressure_app_poll(void)
         pneu_text("\r\n");
     }
     if (pneu_ai_validation_poll()) {
-        if (!was_validation) pneu_display_idle("VALIDATION");
+        if (!was_validation) { app_record_abort(); pneu_display_idle("VALIDATION"); }
+        app_buttons_reset(board_buttons(), board_millis()); notice_active = false;
         was_validation = true; return;
     }
-    if (was_validation) {
-        const hx710b_t sensor = {0, board_dout_high, board_sensor_pulse, PNEU_HX_PULSES};
-        /* PAI1 uses the same chip instance. Retrain from the (maybe new) active slot. */
-        (void)train_model();
-        acquisition_init(&acquisition, sensor, board_millis());
-        pneu_features_reset(&features); pending = false; was_validation = false;
-        pneu_text("# PneutouchAi live acquisition resumed; sequence restarts\r\n");
-    }
+    if (was_validation) { resume_live(); was_validation = false; }
+    poll_buttons();
     acquisition_result_t result = acquisition_poll(&acquisition, board_millis(), &sample);
     if (result == ACQ_SAMPLE) {
         pneutouch_status.raw = sample.raw;

@@ -2,5 +2,5 @@
    in the PST1 INFO reply, so a stale .elf on the board is visible from the PC. */
 #ifndef PNEU_FIRMWARE_TAG_H
 #define PNEU_FIRMWARE_TAG_H
-#define PNEU_FIRMWARE_TAG "ss1-search"
+#define PNEU_FIRMWARE_TAG "ss3-record"
 #endif
