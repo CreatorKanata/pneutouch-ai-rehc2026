@@ -17,6 +17,8 @@
 `load` は MODE 1 → OPEN → 全件 PUT → COMMIT → 先頭と末尾を GET してビット一致を確認 → （`--use`）USE → TRAIN → MODE 0。
 MODE 0 に戻るとファームウェアがもう一度学習し直すので、電源を入れ直さなくてもそのまま使える。`--k 1..12` で特徴数を固定（既定 0 = 自動）、`--name` は 8 文字まで（既定は日付）。
 
+**基準データ**: `docs/analysis/2026-10-24-fram-slot2-176/pressure-demo-training.json`（2026-10-24 にスロット 2 から吸い出した 176 件。TAIL 37 / BACK 33 / LEGS 69 / HEAD 37、実機 4 分割で 94.9%、k=4）。ボタンで追記して崩れたら `load --slot 3 --input <このファイル> --name 1023-176 --use` で戻せる。
+
 | やりたいこと | コマンド |
 |---|---|
 | 各スロットの件数と有効スロット | `model_store.py --port COM7 info` |
