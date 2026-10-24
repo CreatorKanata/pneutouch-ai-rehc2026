@@ -29,6 +29,7 @@ static uint16_t tune_done, tune_total; /* last count of that phase */
 static bool tuning;
 static bool notice_active; /* an LCD notice is up until notice_until */
 static uint32_t notice_until;
+static uint8_t detect_object; /* pneu_object_t whose thresholds features uses */
 
 /* UART text goes through uart_text.c: no printf, heap allocation or semihosting. */
 #define FISHER_PRINT_LIMIT 4.0e9f
@@ -192,6 +193,16 @@ static void show_idle(void)
     pneu_display_idle(text);
 }
 
+/* Thresholds of the pressed object (recording slot's, else the model's); true = changed. */
+static bool follow_object(void)
+{
+    uint8_t object = app_record.active ? app_record.object : pneutouch_model.object;
+    bool changed = object != detect_object;
+    detect_object = object;
+    pneu_features_set_detection(&features, pneu_object_detect((pneu_object_t)object));
+    return changed;
+}
+
 /* Success shows "S2 DINO  176  k4" for 2 s, then the idle text (poll_buttons). */
 static bool train_model(void)
 {
@@ -200,6 +211,7 @@ static bool train_model(void)
     tuning = false; /* a failed PST1 TUNE never sent its last phase 2 */
     notice_active = false;
     ready = pneu_model_init();
+    (void)follow_object(); /* also after a failure (DINO without a readable slot) */
     show_line2(); /* blank after a failure */
     if (!ready) { show_idle(); return false; }
     app_slot_notice(text, pneutouch_model.slot, pneutouch_model.object, pneutouch_model.store_count,
@@ -247,6 +259,7 @@ static void send_model_banner(void)
     }
     pneu_text("\r\n");
     send_tune_banner();
+    app_detect_banner(&features.detect, detect_object);
 }
 
 /* After PAI1/PST1 (same chip instance), a TUNE or a slot switch: retrain from the
@@ -265,6 +278,7 @@ static void resume_live(void)
 static void record_button(app_button_event_t event)
 {
     char line[17];
+    bool was_recording = app_record.active;
     switch (app_chooser.active ? app_chooser_button(event, line) : app_record_button(event, line)) {
     case APP_REC_IDLE: notice_active = false; show_idle(); break;
     case APP_REC_NOTICE: show_notice(line, APP_NOTICE_MS); break;
@@ -273,6 +287,7 @@ static void record_button(app_button_event_t event)
     case APP_REC_DISCARD: resume_live(); show_notice(line, APP_NOTICE_MS); break;
     default: break;
     }
+    if (!was_recording && app_record.active && follow_object()) app_detect_banner(&features.detect, detect_object);
 }
 
 /* SW2 TUNE and SW3 slot switch need a committed slot: refused while recording. */

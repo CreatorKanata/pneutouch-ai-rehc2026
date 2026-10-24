@@ -7,6 +7,7 @@
 #define PNEU_APP_BUTTONS_H
 #include <stdbool.h>
 #include <stdint.h>
+#include "pressure_features.h"
 
 #define APP_DEBOUNCE_MS 30U    /* raw mask stable this long before it is accepted */
 #define APP_TUNE_HOLD_MS 2000U /* long press of SW2/SW4/SW5 (fires once while held) */
@@ -42,6 +43,10 @@ void app_digits(char *out, unsigned width, uint32_t value);
 /* "S2 DINO  176  k4": slot, object tag, records (right-aligned in columns 7..11), selected
    count in columns 14..15 ("k4"; 10..12 two digits). */
 void app_slot_notice(char line[17], uint8_t slot, uint8_t object, uint16_t count, uint8_t selected);
+
+/* "# PNEM5,detect=<trigger>:<quiet>:<min_peak>:<min_trough>,object=<TAG>" (counts): the
+   thresholds in use and the object they belong to (docs/model-store.md, 物体プロファイル). */
+void app_detect_banner(const pneu_detect_t *detect, uint8_t object);
 
 /* SW2: "# PNET1,START", pneu_model_tune() (blocks), "# PNET1,<PST1 TUNE fields>".
    Instance 0 must be retrained afterwards. */

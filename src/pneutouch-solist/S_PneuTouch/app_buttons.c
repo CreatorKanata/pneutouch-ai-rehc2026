@@ -6,6 +6,7 @@
 #include "store_protocol.h"
 #include "object_profile.h"
 #include "uart_text.h"
+#include "board.h"
 #include <string.h>
 
 #define BUTTONS 4U
@@ -101,6 +102,14 @@ void app_slot_notice(char line[17], uint8_t slot, uint8_t object, uint16_t count
     slot_text(line, slot, object, count);
     if (selected >= 10U) app_digits(line+14, 2, selected);
     else { line[14] = 'k'; app_digits(line+15, 1, selected); }
+}
+
+void app_detect_banner(const pneu_detect_t *detect, uint8_t object)
+{
+    pneu_text("# PNEM5,detect="); pneu_number((uint32_t)detect->trigger); board_putc(':');
+    pneu_number((uint32_t)detect->quiet); board_putc(':'); pneu_number((uint32_t)detect->min_peak);
+    board_putc(':'); pneu_number((uint32_t)detect->min_trough); pneu_text(",object=");
+    pneu_text(pneu_object((pneu_object_t)object)->tag); pneu_text("\r\n");
 }
 
 void app_run_tune(void)

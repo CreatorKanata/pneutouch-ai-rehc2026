@@ -33,6 +33,11 @@ const char *pneu_object_class_name(pneu_object_t object, uint8_t label)
     return label >= 1U && label <= profile->classes ? profile->name[label-1U] : "UNKNOWN";
 }
 
+const pneu_detect_t *pneu_object_detect(pneu_object_t object)
+{
+    return object == PNEU_OBJECT_KRAG ? &PNEU_DETECT_KRAG : &PNEU_DETECT_DINO;
+}
+
 void pneu_object_slot_name(pneu_object_t object, const char *suffix, char out[9])
 {
     unsigned at = PNEU_OBJECT_TAG, i;

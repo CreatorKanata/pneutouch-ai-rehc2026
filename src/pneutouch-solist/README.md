@@ -32,7 +32,7 @@ PneutouchAi Writeで書き込み、COM7から315点・実効39.72 SPS・欠番0�
 通常取得時は `# PNEE1` / `# PNEF1` を追加し、生値の `PNEU1` は維持する。
 学習データはコードに埋め込まず、ボードのFeRAM（4スロット、各最大1000件）に `tools/model_store.py` で書き込む。
 電源投入時にチップが有効スロットを読み、14候補特徴（12特徴＋正圧ピーク＋トラフ）をFisher比で自分で選び、正規化してSolist-AIを学習（12入力、隠れ32、4出力、1段）。
-選んだ特徴と件数は起動時の `# PNEM3` で送る。`model_store.py tune` でチップ自身が特徴の組を2段階（小さな学習セットで全部分集合をふるい、上位を4分割交差検証してFisher自動選択と比較）で決めてスロットに保存し、部位ごとの再現率と「どの部位を追加で取るか」を表示する（起動時は `# PNEM4`、`model_store.py info` でも表示。LCDは `READY` のまま）。詳細は[FeRAMモデルストア](../../docs/model-store.md)。
+選んだ特徴と件数は起動時の `# PNEM3` で送る。`model_store.py tune` でチップ自身が特徴の組を2段階（小さな学習セットで全部分集合をふるい、上位を4分割交差検証してFisher自動選択と比較）で決めてスロットに保存し、部位ごとの再現率と「どの部位を追加で取るか」を表示する（起動時は `# PNEM4`、`model_store.py info` でも表示。LCDは `READY` のまま）。押下検出のしきい値は物体ごと（KRAG は恐竜より低い）で、起動時の `# PNEM5` に出る。詳細は[FeRAMモデルストア](../../docs/model-store.md)。
 通常動作では実際のHX710B押下・解放から特徴抽出し、チップ上で推定する。
 LCDに `HEAD / BACK / LEGS / TAIL` を3秒表示し、`READY`へ戻る。表示中も計測は続く。
 学習中は1行目に `LEARN<段階> 済/全`（0=統計、1=学習）、2行目は14セル（特徴の順: rise, decay, width, area_width, slope, asym, rel_rise, recovery, rel_width, rel_area_width, trough_ratio, area_ratio, peak, trough）で選ばれた特徴を黒■、右端2桁に選んだ数（`k4`、10以上は数字2桁）。

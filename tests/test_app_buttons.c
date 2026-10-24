@@ -105,22 +105,25 @@ static void run(uint8_t mask, uint32_t ms)
 static void tap(uint8_t mask) { run(mask, 200); run(0, 100); }
 static void hold(uint8_t mask) { run(mask, 2100); run(0, 100); }
 
-/* One simulated press-and-release (as in test_pressure_app.c), 25 ms samples. */
-static void press_event(void)
+/* One simulated press-and-release (as in test_pressure_app.c), 25 ms samples: peak and
+   trough 10*step counts. Returns the number of completed events (0 or 1). */
+static unsigned press_with(int step)
 {
     unsigned completed = pneutouch_features.completed, i;
     ready = true; button_mask = 0; bits = 4000000;
     for (i = 0; i < 40; ++i) poll_at(now+25); /* settling and baseline */
     for (i = 0; i < 125; ++i) {
         int u = (int)i-60, delta = 0;
-        if (u >= 0) delta = u <= 10 ? 20000*u : u <= 20 ? 20000*(20-u) :
-            u <= 30 ? -20000*(u-20) : u <= 40 ? -20000*(40-u) : 0;
+        if (u >= 0) delta = u <= 10 ? step*u : u <= 20 ? step*(20-u) :
+            u <= 30 ? -step*(u-20) : u <= 40 ? -step*(40-u) : 0;
         bits = (uint32_t)(4000000+delta);
         poll_at(now+25);
     }
-    assert(pneutouch_features.completed == completed+1U);
     ready = false;
+    return pneutouch_features.completed-completed;
 }
+static void press_event(void) { assert(press_with(20000) == 1U); }
+#define KRAG_PRESS 1500 /* +15000 / -15000: KRAG HAT strength, below every DINO threshold */
 
 static void fill(uint8_t slot, unsigned count, bool commit)
 {
@@ -278,6 +281,27 @@ static void test_chooser(void)
     tap(APP_SW4); tap(APP_SW4); assert(!app_record.active); /* SW4 short works again */
 }
 
+/* Detection thresholds follow the recording slot's object, else the active model's (# PNEM5). */
+static void test_detection(void)
+{
+    fixture(0); clear_log(); ready = false; pressure_app_init();
+    assert(logged("# PNEM5,detect=30000:25000:25000:30000,object=DINO\r\n"));
+    run(0, 2100); assert(press_with(KRAG_PRESS) == 0U); /* too weak for DINO */
+    hold(APP_SW4); tap(APP_SW5); clear_log(); tap(APP_SW4); /* new KRAG slot 3 while DINO slot 0 is active */
+    assert(logged("# PNER1,START,3,0,1\r\n") && logged("# PNEM5,detect=7000:5000:6000:6000,object=KRAG\r\n"));
+    for (unsigned i = 0; i < 4; ++i) assert(press_with(KRAG_PRESS) == 1U);
+    assert(app_record.count == 4);
+    clear_log(); tap(APP_SW4); /* stop: retrain on the now-active KRAG slot */
+    assert(logged("# PNER1,STOP,3,4,4\r\n") && logged("# PNEM5,detect=7000:5000:6000:6000,object=KRAG\r\n"));
+    run(0, 2000); assert(press_with(KRAG_PRESS) == 1U);
+    clear_log(); tap(APP_SW3); /* back to the DINO slot 0 */
+    assert(logged("# PNEM3,READY,slot=0,") && logged("# PNEM5,detect=30000:25000:25000:30000,object=DINO\r\n"));
+    run(0, 2000); assert(press_with(KRAG_PRESS) == 0U);
+    clear_log(); tap(APP_SW4); /* append to the DINO slot: same object, no PNEM5 */
+    assert(app_record.active && !logged("PNEM5"));
+    tap(APP_SW4); assert(!app_record.active);
+}
+
 /* Power lost while recording: >= 4 records are committed at boot, fewer stay OPEN. */
 static void test_boot_open_slot(void)
 {
@@ -342,10 +366,11 @@ int main(void)
     test_append();
     test_new_slot();
     test_chooser();
+    test_detection();
     test_boot_open_slot();
     test_discard();
     test_validation();
     puts("App buttons: SW4/SW5 gestures, recording append/new slot/label/undo/stop, SW2/SW3 refused while recording, "
-         "discard, validation stop/abort, store errors, boot autocommit, object chooser and KRAG labels PASS");
+         "discard, validation stop/abort, store errors, boot autocommit, object chooser, KRAG labels and per-object detection thresholds PASS");
     return 0;
 }

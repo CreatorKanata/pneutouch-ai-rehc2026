@@ -5,6 +5,7 @@
 #ifndef PNEU_OBJECT_PROFILE_H
 #define PNEU_OBJECT_PROFILE_H
 #include <stdint.h>
+#include "pressure_features.h"
 
 typedef enum { PNEU_OBJECT_DINO = 0, PNEU_OBJECT_KRAG = 1 } pneu_object_t;
 #define PNEU_OBJECT_COUNT 2U
@@ -19,6 +20,8 @@ pneu_object_t pneu_object_of_name(const char *name);
 uint8_t pneu_object_class_mask(pneu_object_t object);
 /* Zone name of label; "UNKNOWN" outside 1..classes. */
 const char *pneu_object_class_name(pneu_object_t object, uint8_t label);
+/* Detection thresholds of the object (PNEU_DETECT_DINO or PNEU_DETECT_KRAG). */
+const pneu_detect_t *pneu_object_detect(pneu_object_t object);
 /* Tag + suffix, cut at 8 characters: (KRAG, "BTN") -> "KRAGBTN". */
 void pneu_object_slot_name(pneu_object_t object, const char *suffix, char out[9]);
 #endif

@@ -12,9 +12,9 @@ ROOT = Path(__file__).resolve().parents[1]
 FIRMWARE = "src/pneutouch-solist/S_PneuTouch/"
 STORE = ("model_store", "crc16")
 SELECT = ("feature_select", "fast_log")
-OBJECT = ("object_profile",)
+OBJECT = ("object_profile", "pressure_features")  # detection profiles live in pressure_features.c
 APP = ("acquisition", "pressure_app", "app_buttons", "app_record", "app_chooser", "store_protocol",
-       "pressure_features", "uart_text") + OBJECT
+       "uart_text") + OBJECT
 # Firmware sources linked into each host test (hx710b.c is linked into all of them).
 C_TESTS = {
     "hx710b": (),

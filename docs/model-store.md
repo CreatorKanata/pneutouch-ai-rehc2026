@@ -34,6 +34,7 @@ MODE 0 に戻るとファームウェアがもう一度学習し直すので、�
 - UART 起動行 `# PneutouchAi Live; …; fw=<ビルド名>`。`model_store.py info` の `firmware:` にも同じ名前が出る。ファームを変えたら `S_PneuTouch/firmware_tag.h` の名前を手で更新し、書き込み後に一致を確認する（古い .elf が書き込まれたままだと気づける）。
 - UART: `# PNEM3,READY,slot=0,count=176,err=0,object=DINO,sel=0:4:10:13:12,fisher=45000:0:...`（`object` は有効スロットの物体）（fisher は ×1000 の整数、14 個、プール順）。`err`: 0 なし、1 FeRAM 異常、2 有効スロットなし、3 記録の CRC/値異常、4 選択不能、5 Solist-AI 異常。`# PNEM1` は従来どおり（件数、ステップ数、学習時間 us）、`# PNEM2,NONE,0,0,single_instance` は旧ツール互換のためだけに残す。
 - UART: `# PNEM4,k=<tuned_k>,mask=<hex4>,recall=<r1:r2:r3:r4>,counts=<n1:n2:n3:n4>,advice=<TAIL|BACK|LEGS|HEAD|HAT|FACE|NONE>`（PNEM3 の次の行、部位名は有効スロットの物体）。tuned_k 0 = 未調整（recall は意味なし、advice は常に NONE）。mask は今使っている選択（ビット j = プール特徴 j、k や自動で選んだときも同じ形、失敗時 0000）。recall は TUNE 時の held-out 再現率 %（255 = その部位の記録なし）、counts は今回の学習に使った部位ごとの件数（統計の前に失敗したら 0）。
+- UART: `# PNEM5,detect=<trigger>:<quiet>:<min_peak>:<min_trough>,object=<DINO|KRAG>`（PNEM4 の次の行）。押下検出に今使っているしきい値（ベースラインからのカウント）とその物体。学習に失敗しても出る（スロットが読めなければ DINO）。記録開始で物体が替わったときも単独で出る（下の「物体プロファイル」）。
 - LCD 1 行目: 学習中は `LEARN<段階> 済/全`（例 `LEARN1  123/ 704`、0 = 統計、1 = 学習）。学習に成功するたび（起動、PAI1 MODE 0 復帰、SW3 のスロット切替、SW2 の TUNE 後）まず 2 秒間 `S2 DINO  176  k4`（`S` + スロット番号、物体のタグ、件数を列 7..11 に右詰め、選んだ数を列 14..15。10..12 は `k` なしの 2 桁で `S2 DINO  176  12`）を出し、そのあと `READY DINO      `（有効スロットの物体）（TUNE の提案は LCD には出さず、`# PNEM4` の `advice=` と `model_store.py info` / `tune` で見る）。スロットが無ければ `NO MODEL`、その他の失敗は `AI ERROR`。
 - LCD 1 行目（TUNE 中）: 段階 1 は `TUNE 37/198  57%`（"TUNE" + 済んだ学習数を右詰め 3 桁 + "/" + 全数 3 桁 + 空白 + % 3 桁 + "%"。全数 = 候補数 × 2 パス。198 回目は `TUNE198/198`）、段階 2 は `FINAL 3/6    57%`（済んだ候補 / 候補数、10 以上なら 2 桁ずつ `FINAL 10/12  57%`）。% = 今の段階（統計または学習）の進み。各回の始まり（段階 2/3 の通知そのもの）は列 12..15 が空白。最後の FINAL が終わると `READY DINO` などに戻る。候補の選択が決まるたびに 2 行目のセルが切り替わる。
 - LCD 2 行目: 選ばれた特徴を黒■（0xFF）、選ばれなければ空白。右端 2 桁は選んだ数（`k4` の形、10 以上は数字 2 桁）。選択が決まった時点（学習開始時）で表示する。
@@ -173,7 +174,7 @@ CRC は CRC-16/CCITT-FALSE（UART と同じ）。書き込みはすべて読み�
 5. SW2 を 2 秒長押しで TUNE（特徴の組を選び直してスロットに保存）。足りない部位は PC の `model_store.py info`（`提案:`）か UART の `# PNEM4,…,advice=` で分かるので、SW4 短押しで追記する。
 
 波形を見る学習ツール（PC）は今までどおり使えるが、なくても学習できる。
-- PAI1 MODE 0 での復帰も同じ処理（`resume_live()`）になったので、resumed 行の前に `# PNEM1..4` が出る。
+- PAI1 MODE 0 での復帰も同じ処理（`resume_live()`）になったので、resumed 行の前に `# PNEM1..5` が出る。
 
 ## 物体プロファイル（DINO / KRAG）
 
@@ -192,7 +193,22 @@ CRC は CRC-16/CCITT-FALSE（UART と同じ）。書き込みはすべて読み�
 - 切替: SW3 で次のスロットに切り替えるだけ（スロットの物体が違えば DINO ⇄ KRAG）。LCD は `S1 KRAG  141  k4` → `READY KRAG      `。
 - 新しいスロット: SW4 長押しで `NEW: DINO  (SW5)`、SW5 で `NEW: KRAG  (SW5)`、SW4 短押しで `KRAGBTN` として開いて記録開始（SW4 長押しか 10 秒で取り消し）。SW4 短押しの追記はスロットの物体のまま。
 - PC: `model_store.py load --slot 2 --input krag.json --object KRAG --name 1024 --use`（スロット名 `KRAG1024`、ラベルが 1..2 でなければ何も書かずにエラー）。`info` は `slot 2: 40 records  KRAG (HAT/FACE)  …  recall HAT 95% FACE 88%`、`dump` は `source.object` と部位名の `zone`、`tune` / `train` は有効スロットの物体の部位名で表示する（先に INFO と SLOT を読む）。
-- UART: `# PNEM3,…,err=0,object=KRAG,sel=…`。起動時の `# PNEF1; …; classes=tail/back/legs/head; gesture=press_release_1s; objects=dino:tail/back/legs/head,krag:hat/face`。
+- 押下検出のしきい値（`pressure_features.c` の `PNEU_DETECT_DINO` / `PNEU_DETECT_KRAG`、`object_profile.c` の `pneu_object_detect()`）。KRAG の押下は恐竜の 5〜10 分の 1 しかないので、恐竜のしきい値では一度も検出されない。2026-10-24 の実測（ベースラインからのカウント）:
+
+  | 物体・部位 | 押下ピーク | 解放トラフ |
+  |---|---|---|
+  | DINO 学習データ | +30k … +980k | 85k … 1.1M |
+  | KRAG HAT | +4k … +18k | −10k … −20k |
+  | KRAG FACE | +23k … +29k（強く握った 1 回は +79k） | −37k … −51k |
+  | ノイズ | ±1k | |
+
+  | 物体 | trigger（開始・解放の判定） | quiet（ベースライン追従・終了） | min_peak | min_trough |
+  |---|---|---|---|---|
+  | DINO | 30000 | 25000 | 25000 | 30000 |
+  | KRAG | 7000 | 5000 | 6000 | 6000 |
+
+  使うしきい値は**押している物体**のもの: 記録中は記録先スロットの物体、それ以外は有効スロット（今のモデル）の物体。学習のたび（起動、PAI1 MODE 0 復帰、SW3、TUNE 後、記録停止・破棄後。失敗しても）と、記録開始で物体が替わったとき（DINO が有効のまま SW4 長押しで KRAG のスロットを開いたときなど）に切り替え、`# PNEM5` を出す。切替は次のサンプルから効き、検出の状態はリセットしない。準備完了の判定（`WARM_SPAN` 20000）は共通（KRAG のノイズはずっと小さい）。
+- UART: `# PNEM3,…,err=0,object=KRAG,sel=…`、`# PNEM5,detect=7000:5000:6000:6000,object=KRAG`。起動時の `# PNEF1; …; classes=tail/back/legs/head; gesture=press_release_1s; objects=dino:tail/back/legs/head,krag:hat/face`。
 
 ## UART プロトコル PST1
 

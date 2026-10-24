@@ -12,6 +12,14 @@ static void test_profiles(void)
     assert(pneu_object_class_mask(PNEU_OBJECT_DINO) == 0x0F && pneu_object_class_mask(PNEU_OBJECT_KRAG) == 0x03);
 }
 
+static void test_detect(void)
+{
+    assert(pneu_object_detect(PNEU_OBJECT_DINO) == &PNEU_DETECT_DINO);
+    assert(pneu_object_detect(PNEU_OBJECT_KRAG) == &PNEU_DETECT_KRAG);
+    assert(pneu_object_detect((pneu_object_t)7) == &PNEU_DETECT_DINO);
+    assert(pneu_object_detect(PNEU_OBJECT_KRAG)->trigger == 7000.0f);
+}
+
 static void test_names(void)
 {
     static const char *const dino[] = {"UNKNOWN", "TAIL", "BACK", "LEGS", "HEAD", "UNKNOWN"};
@@ -48,8 +56,9 @@ int main(void)
 {
     test_profiles();
     test_names();
+    test_detect();
     test_object_of_name();
     test_slot_name();
-    puts("Object profile: DINO/KRAG tags, class masks, zone names, object of a slot name, slot name truncation PASS");
+    puts("Object profile: DINO/KRAG tags, class masks, zone names, object of a slot name, slot name truncation, detection profiles PASS");
     return 0;
 }
