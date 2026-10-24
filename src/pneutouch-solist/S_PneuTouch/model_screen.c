@@ -18,6 +18,7 @@ uint16_t pneu_screen_ordinal(uint16_t n_c, uint8_t pass, uint8_t j)
     return (uint16_t)(offset+(uint32_t)j*n_c/PNEU_SCREEN_PER_CLASS);
 }
 
+/* Labels are within the object's classes: the statistics pass checked them first. */
 static uint8_t count_labels(uint8_t slot, uint16_t n, uint16_t count[PNEU_CLASS_COUNT])
 {
     float pool[PNEU_POOL_COUNT];

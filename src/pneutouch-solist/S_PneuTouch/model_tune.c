@@ -36,9 +36,12 @@ uint8_t pneu_model_advice(const uint8_t recall[4], const uint16_t counts[4])
 static uint8_t open_slot(uint16_t *n)
 {
     pneu_store_slot_t info;
+    bool valid;
     if (!pneu_store_init()) return PNEU_MODEL_ERR_STORE;
     pneutouch_tune.slot = pneu_store_active();
-    if (!pneu_store_slot_info(pneutouch_tune.slot, &info) || info.state != PNEU_SLOT_COMMITTED ||
+    valid = pneu_store_slot_info(pneutouch_tune.slot, &info);
+    pneu_core_set_object(info.name); /* selection, statistics and argmax over its classes */
+    if (!valid || info.state != PNEU_SLOT_COMMITTED ||
         info.count < PNEU_TUNE_MIN_RECORDS || info.count > PNEU_STORE_MAX_RECORDS) return PNEU_MODEL_ERR_NO_SLOT;
     pneutouch_tune.count = info.count;
     *n = info.count;
@@ -128,7 +131,8 @@ static uint16_t margin(uint16_t count)
     return (uint16_t)(m ? m : 1U);
 }
 
-/* Chosen result, its rounded recall per class and the advice. */
+/* Chosen result, its rounded recall per class and the advice. Classes outside the
+   object have no records and are never predicted: empty rows, recall 255. */
 static void decide(uint8_t recall[4])
 {
     const tune_score_t *chosen = challenger.mask &&

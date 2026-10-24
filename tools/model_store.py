@@ -2,10 +2,12 @@
 
 The chip keeps up to 4 slots of raw training records (label + 14 pool values)
 in its FeRAM. At boot it ranks the features itself, normalizes and trains
-Solist-AI from the active slot; see docs/model-store.md.
+Solist-AI from the active slot; see docs/model-store.md. The object (DINO: 4 zones,
+KRAG: HAT/FACE) is the tag at the start of the slot name; `load --object` adds it.
 
     .venv/bin/python tools/model_store.py --port COM7 info
-    .venv/bin/python tools/model_store.py --port COM7 load --slot 0 --input training.json [--k 0] [--name t] [--use]
+    .venv/bin/python tools/model_store.py --port COM7 load --slot 0 --input training.json [--k 0] [--name MMDD]
+        [--object DINO|KRAG] [--use]
     .venv/bin/python tools/model_store.py --port COM7 dump --slot 0 --out slot0.json
     .venv/bin/python tools/model_store.py --port COM7 use --slot 1
     .venv/bin/python tools/model_store.py --port COM7 erase --slot 1
@@ -16,7 +18,6 @@ Solist-AI from the active slot; see docs/model-store.md.
 import argparse
 import contextlib
 import json
-import math
 import os
 import sys
 from datetime import date
@@ -26,17 +27,20 @@ import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import feature_select as fs  # noqa: E402
+from model_store_report import (  # noqa: E402,F401  (re-exported for callers and tests)
+    ADVICE_RECALL_PCT, DEFAULT_OBJECT, MODEL_ERRORS, OBJECTS, RECALL_ABSENT, SCREEN_PASSES, SCREEN_PER_CLASS,
+    TUNE_FOLDS, TUNE_MARGIN_PCT, TUNE_MIN_SIZE, ZONE_JA, _advice_lines, _names, _tune_summary, _zone,
+    confusion_table, describe_info, describe_object, describe_slot, describe_training, describe_tune,
+    mask_features, object_of_name, recall_advice, shortlist_size, tune_margin, zone_names)
 
 FEATURE_ORDER = fs.FEATURE_NAMES[:12]
-ZONE_NAMES = {1: 'TAIL', 2: 'BACK', 3: 'LEGS', 4: 'HEAD'}
+ZONE_NAMES = zone_names(DEFAULT_OBJECT)
 SLOTS, MAX_RECORDS, MIN_RECORDS, MAX_NAME = 4, 1000, 4, 8
+TAG_LENGTH = 4
+MAX_SUFFIX = MAX_NAME - TAG_LENGTH
 STATES = {0: 'empty', 1: 'open', 2: 'committed'}
 TRAIN_TIMEOUT_S = 120  # 1000 records x 4 epochs at ~1.5 ms per step, plus FeRAM reads
 TUNE_TIMEOUT_S = 900  # ~2 min at 176 records (99 subsets x 2 screening passes + 6 x 4 folds)
-TUNE_FOLDS, ADVICE_RECALL_PCT, RECALL_ABSENT = 4, 90, 255
-TUNE_MIN_SIZE, SCREEN_PER_CLASS, SCREEN_PASSES, TUNE_MARGIN_PCT = 3, 10, 2, 2  # model_tune.h
-MODEL_ERRORS = {1: 'STORE', 2: 'NO_SLOT', 3: 'RECORD', 4: 'SELECT', 5: 'AI'}
-ZONE_JA = {'TAIL': 'しっぽ', 'BACK': '背中', 'LEGS': '足', 'HEAD': '頭'}
 
 
 def encode_pool(pool):
@@ -60,6 +64,19 @@ def check_name(name):
     return name
 
 
+def check_object(obj):
+    if obj not in OBJECTS:
+        raise ValueError(f'object must be one of {", ".join(OBJECTS)}')
+    return obj
+
+
+def slot_name(obj, suffix):
+    """Tag + suffix (up to 4 characters): ('KRAG', '1024') -> 'KRAG1024'."""
+    if len(suffix) > MAX_SUFFIX:
+        raise ValueError(f'name suffix must be up to {MAX_SUFFIX} characters (the object tag takes {TAG_LENGTH})')
+    return check_name(check_object(obj) + suffix)
+
+
 def check_slot(slot):
     if not 0 <= slot < SLOTS:
         raise ValueError(f'slot must be 0..{SLOTS - 1}')
@@ -68,11 +85,6 @@ def check_slot(slot):
 
 def _indices(text):
     return [int(v) for v in text.split(':')] if text else []
-
-
-def mask_features(mask):
-    """Pool indices of a feature mask (bit j = pool feature j), ascending."""
-    return [j for j in range(fs.POOL_COUNT) if mask >> j & 1]
 
 
 def _finalists(text):
@@ -154,22 +166,24 @@ class Store:
         return int(self._cmd('SELFTEST')[0])
 
 
-def records(training):
-    """(labels, float32 pool rows) from a prepare_retrain / dump JSON; validated like the chip."""
+def records(training, obj=DEFAULT_OBJECT):
+    """(labels, float32 pool rows) from a prepare_retrain / dump JSON; validated like the chip (labels of obj)."""
     events = training['events']
     labels = [int(e['label']) for e in events]
     pool = fs.pool_rows(events)
     if not MIN_RECORDS <= len(events) <= MAX_RECORDS:
         raise ValueError(f'{len(events)} events; a slot holds {MIN_RECORDS}..{MAX_RECORDS}')
-    if any(label not in ZONE_NAMES for label in labels) or not (np.isfinite(pool).all() and (pool > 0).all()):
-        raise ValueError('labels must be 1..4 and every pool value finite and > 0')
+    zones = zone_names(check_object(obj))
+    if any(label not in zones for label in labels) or not (np.isfinite(pool).all() and (pool > 0).all()):
+        raise ValueError(f'labels must be 1..{len(zones)} ({obj}) and every pool value finite and > 0')
     return labels, pool
 
 
-def load(store, slot, training, k=0, name='', use=False):
-    """Write every event, verify the first and last record bit-exactly, then TRAIN."""
-    labels, pool = records(training)
-    check_slot(slot); check_name(name)
+def load(store, slot, training, k=0, name='', use=False, obj=DEFAULT_OBJECT):
+    """Write every event into slot <tag of obj><name>, verify the first and last record bit-exactly, then TRAIN."""
+    labels, pool = records(training, obj)
+    check_slot(slot)
+    name = slot_name(obj, name)
     if not 0 <= k <= fs.SELECT_MAX:
         raise ValueError('k must be 0..12')
     with store.paused():
@@ -188,133 +202,25 @@ def load(store, slot, training, k=0, name='', use=False):
 
 
 def dump(store, slot):
-    """Same JSON shape as prepare_retrain (feature_order, events) plus the FeRAM source."""
+    """Same JSON shape as prepare_retrain (feature_order, events) plus the FeRAM source and its object."""
     events = []
     with store.paused():
         info = store.slot(slot)
+        obj = object_of_name(info['name'])
+        zones = zone_names(obj)
         for index in range(info['count'] if info['state'] else 0):
             label, row = store.get(slot, index)
-            events.append(dict(label=label, zone=ZONE_NAMES[label], features12=[float(v) for v in row[:12]],
-                               peak=float(row[12]), trough=float(row[13])))
+            events.append(dict(label=label, zone=zones.get(label, f'LABEL{label}'),
+                               features12=[float(v) for v in row[:12]], peak=float(row[12]), trough=float(row[13])))
     return dict(feature_order=FEATURE_ORDER, events=events,
-                source=dict(kind='fram', slot=slot, name=info['name'], k=info['k'], state=STATES[info['state']],
-                            tuned_k=info['tuned_k'], recall=info['recall'], mask=info['mask']))
+                source=dict(kind='fram', slot=slot, name=info['name'], object=obj, k=info['k'],
+                            state=STATES[info['state']], tuned_k=info['tuned_k'], recall=info['recall'],
+                            mask=info['mask']))
 
 
-def describe_training(result):
-    names = ', '.join(fs.FEATURE_NAMES[j] for j in result['selected']) or 'none'
-    status = 'READY' if result['ready'] else f'ERROR {result["error"]}'
-    return (f'{status}: {result["count"]} records, {result["k"]} features selected ({names}), '
-            f'training {result["training_us"] / 1e6:.2f} s')
-
-
-def _zone(label):
-    name = ZONE_NAMES[label]
-    return f'{ZONE_JA[name]}（{name}）'
-
-
-def _names(mask):
-    return ', '.join(fs.FEATURE_NAMES[j] for j in mask_features(mask)) or 'none'
-
-
-def shortlist_size(candidates):
-    """Shortlist size whose subsets of TUNE_MIN_SIZE.. members number `candidates` (0 if none)."""
-    for size in range(TUNE_MIN_SIZE, fs.SELECT_MAX + 1):
-        if sum(math.comb(size, k) for k in range(TUNE_MIN_SIZE, size + 1)) == candidates:
-            return size
-    return 0
-
-
-def tune_margin(count):
-    """Records a challenger must win by more than (model_tune.c margin())."""
-    return max(1, (count * TUNE_MARGIN_PCT + 50) // 100)
-
-
-def _tune_summary(result):
-    count, champion = result['count'], result['champion_mask']
-    finals = 1 + sum(f['mask'] != champion for f in result['finalists'])
-    judged = result['screened'] * SCREEN_PASSES
-    lines = [f'tune: {count} records, shortlist {shortlist_size(result["candidates"])} features, '
-             f'{result["candidates"]} subsets screened ({SCREEN_PER_CLASS}/class × {SCREEN_PASSES} passes), '
-             f'{finals} finalists ({result["elapsed_us"] / 1e6:.1f} s)',
-             f'  champion (top-{len(mask_features(champion))}): {_names(champion)}  4-fold '
-             f'{result["champion_correct"]}/{count} = {100 * result["champion_correct"] / count:.1f}%']
-    for i, f in enumerate(result['finalists']):
-        lines.append(f'  {"finalists:" if i == 0 else "":<10}  {len(mask_features(f["mask"]))} features '
-                     f'{_names(f["mask"])}   screen {f["screen"]}/{judged}  4-fold {f["correct"]}/{count}')
-    if result['mask'] == champion:
-        lines.append(f'  chosen: champion (no challenger beat it by more than {tune_margin(count)} records)')
-    else:
-        lines.append(f'  chosen: {result["best_k"]} features {_names(result["mask"])} '
-                     f'(beat champion by {result["correct"] - result["champion_correct"]})')
-    return lines
-
-
-def describe_tune(result):
-    """Lines for the CLI; RuntimeError (error code name) when the chip could not tune."""
-    if not result['ok']:
-        raise RuntimeError(f'TUNE failed: {MODEL_ERRORS.get(result["error"], result["error"])}')
-    lines = _tune_summary(result) + [
-        '  ' + '  '.join(f'{ZONE_NAMES[c + 1]} {"-" if r == RECALL_ABSENT else f"{r}%"} ({n})'
-                         for c, (r, n) in enumerate(zip(result['recall'], result['counts'])))]
-    lines += confusion_table(result['confusion'])
-    advice = result['advice']
-    if not advice:
-        return lines + [f'  提案: なし（すべての部位が {ADVICE_RECALL_PCT}% 以上）']
-    return lines + _advice_lines(result['confusion'], advice)
-
-
-def recall_advice(recall):
-    """Class 1..4 with the lowest recall below ADVICE_RECALL_PCT (ties -> lower label), 0 = none.
-
-    From the slot header alone (no record counts), so a tie does not use the counts as model_tune.c does.
-    """
-    present = [(r, c + 1) for c, r in enumerate(recall) if r != RECALL_ABSENT]
-    if not present:
-        return 0
-    lowest, label = min(present)
-    return label if lowest < ADVICE_RECALL_PCT else 0
-
-
-def describe_slot(slot):
-    """One `info` line from a SLOT reply: count, tuned feature set, recall per class and advice."""
-    head = f'slot {slot["slot"]}: {slot["count"]} records'
-    if not slot['tuned_k'] and not slot['mask']:
-        return f'{head}  (未調整)'
-    names = ', '.join(fs.FEATURE_NAMES[j] for j in mask_features(slot['mask']))
-    recall = ' '.join(f'{ZONE_NAMES[c + 1]} {"-" if r == RECALL_ABSENT else f"{r}%"}'
-                      for c, r in enumerate(slot['recall']))
-    advice = recall_advice(slot['recall'])
-    return (f'{head}  k={slot["tuned_k"]} [{names}]  recall {recall}  '
-            f'提案: {_zone(advice) if advice else "なし"}')
-
-
-def describe_info(store):
-    """INFO, then SLOT for every slot with records (call inside paused())."""
-    i = store.info()
-    lines = [f'firmware: {i["firmware"] or "unknown (older build)"}', f'active slot: {i["active"]}']
-    return lines + [describe_slot(store.slot(n)) if c else f'slot {n}: 0 records' for n, c in enumerate(i['counts'])]
-
-
-def confusion_table(confusion):
-    """Chosen set's 4x4 matrix: rows = true class, columns = predicted class."""
-    names = [ZONE_NAMES[c + 1] for c in range(4)]
-    return (['  混同行列（行 = 正解、列 = 判定）', '        ' + ' '.join(names)]
-            + [f'  {names[t]:<4}  ' + ' '.join(f'{n:>4}' for n in row) for t, row in enumerate(confusion)])
-
-
-def _advice_lines(confusion, advice):
-    """Both directions of the advised class A and its main partner B, then what to collect."""
-    a = advice - 1
-    row = confusion[a]
-    b = max((p for p in range(4) if p != a), key=lambda p: (row[p], -p))
-    counts = [sum(r) for r in confusion]
-    name_a, name_b = ZONE_NAMES[a + 1], ZONE_NAMES[b + 1]
-    first = (f'  提案: {_zone(advice)}のデータを追加してください。{name_a} → {name_b} {row[b]} 件、'
-             f'{name_b} → {name_a} {confusion[b][a]} 件（件数 {name_a} {counts[a]} 対 {name_b} {counts[b]}）')
-    if counts[a] < counts[b]:
-        return [first, f'  （件数の少ない部位に境界が不利になるので、まず {name_a} を {name_b} と同程度まで増やす）']
-    return [first, '  （件数は足りているので、境界付近の押し方（弱め・位置違い）を増やす）']
+def active_object(store):
+    """Object of the active slot (call inside paused())."""
+    return object_of_name(store.slot(store.info()['active'])['name'])
 
 
 def run(args, store):
@@ -332,9 +238,9 @@ def run(args, store):
         return [f'FeRAM self test: {"PASS" if result == 0 else f"FAIL ({result})"}']
     if args.command == 'load':
         training = json.loads(args.input.read_text(encoding='utf-8'))
-        result = load(store, args.slot, training, args.k, args.name, args.use)
+        result = load(store, args.slot, training, args.k, args.name, args.use, args.object)
         return [f'slot {args.slot}: {len(training["events"])} records loaded and verified',
-                describe_training(result)]
+                describe_training(result, args.object)]
     if args.command == 'dump':
         data = dump(store, args.slot)
         args.out.write_text(json.dumps(data, indent=1), encoding='utf-8')
@@ -346,11 +252,12 @@ def run(args, store):
         if args.command == 'erase':
             store.erase(args.slot)
             return [f'slot {args.slot} erased']
+        obj = active_object(store)
         if args.command == 'tune':
             # TUNE leaves instance 0 untrained: TRAIN at once so the report ends with the tuned model.
-            lines = describe_tune(store.tune())
-            return lines + [describe_training(store.train())]
-        return [describe_training(store.train())]
+            lines = describe_tune(store.tune(), obj)
+            return lines + [describe_training(store.train(), obj)]
+        return [describe_training(store.train(), obj)]
 
 
 def parser():
@@ -366,7 +273,10 @@ def parser():
     load_p.add_argument('--slot', type=int, required=True)
     load_p.add_argument('--input', type=Path, required=True)
     load_p.add_argument('--k', type=int, default=0, help='0 = chip picks automatically, 1..12 = best k')
-    load_p.add_argument('--name', default=date.today().strftime('%Y%m%d'))
+    load_p.add_argument('--name', default=date.today().strftime('%m%d'),
+                        help=f'suffix after the object tag, up to {MAX_SUFFIX} characters (default MMDD)')
+    load_p.add_argument('--object', default=DEFAULT_OBJECT, choices=sorted(OBJECTS),
+                        help='DINO: TAIL/BACK/LEGS/HEAD (labels 1..4), KRAG: HAT/FACE (labels 1..2)')
     load_p.add_argument('--use', action='store_true', help='make this slot active')
     dump_p = sub.add_parser('dump')
     dump_p.add_argument('--slot', type=int, required=True)

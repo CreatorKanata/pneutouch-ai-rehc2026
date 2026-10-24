@@ -15,15 +15,15 @@
 ```
 
 `load` は MODE 1 → OPEN → 全件 PUT → COMMIT → 先頭と末尾を GET してビット一致を確認 → （`--use`）USE → TRAIN → MODE 0。
-MODE 0 に戻るとファームウェアがもう一度学習し直すので、電源を入れ直さなくてもそのまま使える。`--k 1..12` で特徴数を固定（既定 0 = 自動）、`--name` は 8 文字まで（既定は日付）。
+MODE 0 に戻るとファームウェアがもう一度学習し直すので、電源を入れ直さなくてもそのまま使える。`--k 1..12` で特徴数を固定（既定 0 = 自動）。スロット名は物体のタグ + `--name`（4 文字まで、既定は日付 `MMDD`）で、`--object DINO|KRAG`（既定 DINO）がタグを決める（下の「物体プロファイル」）。
 
-**基準データ**: `docs/analysis/2026-10-24-fram-slot2-176/pressure-demo-training.json`（2026-10-24 にスロット 2 から吸い出した 176 件。TAIL 37 / BACK 33 / LEGS 69 / HEAD 37、実機 4 分割で 94.9%、k=4）。ボタンで追記して崩れたら `load --slot 3 --input <このファイル> --name 1023-176 --use` で戻せる。
+**基準データ**: `docs/analysis/2026-10-24-fram-slot2-176/pressure-demo-training.json`（2026-10-24 にスロット 2 から吸い出した 176 件。TAIL 37 / BACK 33 / LEGS 69 / HEAD 37、実機 4 分割で 94.9%、k=4）。ボタンで追記して崩れたら `load --slot 3 --input <このファイル> --name 1023 --use` で戻せる（スロット名 `DINO1023`）。
 
 | やりたいこと | コマンド |
 |---|---|
-| 各スロットの件数と有効スロット、調整結果 | `model_store.py --port COM7 info`（INFO のあと、件数のあるスロットごとに SLOT を送る。どちらも取得停止中。件数のあるスロットは `slot 2: 176 records  k=4 [release_width_ms, release_area_width_ms, peak, trough]  recall TAIL 100% BACK 97% LEGS 94% HEAD 89%  提案: 頭（HEAD）` の形で 1 行。特徴名は mask のビット順（候補の順）、再現率 255（記録なし）は `-`、提案は再現率だけから: 90% 未満で最も低い部位（同じなら番号の小さい部位）、なければ `提案: なし`。未調整なら `slot 0: 141 records  (未調整)`） |
+| 各スロットの件数と有効スロット、調整結果 | `model_store.py --port COM7 info`（INFO のあと、件数のあるスロットごとに SLOT を送る。どちらも取得停止中。件数のあるスロットは `slot 2: 176 records  DINO (TAIL/BACK/LEGS/HEAD)  k=4 [release_width_ms, release_area_width_ms, peak, trough]  recall TAIL 100% BACK 97% LEGS 94% HEAD 89%  提案: 頭（HEAD）` の形で 1 行。特徴名は mask のビット順（候補の順）、再現率 255（記録なし）は `-`、提案は再現率だけから: 90% 未満で最も低い部位（同じなら番号の小さい部位）、なければ `提案: なし`。未調整なら `slot 0: 141 records  DINO (TAIL/BACK/LEGS/HEAD)  (未調整)`。再現率と提案は物体の部位だけ） |
 | スロット切替 | `model_store.py --port COM7 use --slot 1`（MODE 0 復帰時に再学習） |
-| 吸い出し | `model_store.py --port COM7 dump --slot 0 --out slot0.json`（`prepare_retrain` と同じ JSON 形。`feature_select.py` にそのまま渡せる） |
+| 吸い出し | `model_store.py --port COM7 dump --slot 0 --out slot0.json`（`prepare_retrain` と同じ JSON 形。`feature_select.py` にそのまま渡せる。`source.object` と各記録の `zone` は物体の部位名） |
 | 消去 | `model_store.py --port COM7 erase --slot 1` |
 | 今すぐ再学習 | `model_store.py --port COM7 train` |
 | 使う特徴の組をチップ上で決める | `model_store.py --port COM7 tune`（有効スロット。TUNE → TRAIN。2 段階の部分集合探索の結果、部位ごとの再現率と件数、「どの部位を追加で取るか」の提案を表示。下の「特徴の組の自動決定」） |
@@ -32,10 +32,10 @@ MODE 0 に戻るとファームウェアがもう一度学習し直すので、�
 ## 起動時に表示されるもの
 
 - UART 起動行 `# PneutouchAi Live; …; fw=<ビルド名>`。`model_store.py info` の `firmware:` にも同じ名前が出る。ファームを変えたら `S_PneuTouch/firmware_tag.h` の名前を手で更新し、書き込み後に一致を確認する（古い .elf が書き込まれたままだと気づける）。
-- UART: `# PNEM3,READY,slot=0,count=176,err=0,sel=0:4:10:13:12,fisher=45000:0:...`（fisher は ×1000 の整数、14 個、プール順）。`err`: 0 なし、1 FeRAM 異常、2 有効スロットなし、3 記録の CRC/値異常、4 選択不能、5 Solist-AI 異常。`# PNEM1` は従来どおり（件数、ステップ数、学習時間 us）、`# PNEM2,NONE,0,0,single_instance` は旧ツール互換のためだけに残す。
-- UART: `# PNEM4,k=<tuned_k>,mask=<hex4>,recall=<r1:r2:r3:r4>,counts=<n1:n2:n3:n4>,advice=<TAIL|BACK|LEGS|HEAD|NONE>`（PNEM3 の次の行）。tuned_k 0 = 未調整（recall は意味なし、advice は常に NONE）。mask は今使っている選択（ビット j = プール特徴 j、k や自動で選んだときも同じ形、失敗時 0000）。recall は TUNE 時の held-out 再現率 %（255 = その部位の記録なし）、counts は今回の学習に使った部位ごとの件数（統計の前に失敗したら 0）。
-- LCD 1 行目: 学習中は `LEARN<段階> 済/全`（例 `LEARN1  123/ 704`、0 = 統計、1 = 学習）。学習に成功するたび（起動、PAI1 MODE 0 復帰、SW3 のスロット切替、SW2 の TUNE 後）まず 2 秒間 `SLOT 2  176  k4 `（スロット番号、件数を右詰め 4 桁、選んだ数。10..12 は `k` なしの 2 桁で `SLOT 2  176  12 `）を出し、そのあと `READY`（TUNE の提案は LCD には出さず、`# PNEM4` の `advice=` と `model_store.py info` / `tune` で見る）。スロットが無ければ `NO MODEL`、その他の失敗は `AI ERROR`。
-- LCD 1 行目（TUNE 中）: 段階 1 は `TUNE 37/198  57%`（"TUNE" + 済んだ学習数を右詰め 3 桁 + "/" + 全数 3 桁 + 空白 + % 3 桁 + "%"。全数 = 候補数 × 2 パス。198 回目は `TUNE198/198`）、段階 2 は `FINAL 3/6    57%`（済んだ候補 / 候補数、10 以上なら 2 桁ずつ `FINAL 10/12  57%`）。% = 今の段階（統計または学習）の進み。各回の始まり（段階 2/3 の通知そのもの）は列 12..15 が空白。最後の FINAL が終わると `READY` などに戻る。候補の選択が決まるたびに 2 行目のセルが切り替わる。
+- UART: `# PNEM3,READY,slot=0,count=176,err=0,object=DINO,sel=0:4:10:13:12,fisher=45000:0:...`（`object` は有効スロットの物体）（fisher は ×1000 の整数、14 個、プール順）。`err`: 0 なし、1 FeRAM 異常、2 有効スロットなし、3 記録の CRC/値異常、4 選択不能、5 Solist-AI 異常。`# PNEM1` は従来どおり（件数、ステップ数、学習時間 us）、`# PNEM2,NONE,0,0,single_instance` は旧ツール互換のためだけに残す。
+- UART: `# PNEM4,k=<tuned_k>,mask=<hex4>,recall=<r1:r2:r3:r4>,counts=<n1:n2:n3:n4>,advice=<TAIL|BACK|LEGS|HEAD|HAT|FACE|NONE>`（PNEM3 の次の行、部位名は有効スロットの物体）。tuned_k 0 = 未調整（recall は意味なし、advice は常に NONE）。mask は今使っている選択（ビット j = プール特徴 j、k や自動で選んだときも同じ形、失敗時 0000）。recall は TUNE 時の held-out 再現率 %（255 = その部位の記録なし）、counts は今回の学習に使った部位ごとの件数（統計の前に失敗したら 0）。
+- LCD 1 行目: 学習中は `LEARN<段階> 済/全`（例 `LEARN1  123/ 704`、0 = 統計、1 = 学習）。学習に成功するたび（起動、PAI1 MODE 0 復帰、SW3 のスロット切替、SW2 の TUNE 後）まず 2 秒間 `S2 DINO  176  k4`（`S` + スロット番号、物体のタグ、件数を列 7..11 に右詰め、選んだ数を列 14..15。10..12 は `k` なしの 2 桁で `S2 DINO  176  12`）を出し、そのあと `READY DINO      `（有効スロットの物体）（TUNE の提案は LCD には出さず、`# PNEM4` の `advice=` と `model_store.py info` / `tune` で見る）。スロットが無ければ `NO MODEL`、その他の失敗は `AI ERROR`。
+- LCD 1 行目（TUNE 中）: 段階 1 は `TUNE 37/198  57%`（"TUNE" + 済んだ学習数を右詰め 3 桁 + "/" + 全数 3 桁 + 空白 + % 3 桁 + "%"。全数 = 候補数 × 2 パス。198 回目は `TUNE198/198`）、段階 2 は `FINAL 3/6    57%`（済んだ候補 / 候補数、10 以上なら 2 桁ずつ `FINAL 10/12  57%`）。% = 今の段階（統計または学習）の進み。各回の始まり（段階 2/3 の通知そのもの）は列 12..15 が空白。最後の FINAL が終わると `READY DINO` などに戻る。候補の選択が決まるたびに 2 行目のセルが切り替わる。
 - LCD 2 行目: 選ばれた特徴を黒■（0xFF）、選ばれなければ空白。右端 2 桁は選んだ数（`k4` の形、10 以上は数字 2 桁）。選択が決まった時点（学習開始時）で表示する。
 
 | 列 | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14–15 |
@@ -136,20 +136,21 @@ CRC は CRC-16/CCITT-FALSE（UART と同じ）。書き込みはすべて読み�
 
 | 操作 | 動作 | LCD 1 行目 | UART |
 |---|---|---|---|
-| SW2 を押す | 長押しの案内 | `HOLD 2s: TUNE   `（2 秒前に離すと元の `READY` などに戻る） | なし |
-| SW2 を 2 秒押し続ける | 有効スロットで TUNE（PST1 TUNE と同じ、約 2 分）→ 再学習 → 取得再開。1 回押すと 1 回だけ（押したままでも繰り返さない） | `TUNE …` / `FINAL …` → `LEARN…` → `SLOT …` 2 秒 → `READY …` | `# PNET1,START`、終了時 `# PNET1,<ok>,<err>,…`（PST1 TUNE 返信の id より後ろと同じ並び）、`# PNEM1..4`、`# PneutouchAi live acquisition resumed; sequence restarts` |
-| SW3 を短く押す（1 秒以内に離す） | 有効スロットの次（巡回、COMMITTED で 4 件以上）を有効にして再学習 → 取得再開 | `SLOT 1   141    `（スロット、件数を右詰め 4 桁）→ `LEARN…` → `SLOT …` 2 秒 → `READY …` | `# PNES1,slot=<n>,count=<件数>`、`# PNEM1..4`、resumed 行 |
+| SW2 を押す | 長押しの案内 | `HOLD 2s: TUNE   `（2 秒前に離すと元の `READY DINO` などに戻る） | なし |
+| SW2 を 2 秒押し続ける | 有効スロットで TUNE（PST1 TUNE と同じ、約 2 分）→ 再学習 → 取得再開。1 回押すと 1 回だけ（押したままでも繰り返さない） | `TUNE …` / `FINAL …` → `LEARN…` → `S2 DINO …` 2 秒 → `READY DINO      ` | `# PNET1,START`、終了時 `# PNET1,<ok>,<err>,…`（PST1 TUNE 返信の id より後ろと同じ並び）、`# PNEM1..4`、`# PneutouchAi live acquisition resumed; sequence restarts` |
+| SW3 を短く押す（1 秒以内に離す） | 有効スロットの次（巡回、COMMITTED で 4 件以上）を有効にして再学習 → 取得再開 | `S1 KRAG  141    `（スロット、物体、件数）→ `LEARN…` → `S1 KRAG  141  k4` 2 秒 → `READY KRAG      `。物体の違うスロットに切り替えれば DINO ⇄ KRAG の切替になる | `# PNES1,slot=<n>,count=<件数>`、`# PNEM1..4`、resumed 行 |
 | SW3（ほかに使えるスロットなし） | 何もしない | `SLOT 2 ONLY     `（今の有効スロット）を 2 秒 | `# PNES1,ERROR,NO_OTHER_SLOT` |
 | SW3（ディレクトリ書込み失敗） | 何もしない | `STORE ERROR` を 2 秒 | `# PNES1,ERROR,STORE` |
-| SW4 を短く押す（記録していないとき） | 有効スロットに**追記する記録**を始める。COMMITTED は OPEN に戻す（`pneu_store_reopen`、件数・名前・k・mask・tuned_k・再現率はそのまま）。OPEN ならそのまま続け、EMPTY（またはヘッダーが読めない）なら `BTN` で新しく開く。部位ごとの件数をラベル 1 巡で数える | `REC TAIL   2/  8`（部位、その部位の件数を右詰め 3 桁、`/`、全件数を右詰め 3 桁） | `# PNER1,START,<slot>,<件数>,<新規 0/1>` |
-| SW4 を 2 秒押し続ける（記録していないとき） | 最初の EMPTY スロット（ヘッダーが読めないスロットも EMPTY 扱い）を `pneu_store_open(slot, 0, "BTN")` で開き、有効にして（`pneu_store_use`）記録を始める | `REC TAIL   0/  0` | `# PNER1,START,<slot>,0,1` |
-| SW4 長押し（EMPTY なし） | 何もしない | `NO EMPTY SLOT   ` を 2 秒 | `# PNER1,ERROR,NO_EMPTY_SLOT` |
-| 記録中に押して離す（押下イベント完了） | 今の部位で 14 候補値を記録（`pneu_store_put`）。`# PNEC1` の推定は記録前のモデルで続くが、LCD の結果表示の代わりに件数を出す | `+HEAD 39        `（部位と新しい件数）を 1 秒 → `REC …` | `# PNER1,REC,<slot>,<部位>,<全件数>` |
+| SW4 を短く押す（記録していないとき） | 有効スロットに**追記する記録**を始める。COMMITTED は OPEN に戻す（`pneu_store_reopen`、件数・名前・k・mask・tuned_k・再現率はそのまま）。OPEN ならそのまま続け、EMPTY（またはヘッダーが読めない）なら DINO の `DINOBTN` で新しく開く。物体はスロット名のまま（部位も物体の部位だけ）。部位ごとの件数をラベル 1 巡で数える | `REC TAIL   2/  8`（部位を 4 文字に詰めて、その部位の件数を右詰め 3 桁、`/`、全件数を右詰め 3 桁。KRAG は `REC HAT   12/ 40`） | `# PNER1,START,<slot>,<件数>,<新規 0/1>` |
+| SW4 を 2 秒押し続ける（記録していないとき） | 物体を選ぶ画面を出す（初期値は有効スロットの物体）。SW5 短押しで DINO ⇄ KRAG、SW4 短押しで決定、SW4 長押しか 10 秒操作なしで取り消し（待ち受け表示に戻る）。選択中は SW2・SW3・SW5 長押しを無視 | `NEW: DINO  (SW5)` / `NEW: KRAG  (SW5)` | なし |
+| 物体を選ぶ画面で SW4 短押し | 最初の EMPTY スロット（ヘッダーが読めないスロットも EMPTY 扱い）を `pneu_store_open(slot, 0, "<タグ>BTN")`（`DINOBTN` / `KRAGBTN`）で開き、有効にして（`pneu_store_use`）記録を始める | `REC TAIL   0/  0` / `REC HAT    0/  0` | `# PNER1,START,<slot>,0,1` |
+| SW4 長押し（EMPTY なし、または決定時に EMPTY がなくなっていた） | 何もしない（物体を選ぶ画面も出さない） | `NO EMPTY SLOT   ` を 2 秒 | `# PNER1,ERROR,NO_EMPTY_SLOT` |
+| 記録中に押して離す（押下イベント完了） | 今の部位で 14 候補値を記録（`pneu_store_put`）。`# PNEC1` の推定は記録前のモデルで続くが、LCD の結果表示の代わりに件数を出す | `+HEAD 39        `（部位を 4 文字に詰めて新しい件数。`+HAT  3`）を 1 秒 → `REC …` | `# PNER1,REC,<slot>,<部位>,<全件数>` |
 | 記録の書込み失敗（満杯・FeRAM 不良） / 特徴が範囲外 | 記録しない（記録の開始・終了で FeRAM を読み書きできないときも `STORE ERROR`） | `STORE ERROR     ` / `BAD PRESS       ` を 2 秒 | `# PNER1,ERROR,STORE` / `# PNER1,ERROR,POOL` |
-| SW5 を短く押す（記録中のみ） | 次の部位 TAIL → BACK → LEGS → HEAD → TAIL。起動直後は TAIL、同じ起動中は最後の部位を覚えている | `REC BACK   2/  9` | なし |
+| SW5 を短く押す（記録中のみ） | 次の部位 TAIL → BACK → LEGS → HEAD → TAIL（KRAG は HAT → FACE → HAT）。起動直後は最初の部位、同じ起動中は最後の部位を覚えている（物体の部位でなければ最初の部位） | `REC BACK   2/  9` | なし |
 | SW5 を 2 秒押し続ける（記録中のみ） | 最後の 1 件を取り消す（`pneu_store_undo`: 件数 −1、ヘッダーだけ書き直し）。今回の記録で足した分だけ | `UNDO TAIL 2     ` を 1 秒（取り消した記録の部位と残り件数） | `# PNER1,UNDO,<slot>,<部位>,<全件数>` |
 | SW5 長押し（今回足した記録なし） | 何もしない | `NOTHING TO UNDO ` を 2 秒 | なし |
-| SW4 を短く押す（記録中） | 確定（`pneu_store_commit`）→ 再学習 → 取得再開 | `LEARN…` → `SLOT 2  180  k4 ` 2 秒 → `READY …` | `# PNER1,STOP,<slot>,<件数>,<今回足した数>`、`# PNEM1..4`、resumed 行 |
+| SW4 を短く押す（記録中） | 確定（`pneu_store_commit`）→ 再学習 → 取得再開 | `LEARN…` → `S2 DINO  180  k4` 2 秒 → `READY DINO      ` | `# PNER1,STOP,<slot>,<件数>,<今回足した数>`、`# PNEM1..4`、resumed 行 |
 | SW4 短押し（記録中、4 件未満） | 記録を続ける | `NEED 4 RECORDS  ` を 2 秒 | なし |
 | 記録中の SW2 長押し / SW3 | 何もしない（TUNE とスロット切替は確定済みスロットが必要）。SW2 の `HOLD 2s` 案内も出さない | `STOP REC FIRST  ` を 2 秒 | なし |
 | SW4 を 2 秒押し続ける（記録中） | 今回の記録を取り消す: 今回足した記録をすべて消し（`pneu_store_truncate` で開始時の件数に戻す、ヘッダーだけ書き直し）、新しく開いたスロット（SW4 長押し・EMPTY から）は消して（`pneu_store_erase`）前の有効スロットに戻す。COMMITTED から追記していたスロットは確定し直す。もともと OPEN（4 件未満）なら OPEN のまま。スロットが戻ったときと確定し直したときは再学習 → 取得再開 | （`LEARN…` →）`DISCARDED       ` を 2 秒 | `# PNER1,DISCARD,<slot>,<消した件数>`（再学習時は `# PNEM1..4`、resumed 行） |
@@ -165,14 +166,33 @@ CRC は CRC-16/CCITT-FALSE（UART と同じ）。書き込みはすべて読み�
 
 ### PC なしの学習手順
 
-1. SW4 を 2 秒長押し（空きスロットに新しく記録）、または SW4 を短く押す（有効スロットに追記）。LCD は `REC TAIL   0/  0`。
-2. SW5 を短く押して部位を選ぶ（TAIL → BACK → LEGS → HEAD）。
+1. SW4 を 2 秒長押し → `NEW: DINO  (SW5)` で SW5 を押して物体を選び（DINO / KRAG）、SW4 を短く押す（空きスロットに新しく記録）。または SW4 を短く押す（有効スロットに追記）。LCD は `REC TAIL   0/  0`（KRAG は `REC HAT    0/  0`）。
+2. SW5 を短く押して部位を選ぶ（TAIL → BACK → LEGS → HEAD、KRAG は HAT → FACE）。
 3. 恐竜のその部位を約 1 秒押して離す。1 回ごとに `+TAIL 1` などが出て 1 件記録される。間違えたら SW5 を 2 秒長押しで最後の 1 件を取り消す。
-4. 部位ごとに 2〜4 を繰り返し、SW4 を短く押して終了（4 件以上で確定 → 再学習 → `SLOT …` → `READY`）。やり直したいときは SW4 長押しで今回の記録をすべて取り消し（`DISCARDED`、記録を始める前に戻る）。
+4. 部位ごとに 2〜4 を繰り返し、SW4 を短く押して終了（4 件以上で確定 → 再学習 → `S3 KRAG …` → `READY KRAG`）。やり直したいときは SW4 長押しで今回の記録をすべて取り消し（`DISCARDED`、記録を始める前に戻る）。
 5. SW2 を 2 秒長押しで TUNE（特徴の組を選び直してスロットに保存）。足りない部位は PC の `model_store.py info`（`提案:`）か UART の `# PNEM4,…,advice=` で分かるので、SW4 短押しで追記する。
 
 波形を見る学習ツール（PC）は今までどおり使えるが、なくても学習できる。
 - PAI1 MODE 0 での復帰も同じ処理（`resume_live()`）になったので、resumed 行の前に `# PNEM1..4` が出る。
+
+## 物体プロファイル（DINO / KRAG）
+
+1 枚のボードで物体を替えて使う。物体はスロットに紐づき、**スロット名の先頭のタグ**（大文字小文字を区別）で決まる。FeRAM のレイアウトは変えていない（`object_profile.c`）。
+
+| 物体 | タグ | 部位（ラベル） | 学習・選択に使うクラス |
+|---|---|---|---|
+| 恐竜 | `DINO` | TAIL 1 / BACK 2 / LEGS 3 / HEAD 4 | 0x0F |
+| KRAG | `KRAG` | HAT 1 / FACE 2 | 0x03 |
+
+- タグで始まらない名前（`1023-176`、`BTN`、空など今までのスロット）は DINO。`krag…` は DINO（小文字は別物）。
+- 記録とUARTのラベルは今までどおり 1..4。KRAG のスロットに 3 か 4 の記録があると学習も TUNE も `err=3`（RECORD）で止まる（PST1 PUT は 1..4 を受け付けるので PC からの書込みは `model_store.py load --object KRAG` が先に検査する）。
+- 学習の教師は 4 出力の one-hot のまま（KRAG は出力 3・4 を 0 に学習）。推定の argmax は物体の部位の出力だけで取るので、KRAG のモデルが LEGS/HEAD を答えることはない。`# PNEC1` の 4 つのスコアはそのまま全部出す。
+- `pneu_class_name()` は有効スロットの物体の部位名を返す（`# PNEC1`、`# PNEL1`、LCD の結果、`# PNEM4` の advice）。
+- TUNE: Fisher の選択（`class_mask`）、ふるいの部位ごとの学習セット、混同行列・再現率・提案は物体の部位だけ。ない部位の再現率は 255（スロットのヘッダーにも 255）。
+- 切替: SW3 で次のスロットに切り替えるだけ（スロットの物体が違えば DINO ⇄ KRAG）。LCD は `S1 KRAG  141  k4` → `READY KRAG      `。
+- 新しいスロット: SW4 長押しで `NEW: DINO  (SW5)`、SW5 で `NEW: KRAG  (SW5)`、SW4 短押しで `KRAGBTN` として開いて記録開始（SW4 長押しか 10 秒で取り消し）。SW4 短押しの追記はスロットの物体のまま。
+- PC: `model_store.py load --slot 2 --input krag.json --object KRAG --name 1024 --use`（スロット名 `KRAG1024`、ラベルが 1..2 でなければ何も書かずにエラー）。`info` は `slot 2: 40 records  KRAG (HAT/FACE)  …  recall HAT 95% FACE 88%`、`dump` は `source.object` と部位名の `zone`、`tune` / `train` は有効スロットの物体の部位名で表示する（先に INFO と SLOT を読む）。
+- UART: `# PNEM3,…,err=0,object=KRAG,sel=…`。起動時の `# PNEF1; …; classes=tail/back/legs/head; gesture=press_release_1s; objects=dino:tail/back/legs/head,krag:hat/face`。
 
 ## UART プロトコル PST1
 

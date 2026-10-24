@@ -161,6 +161,13 @@ class ReferenceTests(unittest.TestCase):
                 fs.main([str(path), '--k', '13'])
         self.assertIn('selection failed', fs.report(fixture_events()[:2] * 2)[0])
 
+    def test_report_two_classes(self):
+        """A KRAG slot (HAT 1 / FACE 2 only) reports like any other: absent classes count 0."""
+        events = [dict(e, label=(e['label'] - 1) % 2 + 1) for e in fixture_events()]
+        lines = fs.report(events)
+        self.assertEqual(lines[0], 'records: 8  per class: [4, 4, 0, 0]')
+        self.assertTrue(any(line.startswith('selected (') for line in lines))
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -12,6 +12,8 @@
 #include "model_tune.h"
 #include "app_buttons.h"
 #include "app_record.h"
+#include "app_chooser.h"
+#include "object_profile.h"
 #include "fram_stub.h"
 
 static uint32_t now, bits;
@@ -35,7 +37,9 @@ bool pneu_model_init(void)
     pneutouch_model = (pneu_model_status_t){0};
     pneutouch_model.slot = pneu_store_active();
     memset((char *)pneutouch_model.lcd_line2, ' ', 16); /* blank, as after a failure */
-    if (!pneu_store_slot_info(pneutouch_model.slot, &info) || info.state != PNEU_SLOT_COMMITTED || info.count < 4) {
+    bool valid = pneu_store_slot_info(pneutouch_model.slot, &info);
+    pneutouch_model.object = (uint8_t)pneu_object_of_name(info.name);
+    if (!valid || info.state != PNEU_SLOT_COMMITTED || info.count < 4) {
         pneutouch_model.error = PNEU_MODEL_ERR_NO_SLOT;
         return false;
     }
@@ -57,8 +61,7 @@ bool pneu_model_pool(const float values[12], float peak, float trough, float poo
 }
 const char *pneu_class_name(pneu_demo_class_t label)
 {
-    static const char *const names[] = {"UNKNOWN", "TAIL", "BACK", "LEGS", "HEAD"};
-    return label <= PNEU_CLASS_HEAD ? names[label] : names[0];
+    return pneu_object_class_name((pneu_object_t)pneutouch_model.object, (uint8_t)label);
 }
 void pneu_display_init(void) {}
 void pneu_display_poll(void) {}
@@ -144,6 +147,12 @@ static uint16_t slot_count(uint8_t slot, uint8_t state)
     return info.count;
 }
 
+static bool slot_name(uint8_t slot, const char *name)
+{
+    pneu_store_slot_t info;
+    return pneu_store_slot_info(slot, &info) && !strcmp(info.name, name);
+}
+
 static void boot(void)
 {
     clear_log(); ready = false;
@@ -176,7 +185,7 @@ static void test_append(void)
 {
     unsigned inits;
     fixture(0); boot();
-    assert(!strcmp(idle_text, "READY") && model_inits == 1);
+    assert(!strcmp(idle_text, "READY DINO      ") && model_inits == 1);
     clear_log(); tap(APP_SW4);
     assert(logged("# PNER1,START,0,8,0\r\n") && !strcmp(idle_text, "REC TAIL   2/  8"));
     assert(app_record.active && slot_count(0, PNEU_SLOT_OPEN) == 8);
@@ -197,9 +206,9 @@ static void test_append(void)
     inits = model_inits; clear_log(); tap(APP_SW4);
     assert(logged("# PNER1,STOP,0,8,0\r\n") && logged("# PNEM3,READY,slot=0,count=8,"));
     assert(!app_record.active && slot_count(0, PNEU_SLOT_COMMITTED) == 8 && model_inits == inits+1);
-    assert(!strcmp(idle_text, "SLOT 0    8  k3 "));
-    run(0, 2000); assert(!strcmp(idle_text, "READY"));
-    tap(APP_SW5); hold(APP_SW5); assert(!strcmp(idle_text, "READY")); /* SW5 outside recording */
+    assert(!strcmp(idle_text, "S0 DINO    8  k3"));
+    run(0, 2000); assert(!strcmp(idle_text, "READY DINO      "));
+    tap(APP_SW5); hold(APP_SW5); assert(!strcmp(idle_text, "READY DINO      ")); /* SW5 outside recording */
     tap(APP_SW4); assert(!strcmp(idle_text, "REC BACK   2/  8")); /* label kept */
     tap(APP_SW4); assert(!app_record.active);
 }
@@ -209,7 +218,10 @@ static void test_new_slot(void)
 {
     fixture(0); boot();
     clear_log(); hold(APP_SW4);
+    assert(!strcmp(idle_text, "NEW: DINO  (SW5)") && !logged("START") && !app_record.active);
+    tap(APP_SW4);
     assert(logged("# PNER1,START,3,0,1\r\n") && pneu_store_active() == 3 && !strcmp(idle_text, "REC TAIL   0/  0"));
+    assert(slot_name(3, "DINOBTN") && app_record.object == PNEU_OBJECT_DINO);
     for (unsigned i = 0; i < 4; ++i) tap(APP_SW5);
     assert(!strcmp(idle_text, "REC TAIL   0/  0"));
     press_event(); tap(APP_SW5); press_event();
@@ -222,9 +234,48 @@ static void test_new_slot(void)
     run(0, 2100); assert(!strcmp(idle_text, "REC BACK   3/  4"));
     clear_log(); tap(APP_SW4);
     assert(logged("# PNER1,STOP,3,4,4\r\n") && slot_count(3, PNEU_SLOT_COMMITTED) == 4);
-    assert(!strcmp(idle_text, "SLOT 3    4  k3 ") && pneutouch_model.ready);
+    assert(!strcmp(idle_text, "S3 DINO    4  k3") && pneutouch_model.ready);
     clear_log(); hold(APP_SW4);
     assert(!strcmp(idle_text, "NO EMPTY SLOT   ") && logged("# PNER1,ERROR,NO_EMPTY_SLOT\r\n") && !app_record.active);
+}
+
+/* SW4 long: object chooser, KRAG slot opened as KRAGBTN, HAT/FACE labels only. */
+static void test_chooser(void)
+{
+    fixture(0); boot();
+    clear_log(); hold(APP_SW4);
+    assert(!strcmp(idle_text, "NEW: DINO  (SW5)") && app_chooser.active && !app_record.active);
+    tap(APP_SW5); assert(!strcmp(idle_text, "NEW: KRAG  (SW5)"));
+    tap(APP_SW3); tap(APP_SW2); hold(APP_SW5); /* ignored */
+    assert(!strcmp(idle_text, "NEW: KRAG  (SW5)") && pneu_store_active() == 0 && model_tunes == 0 && !logged("PNES1"));
+    tap(APP_SW5); tap(APP_SW5); assert(!strcmp(idle_text, "NEW: KRAG  (SW5)"));
+    tap(APP_SW4);
+    assert(logged("# PNER1,START,3,0,1\r\n") && pneu_store_active() == 3 && !app_chooser.active);
+    assert(slot_name(3, "KRAGBTN") && app_record.object == PNEU_OBJECT_KRAG && !strcmp(idle_text, "REC HAT    0/  0"));
+    tap(APP_SW5); assert(!strcmp(idle_text, "REC FACE   0/  0"));
+    tap(APP_SW5); assert(!strcmp(idle_text, "REC HAT    0/  0"));
+    clear_log(); press_event();
+    assert(logged("# PNER1,REC,3,HAT,1\r\n") && !strcmp(saved_text, "+HAT  1         "));
+    tap(APP_SW5); press_event(); press_event(); tap(APP_SW5); press_event();
+    run(0, 1100); assert(!strcmp(idle_text, "REC HAT    2/  4"));
+    hold(APP_SW5); assert(!strcmp(idle_text, "UNDO HAT  1     ")); press_event();
+    clear_log(); tap(APP_SW4);
+    assert(logged("# PNER1,STOP,3,4,4\r\n") && logged(",object=KRAG,sel="));
+    assert(pneutouch_model.object == PNEU_OBJECT_KRAG);
+    assert(!strcmp(idle_text, "S3 KRAG    4  k3"));
+    run(0, 2000); assert(!strcmp(idle_text, "READY KRAG      "));
+    tap(APP_SW4); assert(!strcmp(idle_text, "REC HAT    2/  4")); /* append keeps KRAG */
+    tap(APP_SW5); tap(APP_SW5); tap(APP_SW5); assert(!strcmp(idle_text, "REC FACE   2/  4"));
+    tap(APP_SW4); run(0, 2000); assert(!app_record.active);
+    assert(pneu_store_erase(1)); /* an empty slot again */
+    clear_log(); hold(APP_SW4); assert(!strcmp(idle_text, "NEW: KRAG  (SW5)")); /* the active slot's object */
+    hold(APP_SW4); /* SW4 long cancels */
+    assert(!app_chooser.active && !strcmp(idle_text, "READY KRAG      ") && !logged("START"));
+    hold(APP_SW4); tap(APP_SW5); assert(!strcmp(idle_text, "NEW: DINO  (SW5)"));
+    run(0, 9800); assert(app_chooser.active && !strcmp(idle_text, "NEW: DINO  (SW5)"));
+    run(0, 200); /* 10 s after the last press */
+    assert(!app_chooser.active && !strcmp(idle_text, "READY KRAG      ") && !logged("START"));
+    tap(APP_SW4); tap(APP_SW4); assert(!app_record.active); /* SW4 short works again */
 }
 
 /* Power lost while recording: >= 4 records are committed at boot, fewer stay OPEN. */
@@ -239,7 +290,7 @@ static void test_boot_open_slot(void)
     for (uint8_t label = 1; label <= 3; ++label) assert(pneu_store_put(2, label, pool));
     clear_log(); pressure_app_init();
     assert(logged("# PNER1,AUTOCOMMIT,2,5\r\n") && logged("# PNEM3,READY,slot=2,count=5,"));
-    assert(slot_count(2, PNEU_SLOT_COMMITTED) == 5 && !app_record.active && !strcmp(idle_text, "SLOT 2    5  k3 "));
+    assert(slot_count(2, PNEU_SLOT_COMMITTED) == 5 && !app_record.active && !strcmp(idle_text, "S2 DINO    5  k3"));
     fram_drop_writes = true; clear_log(); run(0, 2100); tap(APP_SW4); fram_drop_writes = false;
     assert(!strcmp(idle_text, "STORE ERROR     ") && !app_record.active); /* reopen not verified */
 }
@@ -253,8 +304,8 @@ static void test_discard(void)
     inits = model_inits; clear_log(); hold(APP_SW4);
     assert(logged("# PNER1,DISCARD,0,2\r\n") && !app_record.active && slot_count(0, PNEU_SLOT_COMMITTED) == 8);
     assert(model_inits == inits+1 && logged("resumed") && !strcmp(idle_text, "DISCARDED       "));
-    run(0, 2000); assert(!strcmp(idle_text, "READY"));
-    hold(APP_SW4); press_event(); assert(pneu_store_active() == 3); /* fresh: slot 3 */
+    run(0, 2000); assert(!strcmp(idle_text, "READY DINO      "));
+    hold(APP_SW4); tap(APP_SW4); press_event(); assert(pneu_store_active() == 3); /* fresh: slot 3 */
     inits = model_inits; clear_log(); hold(APP_SW4);
     assert(logged("# PNER1,DISCARD,3,1\r\n") && slot_count(3, PNEU_SLOT_EMPTY) == 0 && pneu_store_active() == 0);
     assert(model_inits == inits+1 && pneutouch_model.ready && pneutouch_model.slot == 0);
@@ -278,7 +329,7 @@ static void test_validation(void)
     assert(!strcmp(idle_text, "VALIDATION"));
     inits = model_inits; validating = false; run(0, 100);
     assert(model_inits == inits+1 && pneutouch_model.ready && pneutouch_model.store_count == 9);
-    run(0, 2000); hold(APP_SW4); press_event(); press_event(); /* fresh slot 3 with 2 */
+    run(0, 2000); hold(APP_SW4); tap(APP_SW4); press_event(); press_event(); /* fresh slot 3 with 2 */
     clear_log(); validating = true; run(0, 100);
     assert(logged("# PNER1,ABORT,3,2\r\n") && !app_record.active && slot_count(3, PNEU_SLOT_OPEN) == 2);
     validating = false; run(0, 100);
@@ -290,10 +341,11 @@ int main(void)
     test_gestures();
     test_append();
     test_new_slot();
+    test_chooser();
     test_boot_open_slot();
     test_discard();
     test_validation();
     puts("App buttons: SW4/SW5 gestures, recording append/new slot/label/undo/stop, SW2/SW3 refused while recording, "
-         "discard, validation stop/abort, store errors, boot autocommit PASS");
+         "discard, validation stop/abort, store errors, boot autocommit, object chooser and KRAG labels PASS");
     return 0;
 }

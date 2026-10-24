@@ -10,6 +10,7 @@
 #include "model_store.h"
 #include "model_tune.h"
 #include "app_buttons.h"
+#include "object_profile.h"
 
 static uint32_t now, bits;
 static unsigned pulses, watchdogs;
@@ -34,8 +35,11 @@ bool pneu_model_init(void)
     static const char selected[17] = "\xff   \xff     \xff   k3";
     assert(store_inits == 1 && progress); /* FeRAM ready and progress hook registered first */
     ++model_inits; strcpy(idle_at_init, idle_text);
+    pneu_store_slot_t info;
     pneutouch_model = (pneu_model_status_t){0};
     pneutouch_model.slot = active_slot;
+    (void)pneu_store_slot_info(active_slot, &info);
+    pneutouch_model.object = (uint8_t)pneu_object_of_name(info.name);
     pneutouch_model.store_count = 8; pneutouch_model.fisher[0] = 45.0f; pneutouch_model.fisher[4] = 12.75f;
     if (model_fails) { pneutouch_model.error = PNEU_MODEL_ERR_NO_SLOT; memset((char *)pneutouch_model.lcd_line2, ' ', 16); return false; }
     pneutouch_model.selected_count = 3;
@@ -93,14 +97,14 @@ bool pneu_model_tune(void)
     pneutouch_tune.elapsed_us = 61000000U;
     return true;
 }
-/* Store: only slot 1 is committed (141 records); PST1 commands are not exercised here. */
+/* Store: only slot 1 is committed (141 records, a KRAG slot); PST1 commands are not exercised here. */
 uint8_t pneu_store_active(void) { return active_slot; }
 bool pneu_store_use(uint8_t slot) { if (use_fails) return false; used_slot = active_slot = slot; return true; }
 bool pneu_store_slot_info(uint8_t slot, pneu_store_slot_t *info)
 {
     *info = (pneu_store_slot_t){0};
     info->valid = true;
-    if (slot == 1) { info->state = PNEU_SLOT_COMMITTED; info->count = 141; }
+    if (slot == 1) { info->state = PNEU_SLOT_COMMITTED; info->count = 141; strcpy(info->name, "KRAG1024"); }
     return true;
 }
 bool pneu_store_open(uint8_t slot, uint8_t k, const char *name) { (void)slot; (void)k; (void)name; return false; }
@@ -176,11 +180,11 @@ static void test_sw2(uint32_t t)
 {
     unsigned inits = model_inits;
     hold_buttons(1, t, t+10); hold_buttons(0, t+10, t+100); /* 10 ms glitch: no press */
-    assert(!strcmp(idle_text, "READY") && model_tunes == 0);
+    assert(!strcmp(idle_text, "READY DINO      ") && model_tunes == 0);
     hold_buttons(1, t+100, t+600); /* accepted 30 ms after the edge */
     assert(!strcmp(idle_text, "HOLD 2s: TUNE   "));
     hold_buttons(0, t+600, t+700);
-    assert(!strcmp(idle_text, "READY") && model_tunes == 0 && model_inits == inits);
+    assert(!strcmp(idle_text, "READY DINO      ") && model_tunes == 0 && model_inits == inits);
     t += 1000;
     hold_buttons(1, t, t+2000);
     assert(!strcmp(idle_text, "HOLD 2s: TUNE   ") && model_tunes == 0);
@@ -188,12 +192,12 @@ static void test_sw2(uint32_t t)
     assert(model_tunes == 1 && model_inits == inits+1);
     assert(strstr(output, "# PNET1,START\r\n# PNET1,1,0,8,0015,3,7,2411,5,0015=16=7,99,8,100:100:100:100,"
                           "2:2:2:2,2:0:0:0:0:2:0:0:0:0:2:0:0:0:0:2,0,61000000\r\n"));
-    assert(strstr(output, "# PNEM3,READY,slot=0,count=8,") &&
+    assert(strstr(output, "# PNEM3,READY,slot=0,count=8,err=0,object=DINO,sel=") &&
            strstr(output, "# PneutouchAi live acquisition resumed; sequence restarts\r\n"));
-    assert(!strcmp(idle_text, "SLOT 0    8  k3 "));
+    assert(!strcmp(idle_text, "S0 DINO    8  k3"));
     hold_buttons(1, t+2010, t+3000); hold_buttons(0, t+3000, t+3990); /* fired once, release is silent */
-    assert(model_tunes == 1 && !strcmp(idle_text, "SLOT 0    8  k3 "));
-    poll_at(t+4000); assert(!strcmp(idle_text, "READY"));
+    assert(model_tunes == 1 && !strcmp(idle_text, "S0 DINO    8  k3"));
+    poll_at(t+4000); assert(!strcmp(idle_text, "READY DINO      "));
 }
 
 static void test_sw3(uint32_t t)
@@ -202,24 +206,25 @@ static void test_sw3(uint32_t t)
     hold_buttons(2, t, t+200); hold_buttons(0, t+200, t+230);
     assert(used_slot == 255);
     poll_at(t+230); /* released 200 ms after press-down */
-    assert(used_slot == 1 && model_inits == inits+1 && !strcmp(idle_at_init, "SLOT 1   141    "));
+    assert(used_slot == 1 && model_inits == inits+1 && !strcmp(idle_at_init, "S1 KRAG  141    "));
     assert(strstr(output, "# PNES1,slot=1,count=141\r\n") && strstr(output, "resumed"));
-    assert(!strcmp(idle_text, "SLOT 1    8  k3 "));
-    poll_at(t+2230); assert(!strcmp(idle_text, "READY"));
+    assert(strstr(output, "# PNEM3,READY,slot=1,count=8,err=0,object=KRAG,sel=0:4:10,"));
+    assert(strstr(output, ",advice=NONE\r\n") && !strcmp(idle_text, "S1 KRAG    8  k3"));
+    poll_at(t+2230); assert(!strcmp(idle_text, "READY KRAG      "));
     t += 3000;
     hold_buttons(2, t, t+200); hold_buttons(0, t+200, t+230); poll_at(t+230);
     assert(model_inits == inits+1 && !strcmp(idle_text, "SLOT 1 ONLY     "));
     assert(strstr(output, "# PNES1,ERROR,NO_OTHER_SLOT\r\n"));
     poll_at(t+2229); assert(!strcmp(idle_text, "SLOT 1 ONLY     "));
-    poll_at(t+2230); assert(!strcmp(idle_text, "READY"));
+    poll_at(t+2230); assert(!strcmp(idle_text, "READY KRAG      "));
     t += 3000;
     hold_buttons(2, t, t+1200); hold_buttons(0, t+1200, t+1300); /* long press: nothing */
-    assert(!strcmp(idle_text, "READY") && model_inits == inits+1);
+    assert(!strcmp(idle_text, "READY KRAG      ") && model_inits == inits+1);
     t += 2000; active_slot = 0; use_fails = true;
     hold_buttons(2, t, t+100); hold_buttons(0, t+100, t+130); poll_at(t+130);
     assert(!strcmp(idle_text, "STORE ERROR") && strstr(output, "# PNES1,ERROR,STORE\r\n"));
     assert(model_inits == inits+1 && active_slot == 0);
-    poll_at(t+2130); assert(!strcmp(idle_text, "READY"));
+    poll_at(t+2130); assert(!strcmp(idle_text, "READY KRAG      ")); /* still the slot 1 model */
     active_slot = 1; use_fails = false;
 }
 
@@ -231,9 +236,9 @@ static void test_validation_buttons(uint32_t t)
     assert(!strcmp(idle_text, "VALIDATION") && model_tunes == 1);
     validating = false; /* MODE 0 with SW2 still held: retrain, no TUNE */
     hold_buttons(1, t+3000, t+6000);
-    assert(model_inits == inits+1 && model_tunes == 1 && !strcmp(idle_text, "READY"));
+    assert(model_inits == inits+1 && model_tunes == 1 && !strcmp(idle_text, "READY KRAG      "));
     hold_buttons(0, t+6000, t+6100);
-    assert(!strcmp(idle_text, "READY") && model_tunes == 1);
+    assert(!strcmp(idle_text, "READY KRAG      ") && model_tunes == 1);
 }
 
 static void test_buttons(void)
@@ -241,24 +246,30 @@ static void test_buttons(void)
     char notice[17];
     model_advice = 0; active_slot = 0; store_inits = 0;
     pressure_app_init(); ready = false;
-    poll_at(now+2000); assert(!strcmp(idle_text, "READY"));
+    poll_at(now+2000); assert(!strcmp(idle_text, "READY DINO      "));
     test_sw2(now+100);
     test_sw3(now+100);
     test_validation_buttons(now+100);
-    app_slot_notice(notice, 2, 176, 12); assert(!strcmp(notice, "SLOT 2  176  12 "));
-    app_slot_notice(notice, 3, 1000, 4); assert(!strcmp(notice, "SLOT 3 1000  k4 "));
+    app_slot_notice(notice, 2, PNEU_OBJECT_DINO, 176, 4); assert(!strcmp(notice, "S2 DINO  176  k4"));
+    app_slot_notice(notice, 2, PNEU_OBJECT_KRAG, 176, 4); assert(!strcmp(notice, "S2 KRAG  176  k4"));
+    app_slot_notice(notice, 3, PNEU_OBJECT_KRAG, 1000, 12); assert(!strcmp(notice, "S3 KRAG 1000  12"));
+    app_slot_notice(notice, 0, PNEU_OBJECT_DINO, 4, 2); assert(!strcmp(notice, "S0 DINO    4  k2"));
+    for (unsigned i = 0; i < 16; ++i) assert(notice[i] == "S0 DINO    4  k2"[i]); /* columns 0..15 */
+    assert(strlen(notice) == 16);
 }
 
 int main(void)
 {
     pressure_app_init();
     assert(strstr(output, "PneutouchAi Live; PNEU1,seq,ms,raw; baud=115200") != NULL);
-    assert(strstr(output, "; fw=ss4-lcd\r\n") != NULL);
-    assert(saw_learn && !strcmp(idle_text, "SLOT 0    8  k3 ")); /* 2 s notice, then READY */
+    assert(strstr(output, "; fw=ss5-krag\r\n") != NULL);
+    assert(saw_learn && !strcmp(idle_text, "S0 DINO    8  k3")); /* 2 s notice, then READY */
     assert(!strcmp(line2_text, "\xff   \xff     \xff   k3"));
     assert(strstr(output, "# PNEM1,READY,176,704,"));
     assert(strstr(output, "# PNEM2,NONE,0,0,single_instance\r\n"));
-    assert(strstr(output, "# PNEM3,READY,slot=0,count=8,err=0,sel=0:4:10,fisher=45000:0:0:0:12750:0:0:0:0:0:0:0:0:0\r\n"));
+    assert(strstr(output, "; gesture=press_release_1s; objects=dino:tail/back/legs/head,krag:hat/face\r\n"));
+    assert(strstr(output, "# PNEM3,READY,slot=0,count=8,err=0,object=DINO,sel=0:4:10,"
+                          "fisher=45000:0:0:0:12750:0:0:0:0:0:0:0:0:0\r\n"));
     assert(strstr(output, "\r\n# PNEM4,k=0,mask=0411,recall=0:0:0:0,counts=37:38:39:40,advice=NONE\r\n"));
     watchdogs = 0; /* the progress callback fed it once during init; count polls only */
     assert(pneutouch_status.state == PNEU_SETTLING);
@@ -271,7 +282,7 @@ int main(void)
     poll_at(1100);
     assert(length == 0 && pneutouch_status.state == PNEU_SETTLING);
     poll_at(1100 + PNEU_SETTLE_MS - 1);
-    assert(length == 0 && !strcmp(idle_text, "SLOT 0    8  k3 "));
+    assert(length == 0 && !strcmp(idle_text, "S0 DINO    8  k3"));
     poll_at(1100 + PNEU_SETTLE_MS);
     char expected[80];
     snprintf(expected, sizeof(expected), "PNEU1,0,%lu,-8388608\r\n",
@@ -288,7 +299,7 @@ int main(void)
     poll_at(1125 + PNEU_SETTLE_MS + PNEU_SENSOR_TIMEOUT_MS);
     assert(pneutouch_status.state == PNEU_SENSOR_TIMEOUT);
     assert(pneutouch_status.samples == 2 && pneutouch_status.raw == 8388607);
-    assert(!strcmp(idle_text, "READY")); /* the notice expired at 2000 ms */
+    assert(!strcmp(idle_text, "READY DINO      ")); /* the notice expired at 2000 ms */
     assert(watchdogs == 6);
     /* Actual simulated GPIO -> acquisition -> 12 features -> chip adapter -> LCD. */
     ready = true; bits = 4000000;
@@ -305,15 +316,15 @@ int main(void)
     model_fails = true; store_inits = 0; saw_learn = false; length = 0;
     pressure_app_init();
     assert(!strcmp(idle_text, "NO MODEL") && !saw_learn && !strcmp(line2_text, "                "));
-    assert(strstr(output, "# PNEM3,ERROR,slot=0,count=8,err=2,sel=,fisher=45000:"));
+    assert(strstr(output, "# PNEM3,ERROR,slot=0,count=8,err=2,object=DINO,sel=,fisher=45000:"));
     assert(strstr(output, "# PNEM4,k=0,mask=0000,recall=0:0:0:0,counts=0:0:0:0,advice=NONE\r\n"));
     /* A tuned slot advising HEAD; a stale TUNE state (failed tune) is cleared by the boot. */
     test_tune_progress();
     model_fails = false; model_advice = 4; store_inits = 0; length = 0;
     pressure_app_init();
     assert(strstr(output, "# PNEM4,k=3,mask=0411,recall=100:100:100:78,counts=37:38:39:40,advice=HEAD\r\n"));
-    poll_at(now+1999); assert(!strcmp(idle_text, "SLOT 0    8  k3 "));
-    poll_at(now+1); assert(!strcmp(idle_text, "READY")); /* advice is UART-only (PNEM4) */
+    poll_at(now+1999); assert(!strcmp(idle_text, "S0 DINO    8  k3"));
+    poll_at(now+1); assert(!strcmp(idle_text, "READY DINO      ")); /* advice is UART-only (PNEM4) */
     test_buttons();
     puts("Pressure app: UART framing, signed limits, debug status, no fake samples, FeRAM boot banner and LCD PASS");
     return 0;

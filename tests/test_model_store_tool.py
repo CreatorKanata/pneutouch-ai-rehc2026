@@ -174,7 +174,7 @@ class SequencingTests(unittest.TestCase):
         self.assertEqual(ops[10:], ['COMMIT', 'GET', 'GET', 'USE', 'TRAIN', 'MODE'])
         self.assertEqual(board.mode, 0)
         self.assertEqual(board.active, 2)
-        self.assertEqual(board.slots[2]['name'], 'dino')
+        self.assertEqual(board.slots[2]['name'], 'DINOdino')
         self.assertEqual(result, dict(ready=True, error=0, count=8, k=3, selected=[0, 4, 10], training_us=1500000))
         self.assertIn('rise_ms, slope_norm_s, trough_peak_ratio', ms.describe_training(result))
 
@@ -183,8 +183,8 @@ class SequencingTests(unittest.TestCase):
         training = fixture_training()
         ms.load(store, 1, training, k=5, name='x')
         data = ms.dump(store, 1)
-        self.assertEqual(data['source'], dict(kind='fram', slot=1, name='x', k=5, state='committed',
-                                              tuned_k=0, recall=[0, 0, 0, 0], mask=0))
+        self.assertEqual(data['source'], dict(kind='fram', slot=1, name='DINOx', object='DINO', k=5,
+                                              state='committed', tuned_k=0, recall=[0, 0, 0, 0], mask=0))
         self.assertEqual(data['feature_order'], ms.FEATURE_ORDER)
         np.testing.assert_array_equal(fs.pool_rows(data['events']).view(np.uint32),
                                       fs.pool_rows(training['events']).view(np.uint32))
@@ -308,13 +308,18 @@ class SequencingTests(unittest.TestCase):
         self.assertEqual(board.sent, [])
 
 
+def run_cli(board, *argv):
+    """model_store.main against the fake board; returns stdout."""
+    out = io.StringIO()
+    factory = lambda port, log: Device(port, log, connection=board, sleep=lambda s: None)  # noqa: E731
+    with contextlib.redirect_stdout(out):
+        ms.main(['--port', 'FAKE', *argv], device_factory=factory)
+    return out.getvalue()
+
+
 class CliTests(unittest.TestCase):
     def run_cli(self, board, *argv):
-        out = io.StringIO()
-        factory = lambda port, log: Device(port, log, connection=board, sleep=lambda s: None)  # noqa: E731
-        with contextlib.redirect_stdout(out):
-            ms.main(['--port', 'FAKE', *argv], device_factory=factory)
-        return out.getvalue()
+        return run_cli(board, *argv)
 
     def test_commands(self):
         board = FakeBoard()
@@ -353,10 +358,11 @@ class CliTests(unittest.TestCase):
                                               mask='0007')
         info = self.run_cli(board, 'info')
         self.assertIn('slot 1: 0 records\n', info)
-        self.assertIn('slot 0: 8 records  (未調整)', info)
-        self.assertIn('slot 2: 176 records  k=4 [release_width_ms, release_area_width_ms, peak, trough]  '
-                      'recall TAIL 100% BACK 97% LEGS 94% HEAD 89%  提案: 頭（HEAD）', info)
-        self.assertIn('slot 3: 5 records  k=3 [rise_ms, decay_ms, width_ms]  '
+        self.assertIn('slot 0: 8 records  DINO (TAIL/BACK/LEGS/HEAD)  (未調整)', info)
+        self.assertIn('slot 2: 176 records  DINO (TAIL/BACK/LEGS/HEAD)  k=4 [release_width_ms, '
+                      'release_area_width_ms, peak, trough]  recall TAIL 100% BACK 97% LEGS 94% HEAD 89%  '
+                      '提案: 頭（HEAD）', info)
+        self.assertIn('slot 3: 5 records  DINO (TAIL/BACK/LEGS/HEAD)  k=3 [rise_ms, decay_ms, width_ms]  '
                       'recall TAIL 100% BACK - LEGS 90% HEAD 95%  提案: なし', info)
         self.assertNotIn('slot 1: 0 records  ', info)
         self.assertEqual([op for _, op in board.sent], ['MODE', 'INFO', 'SLOT', 'SLOT', 'SLOT', 'MODE'])
@@ -374,17 +380,18 @@ class CliTests(unittest.TestCase):
         ms.load(store, 0, fixture_training(), use=True)
         board.sent.clear()
         out = self.run_cli(board, 'tune')
-        self.assertEqual([op for _, op in board.sent], ['MODE', 'TUNE', 'TRAIN', 'MODE'])
+        self.assertEqual([op for _, op in board.sent], ['MODE', 'INFO', 'SLOT', 'TUNE', 'TRAIN', 'MODE'])
         self.assertIn('5 finalists (113.2 s)', out)
         self.assertIn('提案: 頭（HEAD）のデータを追加してください。HEAD → LEGS 4 件、LEGS → HEAD 4 件', out)
         self.assertIn('  HEAD     0    0    4   33', out)
         self.assertIn('READY: 8 records, 3 features selected', out)
+        self.assertIn('object DINO (TAIL/BACK/LEGS/HEAD)', out)
         self.assertEqual((board.slots[0]['tuned_k'], board.slots[0]['mask']), (4, '3300'))
         board.tune_reply = TUNE_FAIL
         board.sent.clear()
         with self.assertRaisesRegex(SystemExit, 'model_store: TUNE failed: NO_SLOT'):
             self.run_cli(board, 'tune')
-        self.assertEqual([op for _, op in board.sent], ['MODE', 'TUNE', 'MODE'])
+        self.assertEqual([op for _, op in board.sent], ['MODE', 'INFO', 'SLOT', 'TUNE', 'MODE'])
         self.assertEqual(board.mode, 0)
 
 

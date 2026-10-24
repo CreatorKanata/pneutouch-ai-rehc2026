@@ -4,6 +4,7 @@
 #include "model_store.h"
 #include "model_tune.h"
 #include "store_protocol.h"
+#include "object_profile.h"
 #include "uart_text.h"
 #include <string.h>
 
@@ -86,13 +87,20 @@ void app_digits(char *out, unsigned width, uint32_t value)
     while (i) out[--i] = ' ';
 }
 
-void app_slot_notice(char line[17], uint8_t slot, uint16_t count, uint8_t selected)
+/* "S2 DINO  176    " (columns 0..11 of the slot notice). */
+static void slot_text(char line[17], uint8_t slot, uint8_t object, uint16_t count)
 {
-    memcpy(line, "SLOT            ", 17);
-    app_digits(line+5, 1, slot);
-    app_digits(line+7, 4, count);
-    if (selected >= 10U) app_digits(line+13, 2, selected);
-    else { line[13] = 'k'; app_digits(line+14, 1, selected); }
+    memcpy(line, "S               ", 17);
+    app_digits(line+1, 1, slot);
+    memcpy(line+3, pneu_object((pneu_object_t)object)->tag, PNEU_OBJECT_TAG);
+    app_digits(line+7, 5, count);
+}
+
+void app_slot_notice(char line[17], uint8_t slot, uint8_t object, uint16_t count, uint8_t selected)
+{
+    slot_text(line, slot, object, count);
+    if (selected >= 10U) app_digits(line+14, 2, selected);
+    else { line[14] = 'k'; app_digits(line+15, 1, selected); }
 }
 
 void app_run_tune(void)
@@ -104,7 +112,7 @@ void app_run_tune(void)
 }
 
 /* First slot after active (wrapping) that is COMMITTED with >= 4 records, or active. */
-static uint8_t find_next(uint8_t active, uint16_t *count)
+static uint8_t find_next(uint8_t active, uint16_t *count, uint8_t *object)
 {
     pneu_store_slot_t info;
     unsigned step;
@@ -112,6 +120,7 @@ static uint8_t find_next(uint8_t active, uint16_t *count)
         uint8_t slot = (uint8_t)((active+step)%PNEU_STORE_SLOTS);
         if (pneu_store_slot_info(slot, &info) && info.state == PNEU_SLOT_COMMITTED && info.count >= 4U) {
             *count = info.count;
+            *object = (uint8_t)pneu_object_of_name(info.name);
             return slot;
         }
     }
@@ -120,9 +129,9 @@ static uint8_t find_next(uint8_t active, uint16_t *count)
 
 bool app_next_slot(char line[17])
 {
-    uint8_t active = pneu_store_active(), next;
+    uint8_t active = pneu_store_active(), next, object = PNEU_OBJECT_DINO;
     uint16_t count = 0;
-    next = find_next(active, &count);
+    next = find_next(active, &count, &object);
     if (next == active) {
         memcpy(line, "SLOT   ONLY     ", 17); app_digits(line+5, 1, active);
         pneu_text("# PNES1,ERROR,NO_OTHER_SLOT\r\n");
@@ -134,6 +143,6 @@ bool app_next_slot(char line[17])
         return false;
     }
     pneu_text("# PNES1,slot="); pneu_number(next); pneu_text(",count="); pneu_number(count); pneu_text("\r\n");
-    memcpy(line, "SLOT            ", 17); app_digits(line+5, 1, next); app_digits(line+8, 4, count);
+    slot_text(line, next, object, count);
     return true;
 }

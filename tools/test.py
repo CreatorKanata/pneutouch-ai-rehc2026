@@ -12,22 +12,24 @@ ROOT = Path(__file__).resolve().parents[1]
 FIRMWARE = "src/pneutouch-solist/S_PneuTouch/"
 STORE = ("model_store", "crc16")
 SELECT = ("feature_select", "fast_log")
+OBJECT = ("object_profile",)
+APP = ("acquisition", "pressure_app", "app_buttons", "app_record", "app_chooser", "store_protocol",
+       "pressure_features", "uart_text") + OBJECT
 # Firmware sources linked into each host test (hx710b.c is linked into all of them).
 C_TESTS = {
     "hx710b": (),
     "acquisition": ("acquisition",),
-    "pressure_app": ("acquisition", "pressure_app", "app_buttons", "app_record", "store_protocol", "pressure_features",
-                     "uart_text"),
-    "app_buttons": ("acquisition", "pressure_app", "app_buttons", "app_record", "store_protocol", "pressure_features",
-                    "uart_text") + STORE,
+    "pressure_app": APP,
+    "app_buttons": APP + STORE,
     "pressure_features": ("pressure_features",),
     "ai_validation": ("ai_validation", "store_protocol", "uart_text") + STORE,
-    "pressure_model": ("pressure_model", "model_tune", "model_screen") + SELECT + STORE,
-    "model_tune": ("pressure_model", "model_tune", "model_screen") + SELECT + STORE,
+    "pressure_model": ("pressure_model", "model_tune", "model_screen") + SELECT + STORE + OBJECT,
+    "model_tune": ("pressure_model", "model_tune", "model_screen") + SELECT + STORE + OBJECT,
     "pressure_display": ("pressure_display",),
     "model_store": STORE,
     "feature_select": SELECT,
     "fast_log": ("fast_log",),
+    "object_profile": OBJECT,
     "soft_spi": (),  # tests/test_soft_spi.c includes S_Bsp/SoftSpi.c with a fake Port 8
 }
 

@@ -8,6 +8,7 @@
 #include "model_store.h"
 #include "feature_select.h"
 #include "feature_select_fixture.h"
+#include "object_profile.h"
 #include "solistAi.h"
 #include "crc16.h"
 #include "fram_stub.h"
@@ -16,6 +17,8 @@ static unsigned trained, predicted, now, winner, progress_calls;
 static int stalled = 0, nonfinite = 0;
 static uint16_t expected_predict[12];
 static bool check_predict;
+static bool loose;                 /* KRAG slots: training inputs are not the fixture's */
+static unsigned runner_up = 255;   /* output index with the second best score (255 none) */
 static pneu_selection_t reference;
 static int last_phase = -1;
 static uint16_t last_done, last_total;
@@ -50,8 +53,14 @@ void ODL_StartTrain(uint8_t model, const bfloat16 *x, const bfloat16 *t)
     float pool[PNEU_POOL_COUNT];
     uint16_t words[12];
     unsigned r;
+    assert(model == 0 && trained < 32U);
+    if (loose) {
+        unsigned hot = 0;
+        for (unsigned i = 0; i < 4; ++i) hot += t[i] == 0x3f80 ? 1U : 0U;
+        assert(hot == 1 && (pneutouch_model.object != PNEU_OBJECT_KRAG || (t[2] == 0 && t[3] == 0)));
+        ++trained; return;
+    }
     r = fix_train_order[trained++];
-    assert(model == 0 && trained <= 32U);
     fixture_pool(r, pool);
     assert(pneu_select_words(&reference, pool, words) && !memcmp(x, words, sizeof(words)));
     if (r == FIX_PRIMARY_WORDS_RECORD && reference.count == FIX_PRIMARY_AUTO_COUNT)
@@ -69,7 +78,7 @@ uint32_t ODL_IsBusy(void) { return (uint32_t)stalled; }
 void ODL_GetResult(uint8_t model, bfloat16 *y)
 {
     assert(model == 0);
-    for (unsigned i = 0; i < 4; ++i) y[i] = (bfloat16)(i == winner ? 0xbf00 : 0xbf80);
+    for (unsigned i = 0; i < 4; ++i) y[i] = (bfloat16)(i == winner ? 0xbf00 : i == runner_up ? 0xbf40 : 0xbf80);
     if (nonfinite) y[3] = 0x7fc0;
 }
 static void on_progress(uint8_t phase, uint16_t done, uint16_t total)
@@ -84,12 +93,16 @@ static void on_progress(uint8_t phase, uint16_t done, uint16_t total)
     if (done == total) ++phase_ends[phase];
     last_phase = phase; last_done = done; last_total = total; ++progress_calls;
 }
-static void load_slot(uint8_t slot, uint8_t k, const uint8_t labels[FIX_RECORDS], unsigned count)
+static void load_named(uint8_t slot, uint8_t k, const char *name, const uint8_t labels[FIX_RECORDS], unsigned count)
 {
     float pool[PNEU_POOL_COUNT];
-    assert(pneu_store_open(slot, k, "fixture"));
+    assert(pneu_store_open(slot, k, name));
     for (unsigned r = 0; r < count; ++r) { fixture_pool(r, pool); assert(pneu_store_put(slot, labels[r], pool)); }
     assert(pneu_store_commit(slot));
+}
+static void load_slot(uint8_t slot, uint8_t k, const uint8_t labels[FIX_RECORDS], unsigned count)
+{
+    load_named(slot, k, "fixture", labels, count);
 }
 static void reference_selection(uint8_t k)
 {
@@ -264,6 +277,44 @@ static void test_mask_boot(void)
     assert(pneu_store_use(0));
 }
 
+/* A KRAG slot: HAT/FACE only, argmax over the first two outputs, labels 3/4 refused. */
+static void test_krag(void)
+{
+    static const uint8_t krag[FIX_RECORDS] = {1, 1, 2, 2, 1, 1, 2, 2}, legs[FIX_RECORDS] = {1, 1, 2, 2, 1, 3, 2, 2};
+    float pool[PNEU_POOL_COUNT];
+    pneu_stats_t s;
+    pneu_selection_t want;
+    memset(fram, 0xff, sizeof(fram));
+    assert(pneu_store_init());
+    load_named(0, 0, "KRAGx", krag, FIX_RECORDS);
+    pneu_stats_reset(&s);
+    for (unsigned r = 0; r < FIX_RECORDS; ++r) { fixture_pool(r, pool); assert(pneu_stats_add(&s, krag[r], pool)); }
+    assert(pneu_select(&s, 0x03, 0, &want));
+    loose = true;
+    assert(pneu_model_init() && pneutouch_model.object == PNEU_OBJECT_KRAG && trained == 32);
+    assert(pneutouch_model.mask == pneu_selection_mask(&want) && pneutouch_model.class_count[0] == 4);
+    assert(pneutouch_model.class_count[1] == 4 && pneutouch_model.class_count[2] == 0);
+    fixture_pool(0, pool);
+    winner = 1; assert(pneu_model_predict(pool, pool[12], pool[13]) == PNEU_CLASS_BACK); /* FACE */
+    winner = 0; assert(pneu_model_predict(pool, pool[12], pool[13]) == PNEU_CLASS_TAIL); /* HAT */
+    winner = 2; runner_up = 1; /* LEGS output is the highest: the best of HAT/FACE wins */
+    assert(pneu_model_predict(pool, pool[12], pool[13]) == PNEU_CLASS_BACK);
+    winner = 3; runner_up = 0; assert(pneu_model_predict(pool, pool[12], pool[13]) == PNEU_CLASS_TAIL);
+    runner_up = 255; /* HAT/FACE tie: the lower label */
+    assert(pneu_model_predict(pool, pool[12], pool[13]) == PNEU_CLASS_TAIL);
+    assert(!strcmp(pneu_class_name(PNEU_CLASS_BACK), "FACE") && !strcmp(pneu_class_name(PNEU_CLASS_TAIL), "HAT"));
+    assert(!strcmp(pneu_class_name(PNEU_CLASS_LEGS), "UNKNOWN"));
+    assert(!strcmp(pneu_class_name(PNEU_CLASS_HEAD), "UNKNOWN"));
+    load_named(1, 0, "KRAGbad", legs, FIX_RECORDS); /* a LEGS record in a KRAG slot */
+    assert(pneu_store_use(1) && !pneu_model_init() && pneutouch_model.error == PNEU_MODEL_ERR_RECORD);
+    assert(pneutouch_model.object == PNEU_OBJECT_KRAG);
+    load_named(2, 0, "DINObad", legs, FIX_RECORDS); /* the same labels are fine for DINO */
+    assert(pneu_store_use(2) && pneu_model_init() && pneutouch_model.object == PNEU_OBJECT_DINO);
+    winner = 2; assert(pneu_model_predict(pool, pool[12], pool[13]) == PNEU_CLASS_LEGS);
+    assert(!strcmp(pneu_class_name(PNEU_CLASS_LEGS), "LEGS"));
+    loose = false;
+}
+
 int main(void)
 {
     test_training();
@@ -272,8 +323,10 @@ int main(void)
     test_failures();
     test_mask_boot();
     test_pool();
+    assert(pneutouch_model.object == PNEU_OBJECT_DINO);
     assert(!strcmp(pneu_class_name(PNEU_CLASS_HEAD), "HEAD") && !strcmp(pneu_class_name((pneu_demo_class_t)9), "UNKNOWN"));
+    test_krag();
     puts("Pressure model: FeRAM training order/words/labels, selection, LCD line 2, progress, predict, pool, faults, "
-         "header mask / v1 tuned_k / explicit k at boot PASS");
+         "header mask / v1 tuned_k / explicit k at boot, KRAG slot PASS");
     return 0;
 }

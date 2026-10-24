@@ -4,6 +4,8 @@
 #include "app_record.h"
 #include "model_store.h"
 #include "pressure_model.h"
+#include "object_profile.h"
+#include "app_chooser.h"
 #include "uart_text.h"
 #include "board.h"
 #include <string.h>
@@ -11,9 +13,10 @@
 #define MIN_RECORDS 4U
 #define FIRST_LABEL 1U
 #define LABELS 4U
-#define FRESH_NAME "BTN"
+#define FRESH_SUFFIX "BTN"
+#define NAME_COLUMNS 4U
 
-volatile app_record_t app_record = {false, false, false, 0, FIRST_LABEL, 0, 0, 0, {0, 0, 0, 0}};
+volatile app_record_t app_record = {false, false, false, 0, FIRST_LABEL, 0, PNEU_OBJECT_DINO, 0, 0, {0, 0, 0, 0}};
 
 /* text: exactly 16 characters. */
 static void set_notice(char notice[17], const char *text) { memcpy(notice, text, 17); }
@@ -29,7 +32,21 @@ static void store_error(char notice[17])
     error_line("STORE");
 }
 
-static const char *label_name(uint8_t label) { return pneu_class_name((pneu_demo_class_t)label); }
+/* Zone names of the recording slot's object (it may differ from the model in use). */
+static const char *label_name(uint8_t label)
+{
+    return pneu_object_class_name((pneu_object_t)app_record.object, label);
+}
+
+static uint8_t classes(void) { return pneu_object((pneu_object_t)app_record.object)->classes; }
+
+/* The zone name in NAME_COLUMNS columns (the space padding of out is kept). */
+static void put_name(char *out, uint8_t label)
+{
+    const char *name = label_name(label);
+    size_t n = strlen(name);
+    memcpy(out, name, n < NAME_COLUMNS ? n : NAME_COLUMNS);
+}
 
 /* "<head>,<slot>,<a>,<b>" after "# PNER1,"; b < 0 = absent. */
 static void record_line(const char *head, uint32_t a, int32_t b)
@@ -47,7 +64,7 @@ static void zone_notice(char notice[17], const char *prefix, uint8_t label, uint
     unsigned at = (unsigned)strlen(prefix), i = 0;
     memset(notice, ' ', 16); notice[16] = '\0';
     memcpy(notice, prefix, at);
-    memcpy(notice+at, label_name(label), 4); at += 5U;
+    put_name(notice+at, label); at += NAME_COLUMNS+1U;
     app_digits(digits, 4, n);
     while (i < 3U && digits[i] == ' ') ++i;
     memcpy(notice+at, digits+i, 4U-i);
@@ -83,35 +100,38 @@ static bool count_classes(uint8_t slot, uint16_t count)
 }
 
 /* Leaves slot OPEN for appending; *count = its records. An unreadable header reads
-   as EMPTY (pneu_store_slot_info zeroes it) and is opened fresh. */
-static bool open_for_append(uint8_t slot, bool *fresh, uint16_t *count)
+   as EMPTY (pneu_store_slot_info zeroes it) and is opened fresh for object. */
+static bool open_for_append(uint8_t slot, bool *fresh, uint8_t object, uint16_t *count)
 {
     pneu_store_slot_t info;
+    char name[PNEU_STORE_NAME+1U];
     unsigned c;
     (void)pneu_store_slot_info(slot, &info);
     if (info.state == PNEU_SLOT_EMPTY) *fresh = true;
+    app_record.object = *fresh ? object : (uint8_t)pneu_object_of_name(info.name);
     app_record.reopened = !*fresh && info.state == PNEU_SLOT_COMMITTED;
     app_record.prev_active = pneu_store_active();
     if (*fresh) {
         *count = 0;
         for (c = 0; c < LABELS; ++c) app_record.class_count[c] = 0;
-        return pneu_store_open(slot, 0, FRESH_NAME) && pneu_store_use(slot);
+        pneu_object_slot_name((pneu_object_t)app_record.object, FRESH_SUFFIX, name);
+        return pneu_store_open(slot, 0, name) && pneu_store_use(slot);
     }
     *count = info.count;
     if (!count_classes(slot, info.count)) return false;
     return info.state == PNEU_SLOT_OPEN || pneu_store_reopen(slot);
 }
 
-bool app_record_start(uint8_t slot, bool fresh, char notice[17])
+bool app_record_start(uint8_t slot, bool fresh, uint8_t object, char notice[17])
 {
     uint16_t count = 0;
-    if (slot >= PNEU_STORE_SLOTS || !open_for_append(slot, &fresh, &count)) {
+    if (slot >= PNEU_STORE_SLOTS || !open_for_append(slot, &fresh, object, &count)) {
         store_error(notice);
         return false;
     }
     app_record.active = true; app_record.slot = slot; app_record.fresh = fresh;
     app_record.added = 0; app_record.count = count;
-    if (app_record.label < 1U || app_record.label > LABELS) app_record.label = FIRST_LABEL;
+    if (app_record.label < 1U || app_record.label > classes()) app_record.label = FIRST_LABEL;
     record_line("START", count, fresh ? 1 : 0);
     return true;
 }
@@ -124,6 +144,13 @@ bool app_record_empty_slot(uint8_t *slot)
         (void)pneu_store_slot_info(s, &info); /* an unreadable header reads as EMPTY */
         if (info.state == PNEU_SLOT_EMPTY) { *slot = s; return true; }
     }
+    return false;
+}
+
+bool app_record_need_empty(uint8_t *slot, char notice[17])
+{
+    if (app_record_empty_slot(slot)) return true;
+    set_notice(notice, "NO EMPTY SLOT   "); error_line("NO_EMPTY_SLOT");
     return false;
 }
 
@@ -154,7 +181,7 @@ bool app_record_event(const float values[12], float peak, float trough, char not
 
 void app_record_next_label(void)
 {
-    app_record.label = (uint8_t)(app_record.label%LABELS+1U);
+    app_record.label = (uint8_t)(app_record.label%classes()+1U);
 }
 
 bool app_record_undo(char notice[17])
@@ -178,7 +205,7 @@ void app_record_line(char line[17])
 {
     uint8_t label = app_record.label;
     memcpy(line, "REC             ", 17);
-    memcpy(line+4, label_name(label), 4);
+    put_name(line+4, label);
     app_digits(line+9, 3, app_record.class_count[label-1U]);
     line[12] = '/';
     app_digits(line+13, 3, app_record.count);
@@ -205,6 +232,7 @@ app_record_action_t app_record_discard(char notice[17])
 
 void app_record_abort(void)
 {
+    app_chooser_close();
     if (!app_record.active) return;
     app_record.active = false;
     if (app_record.count >= MIN_RECORDS && pneu_store_commit(app_record.slot)) {
@@ -214,21 +242,17 @@ void app_record_abort(void)
     record_line("ABORT", app_record.count, -1);
 }
 
-/* SW5 outside recording does nothing. */
+/* SW5 outside recording does nothing. An EMPTY active slot opened by SW4 short is DINO. */
 app_record_action_t app_record_button(app_button_event_t event, char notice[17])
 {
-    uint8_t slot;
     switch (event) {
     case APP_BUTTON_REC_TOGGLE:
         if (app_record.active) return app_record_stop(notice) ? APP_REC_RETRAIN : APP_REC_NOTICE;
-        return app_record_start(pneu_store_active(), false, notice) ? APP_REC_IDLE : APP_REC_NOTICE;
+        return app_record_start(pneu_store_active(), false, PNEU_OBJECT_DINO, notice) ? APP_REC_IDLE
+                                                                                       : APP_REC_NOTICE;
     case APP_BUTTON_REC_NEW:
         if (app_record.active) return app_record_discard(notice);
-        if (!app_record_empty_slot(&slot)) {
-            set_notice(notice, "NO EMPTY SLOT   "); error_line("NO_EMPTY_SLOT");
-            return APP_REC_NOTICE;
-        }
-        return app_record_start(slot, true, notice) ? APP_REC_IDLE : APP_REC_NOTICE;
+        return app_chooser_open(notice);
     case APP_BUTTON_LABEL:
         if (!app_record.active) return APP_REC_NONE;
         app_record_next_label();

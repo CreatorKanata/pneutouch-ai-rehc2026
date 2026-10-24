@@ -10,6 +10,8 @@
 #include "firmware_tag.h"
 #include "app_buttons.h"
 #include "app_record.h"
+#include "app_chooser.h"
+#include "object_profile.h"
 #include <string.h>
 
 volatile pneutouch_status_t pneutouch_status;
@@ -170,21 +172,27 @@ static void show_progress(uint8_t phase, uint16_t done, uint16_t total)
     board_watchdog();
 }
 
-static const char *const zone_names[] = {"NONE", "TAIL", "BACK", "LEGS", "HEAD"};
+static const char *object_tag(void) { return pneu_object((pneu_object_t)pneutouch_model.object)->tag; }
 
-static const char *zone_name(uint8_t label) { return zone_names[label <= 4U ? label : 0U]; }
+/* Advice zone of the active slot's object, NONE for 0. */
+static const char *zone_name(uint8_t label)
+{
+    return label ? pneu_object_class_name((pneu_object_t)pneutouch_model.object, label) : "NONE";
+}
 
-/* LCD line 1 when nothing else is shown: the REC line while recording, else
-   READY, NO MODEL or AI ERROR. The TUNE advice goes to UART only (# PNEM4). */
+/* LCD line 1 when nothing else is shown: the chooser, the REC line while recording, else
+   "READY DINO      ", NO MODEL or AI ERROR. The TUNE advice goes to UART only (# PNEM4). */
 static void show_idle(void)
 {
     char text[17];
-    if (app_record.active) { app_record_line(text); pneu_display_idle(text); return; }
-    pneu_display_idle(pneutouch_model.ready ? "READY" :
-                      pneutouch_model.error == PNEU_MODEL_ERR_NO_SLOT ? "NO MODEL" : "AI ERROR");
+    if (app_chooser.active) app_chooser_line(text);
+    else if (app_record.active) app_record_line(text);
+    else if (pneutouch_model.ready) { memcpy(text, "READY           ", 17); memcpy(text+6, object_tag(), 4); }
+    else { pneu_display_idle(pneutouch_model.error == PNEU_MODEL_ERR_NO_SLOT ? "NO MODEL" : "AI ERROR"); return; }
+    pneu_display_idle(text);
 }
 
-/* Success shows "SLOT 2  176  k4 " for 2 s, then the idle text (poll_buttons). */
+/* Success shows "S2 DINO  176  k4" for 2 s, then the idle text (poll_buttons). */
 static bool train_model(void)
 {
     char text[17];
@@ -194,7 +202,8 @@ static bool train_model(void)
     ready = pneu_model_init();
     show_line2(); /* blank after a failure */
     if (!ready) { show_idle(); return false; }
-    app_slot_notice(text, pneutouch_model.slot, pneutouch_model.store_count, pneutouch_model.selected_count);
+    app_slot_notice(text, pneutouch_model.slot, pneutouch_model.object, pneutouch_model.store_count,
+                    pneutouch_model.selected_count);
     show_notice(text, APP_NOTICE_MS);
     return true;
 }
@@ -227,7 +236,8 @@ static void send_model_banner(void)
     pneu_text("# PNEM2,NONE,0,0,single_instance\r\n"); /* kept for older log readers */
     pneu_text(pneutouch_model.ready ? "# PNEM3,READY,slot=" : "# PNEM3,ERROR,slot=");
     pneu_number(pneutouch_model.slot); pneu_text(",count="); pneu_number(pneutouch_model.store_count);
-    pneu_text(",err="); pneu_number(pneutouch_model.error); pneu_text(",sel=");
+    pneu_text(",err="); pneu_number(pneutouch_model.error);
+    pneu_text(",object="); pneu_text(object_tag()); pneu_text(",sel=");
     send_list(pneutouch_model.selected, pneutouch_model.selected_count);
     pneu_text(",fisher=");
     for (i = 0; i < 14U; ++i) {
@@ -251,11 +261,11 @@ static void resume_live(void)
     pneu_text("# PneutouchAi live acquisition resumed; sequence restarts\r\n");
 }
 
-/* SW4/SW5 (app_record.c decides); stop commits and retrains. */
+/* SW4/SW5 (app_record.c or, while it is up, the chooser decides); stop commits and retrains. */
 static void record_button(app_button_event_t event)
 {
     char line[17];
-    switch (app_record_button(event, line)) {
+    switch (app_chooser.active ? app_chooser_button(event, line) : app_record_button(event, line)) {
     case APP_REC_IDLE: notice_active = false; show_idle(); break;
     case APP_REC_NOTICE: show_notice(line, APP_NOTICE_MS); break;
     case APP_REC_BRIEF: show_notice(line, APP_BRIEF_MS); break;
@@ -280,6 +290,7 @@ static void poll_buttons(void)
 {
     uint32_t now = board_millis();
     app_button_event_t event = app_buttons_poll(board_buttons(), now);
+    if (app_chooser.active) { record_button(event); return; } /* SW2/SW3 ignored, timeout */
     switch (event) {
     case APP_BUTTON_HOLD:
         if (!app_record.active) { notice_active = false; pneu_display_idle("HOLD 2s: TUNE   "); }
@@ -312,7 +323,8 @@ void pressure_app_init(void)
     pneu_text("# PneutouchAi Live; PNEU1,seq,ms,raw; baud=");
     pneu_number(PNEU_UART_BAUD); pneu_text("; nominal_sps="); pneu_number(PNEU_SAMPLE_RATE_HZ);
     pneu_text("; fw="); pneu_text(PNEU_FIRMWARE_TAG); pneu_text("\r\n");
-    pneu_text("# PNEF1; version=1; features=12; units_x1000; classes=tail/back/legs/head; gesture=press_release_1s\r\n");
+    pneu_text("# PNEF1; version=1; features=12; units_x1000; classes=tail/back/legs/head; gesture=press_release_1s; "
+              "objects=dino:tail/back/legs/head,krag:hat/face\r\n");
     send_model_banner();
     pneutouch_status.state = PNEU_SETTLING;
 }

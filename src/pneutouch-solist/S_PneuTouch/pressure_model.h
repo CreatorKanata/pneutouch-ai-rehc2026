@@ -15,6 +15,7 @@ typedef struct {
     uint16_t training_examples, training_steps;
     /* FeRAM slot and the pool features the chip selected from it. */
     uint8_t slot, error, selected_count, selected[12];
+    uint8_t object;                     /* pneu_object_t of the active slot (from its name) */
     uint16_t mask;                      /* the selection in use as bits (bit j = pool feature j) */
     uint16_t store_count;
     /* From the slot header (written by PST1 TUNE): size of the feature mask chosen by
@@ -46,6 +47,7 @@ bool pneu_model_pool(const float values[12], float peak, float trough, float poo
 /* values: 12 event features; peak and trough magnitude in counts. */
 pneu_demo_class_t pneu_model_predict(const float values[12], float positive_peak_counts,
                                      float trough_counts);
+/* Zone name of label for the object of the active slot ("UNKNOWN" outside its classes). */
 const char *pneu_class_name(pneu_demo_class_t label);
 /* LCD line 2: one cell per pool feature (0xFF selected, ' ' not), then the
    selected count in the last two columns ("k4"; 10..12 as two digits); 16 spaces when nothing is selected

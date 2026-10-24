@@ -12,6 +12,7 @@
 #include "feature_select_fixture.h"
 #include "solistAi.h"
 #include "fram_stub.h"
+#include "object_profile.h"
 
 #define RECORDS 48U                /* 12 per class */
 #define JUDGED 8U                  /* records outside a screening set */
@@ -25,6 +26,8 @@ static pneu_selection_t current;   /* selection the firmware should be using */
 static unsigned now, trained, inits, final_inits, predicts_in_run, predicts_in_training, judge_cursor, winner;
 static int stalled, phase_seen = -1;
 static bool in_tune, finals_started, challenger_wins; /* in_tune false: a plain boot training */
+static bool krag;                  /* KRAG run: unscripted, the AI answers by a fixed cycle */
+static unsigned krag_predicts;
 static uint16_t screen_done, final_done, screen_total, final_total;
 
 static void record_pool(unsigned r, float pool[PNEU_POOL_COUNT])
@@ -83,7 +86,7 @@ static unsigned final_fold(void) { return (final_inits-1U)%4U; }
 void ODL_Initialize(uint8_t model, const ODL_Parameters *p)
 {
     assert(model == 0 && p->inputSize == 12 && p->outputSize == 4);
-    if (!in_tune) return;
+    if (!in_tune || krag) return;
     if (inits && !finals_started) assert(trained == 160U); /* 4 epochs x 40 screening records */
     if (final_inits) assert(trained == 144U);                /* 4 epochs x 36 training-fold records */
     ++inits; trained = 0; judge_cursor = 0; predicts_in_training = 0;
@@ -102,7 +105,8 @@ void ODL_StartTrain(uint8_t model, const bfloat16 *x, const bfloat16 *t)
     uint16_t words[12];
     bool found = false;
     assert(model == 0);
-    if (!in_tune) return;
+    if (krag) assert(t[2] == 0 && t[3] == 0 && (t[0] == 0x3f80) != (t[1] == 0x3f80));
+    if (!in_tune || krag) return;
     assert(++trained <= 160U);
     for (unsigned r = 0; r < RECORDS && !found; ++r) {
         bool trains = finals_started ? r%4U != final_fold() : member[screen_pass()][r];
@@ -142,7 +146,12 @@ static unsigned next_predicted(void)
 void ODL_StartPredict(uint8_t model, const bfloat16 *x, const bfloat16 *t)
 {
     uint16_t words[12];
-    unsigned r = next_predicted(), wrong, truth;
+    unsigned r, wrong, truth;
+    if (krag) { /* HAT, FACE, LEGS (never answered: the best of HAT/FACE is HAT) */
+        winner = krag_predicts++%3U; if (winner == 2U) winner = 3U;
+        return;
+    }
+    r = next_predicted();
     assert(model == 0 && r < RECORDS && (finals_started ? trained == 144U : trained == 160U));
     for (unsigned i = 0; i < 4; ++i) assert(t[i] == 0);
     assert(words_of(r, words) && !memcmp(x, words, sizeof(words)));
@@ -340,6 +349,34 @@ static void test_advice(void)
     assert(pneu_model_advice((const uint8_t[4]){0, 100, 100, 100}, counts) == PNEU_CLASS_TAIL);
 }
 
+/* A KRAG slot (24 records, 12 HAT and 12 FACE): only two classes take part. */
+static void test_krag(void)
+{
+    float pool[PNEU_POOL_COUNT];
+    pneu_store_slot_t info;
+    assert(pneu_store_open(2, 0, "KRAG24"));
+    for (unsigned r = 0; r < 24U; ++r) { record_pool(r, pool); assert(pneu_store_put(2, (uint8_t)(r%2U+1U), pool)); }
+    assert(pneu_store_commit(2) && pneu_store_use(2)); krag = true; krag_predicts = 0;
+    assert(run_tune() && pneutouch_tune.done && pneutouch_model.object == PNEU_OBJECT_KRAG);
+    assert(pneutouch_tune.recall[2] == PNEU_RECALL_ABSENT && pneutouch_tune.recall[3] == PNEU_RECALL_ABSENT);
+    assert(pneutouch_tune.recall[0] <= 100U && pneutouch_tune.recall[1] <= 100U);
+    assert(pneutouch_tune.advice >= 1U && pneutouch_tune.advice <= 2U && pneutouch_tune.screened == 4U);
+    for (unsigned c = 0; c < 4; ++c) {
+        assert(pneutouch_tune.confusion[c][2] == 0 && pneutouch_tune.confusion[c][3] == 0);
+        assert(c < 2U || (pneutouch_tune.confusion[c][0] == 0 && pneutouch_tune.confusion[c][1] == 0));
+    }
+    assert(pneutouch_tune.confusion[0][0]+pneutouch_tune.confusion[0][1] == 12U);
+    assert(pneu_store_slot_info(2, &info) && info.recall[2] == 255U && info.recall[3] == 255U && info.tuned_k);
+    assert(pneu_store_open(3, 0, "KRAGbad")); /* a LEGS record: the slot cannot be tuned */
+    for (unsigned r = 0; r < 12U; ++r) {
+        record_pool(r, pool); assert(pneu_store_put(3, (uint8_t)(r == 5 ? 3 : r%2U+1U), pool));
+    }
+    assert(pneu_store_commit(3) && pneu_store_use(3));
+    assert(!run_tune() && pneutouch_tune.error == PNEU_MODEL_ERR_RECORD);
+    krag = false;
+    assert(pneu_store_use(0));
+}
+
 int main(void)
 {
     memset(fram, 0xff, sizeof(fram));
@@ -355,7 +392,8 @@ int main(void)
     test_challenger_chosen();
     test_errors();
     test_advice();
+    test_krag();
     puts("Model tune: screening ordinals/sets, 99 subsets in order, finalists and ties, finals, "
-         "champion margin, header mask, progress, errors, advice PASS");
+         "champion margin, header mask, progress, errors, advice, KRAG slot PASS");
     return 0;
 }
