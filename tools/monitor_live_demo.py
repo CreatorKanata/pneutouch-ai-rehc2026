@@ -51,7 +51,7 @@ def monitor(port, seconds, output):
                     f = raw.split(',')
                     report['lcd'].append(raw)
                     if len(f) == 3 and f[2].isdigit():
-                        if f[1] in ('TAIL','BACK','LEGS','HEAD'):
+                        if f[1] != 'UNKNOWN':  # any zone of any object (DINO, KRAG HAT/FACE)
                             shown = int(f[2])
                         elif f[1] == 'UNKNOWN' and shown is not None:
                             report['holds_ms'].append((int(f[2])-shown) & 0xffffffff)

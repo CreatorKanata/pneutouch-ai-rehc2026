@@ -22,9 +22,14 @@ export class VideoPlayback {
     try { await this.idle.play(); }
     catch { if (token === this.token) this.onError('画面の「動画を再生」を押してください'); }
   }
+  // Another object's clips (keys: static + upper-case part names); any pending reaction is dropped.
+  setObject(urls) {
+    this.urls = urls; this.idle.src = urls.static;
+    return this.showIdle();
+  }
   async play(part) {
-    const url = this.urls[part.toLowerCase()];
-    if (!url || part === 'UNKNOWN') return;
+    const url = Object.hasOwn(this.urls, part) && part !== 'static' ? this.urls[part] : null;
+    if (!url) return;
     const token = ++this.token;
     this.timers.clearTimeout(this.timer); this.timer = null;
     this.part = part; this.ready = false;

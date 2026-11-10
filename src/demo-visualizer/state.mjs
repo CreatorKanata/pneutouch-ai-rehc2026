@@ -1,7 +1,8 @@
 // Event association and independent display deadlines, without a body classifier.
-import {msDelta} from './protocol.mjs';
+import {msDelta, KNOWN_PARTS, DEFAULT_OBJECT} from './protocol.mjs';
 export class DemoState {
-  constructor() { this.reset(); }
+  // The object (DINO/KRAG) and its slot survive stream resets; only `# PNEM3` changes them.
+  constructor() { this.object = DEFAULT_OBJECT; this.slot = null; this.count = null; this.reset(); }
   reset() {
     this.samples = []; this.events = new Map(); this.lastSample = null;
     this.phase = 'idle'; this.part = null; this.activeId = null; this.deadline = 0;
@@ -9,7 +10,8 @@ export class DemoState {
   }
   consume(p, now) {
     if (!p) return [];
-    if (p.type === 'reset') { this.reset(); return ['reset']; }
+    if (p.type === 'reset' || (p.type === 'mode' && p.mode === 1)) { this.reset(); return ['reset']; }
+    if (p.type === 'object') return this.setObject(p);
     if (p.type === 'sample') {
       const prev = this.lastSample;
       const gap = prev && (((p.seq-prev.seq) >>> 0) !== 1 || msDelta(p.ms,prev.ms) <= 0 || msDelta(p.ms,prev.ms) > 100);
@@ -34,12 +36,13 @@ export class DemoState {
     if (p.type === 'result') {
       if (this.events.get(p.id)?.result) return [];
       if (this.activeId !== null && this.activeId !== p.id) return [];
+      const part = KNOWN_PARTS[this.object].includes(p.part) ? p.part : 'UNKNOWN';
       const e = this.events.get(p.id) ?? {id: p.id, trigger: null};
-      Object.assign(e, {result: true, part: p.part, end: this.lastSample?.ms ?? p.ms,
+      Object.assign(e, {result: true, part, end: this.lastSample?.ms ?? p.ms,
         predictionMs: p.ms, inferenceUs: p.inferenceUs, exactBounds: false});
       this.events.set(p.id, e); this.lastResult = e;
       while (this.events.size > 16) this.events.delete(this.events.keys().next().value);
-      this.activeId = null; this.part = p.part; this.phase = p.part === 'UNKNOWN' ? 'unknown' : 'result';
+      this.activeId = null; this.part = part; this.phase = part === 'UNKNOWN' ? 'unknown' : 'result';
       this.deadline = now+3000; this.traceDeadline = now+5000; this.updateTrace();
       return ['result'];
     }
@@ -51,6 +54,13 @@ export class DemoState {
       if (this.lastResult?.id === p.id) this.updateTrace();
     }
     return [];
+  }
+  setObject({object, slot, count}) {
+    const changed = object !== this.object;
+    this.object = object; this.slot = slot; this.count = count;
+    if (!changed) return ['slot'];
+    this.reset();
+    return ['object'];
   }
   updateTrace() {
     const e = this.lastResult;

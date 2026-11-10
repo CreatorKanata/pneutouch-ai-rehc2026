@@ -1,0 +1,45 @@
+恐竜7室モデル — BACK仕切りの左右傾斜を反転
+作成日: 2026-11-02
+
+変更内容
+背中と脚の空気室を分ける仕切りを、左上がり30度から右上がり30度へ反転した。
+左側の丸い部分から仕切りを下方へ離すことを目的とした変更。
+中央高さ40 mmは維持。左側 X=-30 mmでは高さ57.32 mmから22.68 mmへ下がる。
+仕切り中心面は Z=40+tan(30度)*X（座標単位mm）。
+前回変更した尻尾仕切りの位置・角度、首仕切り、外形、接続口は維持した。
+頭・首と尻尾の室は容積・外接寸法が前版と一致。
+
+維持した仕様
+本体全長200 mm、外皮1.8 mm以上（全体最短距離約1.82059 mm）、隔壁1.5 mm。
+7室を直径2 mmの穴6個で直列に接続。
+尻尾1 → 右後脚3 → 右前脚5 → 左前脚6 → 左後脚4 → 背中2 → 首・頭7。
+脚の間の通気穴とBACKへの穴は反転後の床面に合わせて位置を調整した。
+尻尾の接続口: 内径2.7 mm、外径5.7 mm、突出8 mm（筒壁は従来どおり1.5 mm）。
+
+保存ファイル（3d-models内）
+new-dinasour-7chambers-t1p8-back-reversed.stl — 6,904,984 bytes、138,098三角形、単位mm。
+NewDinosaur_7Chambers_t1p8_BackReversed.f3d — 96,168,204 bytes。
+new-dinasour-7chambers-t1p8-back-reversed-cross-section.png — Y=10 mmでの実断面を前後比較。
+new-dinasour-7chambers-t1p8-back-reversed-sections.png — 左右それぞれの実断面。
+
+検証
+自動検査9件が成功。うち7件は寸法・肉厚・7室・2 mm穴・連通・メッシュを確認。
+追加2件で左右の室の容積変化、頭・首と尻尾室の不変、CAD/STL照合、F3DのCRCを確認。
+穴を開ける前は7室。各穴を開けるごとに空気領域数が6、5、4、3、2、1となった。
+接続口を検査用の蓋で閉じると、密閉された空洞が1つとなる。
+STL: 境界エッジ0、非多様体エッジ0、退化面0、法線整合、一体の閉じた表面。
+材料体積: Fusion 121.081749972 cm³、STL 121.081669079 cm³。
+スライス・実印刷・実物の気密試験は未実施。
+
+Fusion
+現在の NewDinosaur_7Chambers_t1p8 内で BackReversed_7Chambers を表示。
+前版 PinkLayout_7Chambers は非表示で保持。前版の保存ファイルも維持。
+今回の修正版はローカル保存済み。クラウド保存はしていない。
+
+STL SHA-256
+fcd2cfeb6220d8577f6f2d1308614f9d3a4d8c6e32c671c027dc8524048a2d54
+
+再検証
+作業フォルダ: artifacts/new-dinosaur-back-reversed
+Python環境: pneutouch-ai-rehc2026/.venv/bin/python
+実行: python -m unittest discover -s artifacts/new-dinosaur-back-reversed -p 'test_*.py' -v

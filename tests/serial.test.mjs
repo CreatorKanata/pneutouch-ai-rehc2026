@@ -32,3 +32,26 @@ test('unplug closes reader; a subsequent connection can start', async () => {
   const next = fixture(); await f.connection.start(next.port); await f.connection.stop();
   assert.equal(next.events.filter(e => e === 'close').length, 1);
 });
+test('write sends one UTF-8 line with CRLF, releases the writer, and fails when closed', async () => {
+  const f = fixture(), chunks = [];
+  f.port.writable = new WritableStream({write(chunk) { chunks.push(new TextDecoder().decode(chunk)); }});
+  await assert.rejects(f.connection.write('PAI1,MODE,1*1f24'), /接続/);
+  await f.connection.start(f.port);
+  await f.connection.write('PAI1,MODE,1*1f24'); await f.connection.write('PAI1,MODE,0*0f05');
+  assert.deepEqual(chunks, ['PAI1,MODE,1*1f24\r\n', 'PAI1,MODE,0*0f05\r\n']);
+  assert.equal(f.port.writable.locked, false);
+  await f.connection.stop();
+  await assert.rejects(f.connection.write('x'), /接続/);
+});
+test('paced write sends one byte per call with a pause between bytes, using one writer', async () => {
+  const f = fixture(), chunks = [], sleeps = [];
+  f.connection.sleep = async ms => { sleeps.push(ms); };
+  f.port.writable = new WritableStream({write(chunk) { chunks.push([...chunk]); }});
+  await f.connection.start(f.port);
+  await f.connection.write('AB', {paceMs: 15});
+  assert.deepEqual(chunks, [[65], [66], [13], [10]]);
+  assert.deepEqual(sleeps, [15, 15, 15]);
+  assert.equal(f.port.writable.locked, false);
+  await f.connection.write('C', {paceMs: 0}); assert.deepEqual(chunks.at(-1), [67, 13, 10]);
+  await f.connection.stop();
+});

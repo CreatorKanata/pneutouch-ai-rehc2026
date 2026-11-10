@@ -1,0 +1,57 @@
+恐竜7室モデル — BACK仕切りを上げ、左脚の丸との干渉を回避
+作成日: 2026-11-02
+
+変更内容
+BACK仕切りの中央高さを40 mmから60.2 mmへ、20.2 mm上げた。
+左右の傾きは前版のまま、左側が低く右側が高い30度。
+仕切り中心面: Z=60.2+tan(30度)*X（座標単位mm）。
+尻尾・首の仕切り位置、外形、接続口は維持した。
+BACKへの直径2 mmの通気穴も仕切りとともに20.2 mm上へ移動した。
+
+丸い部分との余裕
+Fusionの左側表示で、左前脚と胴体の丸い部分を確認した。
+丸の縁を含む範囲を、左側のYZ投影で以下の円として定義した。
+左前脚: 中心(Y,Z)=(-27,22) mm、半径12 mm。
+胴体: 中心(Y,Z)=(4,64) mm、半径16 mm。
+外面と内面のうち、円と投影が重なる左半分の三角形を丸ごと検査対象にした。
+仕切り面への垂直距離から隔壁の半厚0.75 mmを引いた保守的な距離下限:
+・左前脚の丸の周辺: 3.16208 mm
+・胴体の丸の周辺: 3.23097 mm
+どちらも設定した3 mmの余裕を満たした。
+完成STLにも、この高さの隔壁両面が存在することを面の方向・位置・面積から検査した。
+添付の外観図: 緑が確認範囲、灰色が変更前、ピンクが変更後の仕切り中心面と外面の交線。
+
+維持した仕様と検証
+本体全長200 mm、外皮1.8 mm以上（最短約1.82059 mm）、隔壁1.5 mm。
+7室、直径2 mmの通気穴6個、従来の直列経路を維持。
+尻尾1 → 右後脚3 → 右前脚5 → 左前脚6 → 左後脚4 → 背中2 → 首・頭7。
+接続口: 内径2.7 mm、外径5.7 mm、突出8 mm（筒壁は1.5 mm）。
+自動検査10件が成功。丸との距離、実際の隔壁面、肉厚、連通、メッシュ、保存ファイルを確認。
+穴を開ける前は7室。各穴の追加後に空気領域数が6、5、4、3、2、1と減る。
+STLは一体の閉じた表面。境界エッジ0、非多様体エッジ0、退化面0、法線整合。
+接続口を検査用に塞ぐと、密閉された空洞が1つになる。
+Fusion体積 123.783416522 cm³、STL体積 123.783331904 cm³。
+スライス、実印刷、実物の気密試験は未実施。
+
+完成ファイル（3d-models内）
+new-dinasour-7chambers-t1p8-back-raised.stl — 6,901,684 bytes、138,032三角形、単位mm。
+NewDinosaur_7Chambers_t1p8_BackRaised.f3d — 96,584,032 bytes。
+new-dinasour-7chambers-t1p8-back-raised-feature-regions.png — 左側の丸と仕切り位置の確認図。
+new-dinasour-7chambers-t1p8-back-raised-sections.png — 完成STLから算出した左右の実断面。
+
+Fusion
+NewDinosaur_7Chambers_t1p8 内で BackRaised_7Chambers を表示。
+前のコンポーネントは非表示で保持。前版の保存ファイルも維持。
+ローカル保存済み。2026-11-02にクラウド保存も完了。
+保存先: HAPT Lab / dino-touch-sensor / NewDinosaur_7Chambers_t1p8、バージョン1。
+非表示の旧版を含む現在のタブ全体を、384,569,168 bytesの控えについて個別承認を得て保存した。
+クラウド処理完了（isComplete=true）、未保存変更なし（isModified=false）を確認。
+クラウドファイルID・URL・承認対象は cloud_save.json を参照。
+
+STL SHA-256
+6a7e8a72dc1d32c880b58f75f0802c5d3a5735aede2636704ebee59bfab019e0
+
+再検証
+作業フォルダ: artifacts/new-dinosaur-back-raised
+Python: pneutouch-ai-rehc2026/.venv/bin/python
+実行: python -m unittest discover -s artifacts/new-dinosaur-back-raised -p 'test_*.py' -v

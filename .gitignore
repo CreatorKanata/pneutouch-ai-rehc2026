@@ -22,3 +22,7 @@ __pycache__/
 
 # 大会用の動画素材はバージョン管理しない
 /videos/rehc2026/
+
+# 3D モデルのうち 10 MB 以上のもの（Fusion ファイルと加工前の元 STL）はバージョン管理しない
+/3d-models/**/*.f3d
+/3d-models/new-dinasour-filled.stl

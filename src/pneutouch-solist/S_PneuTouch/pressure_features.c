@@ -4,15 +4,15 @@
 #include <string.h>
 
 #define WARM_POINTS 32U
-#define WARM_SPAN 20000
-/* 30000 since 2026-10-22 for the TPU 85A dinosaur: leg presses peak 30-88k counts; no false triggers seen on other zones. */
-#define TRIGGER_COUNTS 30000.0f
-#define QUIET_COUNTS 25000.0f
+#define WARM_SPAN 20000 /* readiness only; KRAG noise (+-1k) is far below it */
 #define TIMEOUT_MS 4000U
 #define MAX_INTERVAL_MS 100U
-/* 25000 chosen for the TPU 85A dinosaur on 2026-10-22 (legs peak 30-88k; was 100000 then 40000). */
-#define MIN_PEAK_COUNTS 25000.0f
-#define MIN_TROUGH_COUNTS 30000.0f
+
+/* DINO since 2026-10-22 for the TPU 85A dinosaur: leg presses peak 30-88k counts, no false
+   triggers on other zones (min_peak was 100000 then 40000). KRAG measured 2026-10-24:
+   HAT +4k..+18k / -10k..-20k, FACE +23k..+29k / -37k..-51k, noise +-1k. */
+const pneu_detect_t PNEU_DETECT_DINO = {30000.0f, 25000.0f, 25000.0f, 30000.0f};
+const pneu_detect_t PNEU_DETECT_KRAG = {7000.0f, 5000.0f, 6000.0f, 6000.0f};
 
 /* Only extract() uses these arrays. Cache each conversion once per completed
    event: thousands of repeated soft-float conversions otherwise stall the M0+
@@ -127,7 +127,7 @@ static bool extract(pneu_features_t *s)
     for (i = peak; i < s->count; ++i)
         if (sample(s, i).raw < sample(s, trough).raw) trough = i;
     a = delta_at(s, peak); b = -delta_at(s, trough);
-    if (a < MIN_PEAK_COUNTS || b < MIN_TROUGH_COUNTS) return false;
+    if (a < s->detect.min_peak || b < s->detect.min_trough) return false;
     lo = 0;
     while (lo < peak && time_at(s, lo) < time_at(s, peak)-1200.0f) ++lo;
     for (i = 0; i < 3; ++i) {
@@ -157,12 +157,21 @@ static bool extract(pneu_features_t *s)
     return true;
 }
 
-void pneu_features_init(pneu_features_t *s) { memset(s, 0, sizeof(*s)); }
+void pneu_features_init(pneu_features_t *s)
+{
+    memset(s, 0, sizeof(*s));
+    s->detect = PNEU_DETECT_DINO;
+}
 void pneu_features_reset(pneu_features_t *s)
 {
     uint32_t id = s->next_id;
+    pneu_detect_t detect = s->detect;
     pneu_features_init(s);
-    s->next_id = id;
+    s->next_id = id; s->detect = detect;
+}
+void pneu_features_set_detection(pneu_features_t *s, const pneu_detect_t *detect)
+{
+    s->detect = *detect;
 }
 pneu_demo_class_t pneu_demo_class_for_zone(uint8_t zone)
 {
@@ -208,7 +217,7 @@ pneu_event_result_t pneu_features_feed(pneu_features_t *s, uint32_t seq, uint32_
     if (!s->active) {
         base = quiet_baseline(s);
         delta = (float)raw-base;
-        if (delta > TRIGGER_COUNTS) {
+        if (delta > s->detect.trigger) {
             if (s->consecutive_high == 0) {
                 s->detection_baseline = base;
                 s->first_high_ms = ms;
@@ -222,13 +231,13 @@ pneu_event_result_t pneu_features_feed(pneu_features_t *s, uint32_t seq, uint32_
             }
         } else {
             s->consecutive_high = 0;
-            if (magnitude(delta) <= QUIET_COUNTS) add_quiet(s, raw);
+            if (magnitude(delta) <= s->detect.quiet) add_quiet(s, raw);
         }
         return PNEU_EVENT_NONE;
     }
     delta = (float)raw-s->detection_baseline;
-    if (delta < -TRIGGER_COUNTS) s->negative_seen = true;
-    if (s->negative_seen && magnitude(delta) <= QUIET_COUNTS) ++s->consecutive_quiet;
+    if (delta < -s->detect.trigger) s->negative_seen = true;
+    if (s->negative_seen && magnitude(delta) <= s->detect.quiet) ++s->consecutive_quiet;
     else s->consecutive_quiet = 0;
     if (s->consecutive_quiet >= 8) {
         bool valid;

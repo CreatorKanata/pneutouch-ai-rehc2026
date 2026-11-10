@@ -27,6 +27,13 @@ typedef enum {
     PNEU_EVENT_INVALID, PNEU_EVENT_TIMEOUT, PNEU_EVENT_RESET
 } pneu_event_result_t;
 
+/* Detection thresholds in counts relative to the baseline (docs/model-store.md, 物体プロファイル):
+   trigger starts an event (and marks the release), quiet tracks the baseline and ends it,
+   min_peak/min_trough reject weak events at extraction. */
+typedef struct { float trigger, quiet, min_peak, min_trough; } pneu_detect_t;
+extern const pneu_detect_t PNEU_DETECT_DINO; /* 30000, 25000, 25000, 30000 */
+extern const pneu_detect_t PNEU_DETECT_KRAG; /*  7000,  5000,  6000,  6000 */
+
 typedef struct { uint32_t ms; int32_t raw; } pneu_history_sample_t;
 typedef struct {
     uint32_t id, trigger_ms, end_ms;
@@ -42,12 +49,16 @@ typedef struct {
     bool ready, active, negative_seen, have_previous;
     uint32_t previous_ms, previous_seq, first_high_ms, next_id;
     float detection_baseline;
+    pneu_detect_t detect; /* DINO after init; reset keeps it */
     pneu_feature_event_t event;
 } pneu_features_t;
 
 void pneu_features_init(pneu_features_t *state);
-/* Clears partial data; preserves the event ID so old results stay distinguishable. */
+/* Clears partial data; preserves the event ID (so old results stay distinguishable)
+   and the detection profile. */
 void pneu_features_reset(pneu_features_t *state);
+/* Takes effect at the next sample; no reset. */
+void pneu_features_set_detection(pneu_features_t *state, const pneu_detect_t *detect);
 pneu_event_result_t pneu_features_feed(pneu_features_t *state,
                                      uint32_t seq, uint32_t ms, int32_t raw);
 pneu_demo_class_t pneu_demo_class_for_zone(uint8_t zone);

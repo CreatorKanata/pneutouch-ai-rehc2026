@@ -9,8 +9,8 @@ volatile pneu_display_status_t pneutouch_display;
 static const uint8_t init_commands[] = {0x38,0x39,0x14,0x73,0x5e,0x6c,0x0c,0x38,0x01,0x06};
 static uint8_t buffer[17], init_index, phase;
 static uint32_t since, delay_ms;
-static bool busy, dirty, holding;
-static char desired[17], idle[17];
+static bool busy, dirty, holding, dirty2, writing2;
+static char desired[17], idle[17], second[17]; /* second: persistent line 2 */
 static pneu_demo_class_t desired_label, sent_label;
 
 static void line(char out[17], const char *s)
@@ -24,7 +24,8 @@ void pneu_display_init(void)
 {
     pneutouch_display = (pneu_display_status_t){0};
     board_lcd_init();
-    init_index = phase = 0; busy = holding = false; dirty = true;
+    init_index = phase = 0; busy = holding = dirty2 = writing2 = false; dirty = true;
+    line(second, ""); /* the init clear (0x01) already blanks line 2 */
     desired_label = sent_label = PNEU_CLASS_UNKNOWN;
     line(idle, "READY"); line(desired, "READY");
     since = board_millis(); delay_ms = 100;
@@ -33,6 +34,11 @@ void pneu_display_idle(const char *message)
 {
     line(idle, message); memcpy(desired, idle, sizeof(desired));
     desired_label = PNEU_CLASS_UNKNOWN; holding = false; dirty = true;
+}
+/* Line 2 waits until line 1 is up to date; it never touches the 3-second hold. */
+void pneu_display_line2(const char *text)
+{
+    line(second, text); dirty2 = true;
 }
 void pneu_display_result(pneu_demo_class_t label)
 {
@@ -59,6 +65,7 @@ void pneu_display_poll(void)
         } else {
             delay_ms = 1;
             if (phase == 1) phase = 2; /* Address set; send text next. */
+            else if (phase == 3 && writing2) phase = 0;
             else if (phase == 3) {
                 phase = 0; ++pneutouch_display.updates;
                 pneutouch_display.label = sent_label;
@@ -83,11 +90,14 @@ void pneu_display_poll(void)
     } else {
         pneutouch_display.ready = true;
         if (phase == 2) {
-            buffer[0] = 0x40; memcpy(buffer+1, desired, 16);
-            sent_label = desired_label; dirty = false; phase = 3;
+            buffer[0] = 0x40; memcpy(buffer+1, writing2 ? second : desired, 16);
+            if (writing2) dirty2 = false;
+            else { sent_label = desired_label; dirty = false; }
+            phase = 3;
             board_lcd_start(buffer, 17); busy = true;
-        } else if (!phase && dirty) {
-            buffer[0] = 0; buffer[1] = 0x80; phase = 1;
+        } else if (!phase && (dirty || dirty2)) {
+            writing2 = !dirty; /* line 1 keeps priority */
+            buffer[0] = 0; buffer[1] = writing2 ? 0xc0 : 0x80; phase = 1;
             board_lcd_start(buffer, 2); busy = true;
         }
     }

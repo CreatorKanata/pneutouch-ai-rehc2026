@@ -44,11 +44,13 @@ fs.mkdirSync(out,{recursive:true});
     const media=await page.evaluate(async()=>{
       const manifest=await (await fetch('assets.json')).json();
       const result={images:{},videos:{}};
-      for(const [key,url] of Object.entries(manifest.images)) {
+      const objects=Object.entries(manifest.objects);
+      const entries=table=>objects.flatMap(([tag,o])=>Object.entries(o[table]??{}).map(([key,url])=>[`${tag}.${key}`,url]));
+      for(const [key,url] of entries('images')) {
         const img=new Image(); img.src=url; await img.decode();
         result.images[key]=[img.naturalWidth,img.naturalHeight];
       }
-      for(const [key,url] of Object.entries(manifest.videos)) {
+      for(const [key,url] of entries('videos')) {
         const video=document.createElement('video'); video.preload='metadata';video.src=url;
         await new Promise((resolve,reject)=>{video.onloadedmetadata=resolve;video.onerror=reject;});
         result.videos[key]={duration:video.duration,width:video.videoWidth,height:video.videoHeight};

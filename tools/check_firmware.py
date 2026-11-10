@@ -35,7 +35,7 @@ def main():
              "-mthumb", "-std=c11", "-ffreestanding", "-DML63Q25x7", "-DML63Q2557"]
     flags += ["-I" + str(args.cmsis_include)]
     flags += ["-I" + str(path) for path in args.toolchain_include]
-    for folder in ("S_PneuTouch", "S_System", "RTE", "S_Driver"):
+    for folder in ("S_PneuTouch", "S_System", "RTE", "S_Driver", "S_Bsp"):  # board.c uses Fram.h
         flags += ["-I" + str(project / folder)]
     for source in sources:
         subprocess.run([*flags, "-c", str(source), "-o", str(output / (source.stem + ".o"))], check=True)

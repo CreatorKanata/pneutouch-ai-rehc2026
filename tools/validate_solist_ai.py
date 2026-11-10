@@ -32,13 +32,18 @@ def decode(words):
 
 
 class Device:
-    def __init__(self, port, log):
-        self.serial = serial.Serial(port, 115200, timeout=.2, write_timeout=5)
+    """CN9 line protocol client. ``connection`` replaces the serial port (tests)."""
+
+    def __init__(self, port, log, connection=None, sleep=time.sleep):
+        self.serial = connection if connection is not None else serial.Serial(
+            port, 115200, timeout=.2, write_timeout=5)
         self.log = log
         self.token = 0
+        self.sleep = sleep
 
-    def command(self, operation, *fields, timeout=8):
-        payload = ','.join(['PAI1', operation, *map(str, fields)]).encode('ascii')
+    def command(self, operation, *fields, timeout=8, family='PAI1'):
+        """Send ``family,operation,fields`` and return the matching ``# family,operation,`` reply."""
+        payload = ','.join([family, operation, *map(str, fields)]).encode('ascii')
         packet = payload+f'*{binascii.crc_hqx(payload, 0xffff):04x}\n'.encode('ascii')
         self.log.write('TX '+packet.decode())
         if operation == 'MODE':
@@ -46,11 +51,11 @@ class Device:
             # Clear an incomplete command, then pace the mode handshake. Once
             # MODE 1 is acknowledged, acquisition is paused and bulk RX is safe.
             self.serial.write(b'\n')
-            time.sleep(.05)
+            self.sleep(.05)
             self.serial.reset_input_buffer()
             for byte in packet:
                 self.serial.write(bytes([byte]))
-                time.sleep(.015)
+                self.sleep(.015)
         else:
             self.serial.write(packet)
         deadline = time.monotonic()+timeout
@@ -59,9 +64,10 @@ class Device:
             if not line:
                 continue
             self.log.write('RX '+line+'\n')
-            if line.startswith('# PAI1,ERROR,'):
+            # Line-level errors (CRC, OVERLONG) always come back as PAI1.
+            if line.startswith(f'# {family},ERROR,') or line.startswith('# PAI1,ERROR,'):
                 raise RuntimeError(line)
-            if line.startswith('# PAI1,'+operation+','):
+            if line.startswith(f'# {family},{operation},'):
                 response = line[2:].split(',')
                 if response[2] != str(fields[0]):
                     raise RuntimeError('Response token mismatch: '+line)

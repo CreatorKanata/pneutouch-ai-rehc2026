@@ -1,16 +1,51 @@
-/* Only the reference training set is embedded. Every live prediction uses the
-   current HX710B event, never a stored waveform, replay or a teacher label. */
+/* Boot-time training from the active FeRAM slot. The chip ranks the 14 pool
+   features itself, so no training data or normalization is compiled in.
+   Every live prediction uses the current HX710B event, never a stored record.
+   The pneu_core_* pieces are shared with the k tuning in model_tune.c. */
 #include "pressure_model.h"
-#include "pressure_model_data.h"
+#include "model_core.h"
+#include "model_store.h"
+#include "model_tune.h"
+#include "object_profile.h"
 #include "board.h"
 #include "solistAi.h"
 #include "smpl_common.h"
 #include "irq.h"
-#include <math.h>
 #include <string.h>
+
+#define PNEU_MODEL_HIDDEN 32U
+#define SHAPE_LIMIT 100000.0f
+#define AMPLITUDE_LIMIT 100000000.0f
 
 volatile pneu_model_status_t pneutouch_model;
 static bfloat16 input[12], teacher[4], output[4], reset_row[64];
+static pneu_stats_t stats;
+static pneu_selection_t selection;
+static pneu_model_progress_t progress;
+
+void pneu_model_set_progress(pneu_model_progress_t callback) { progress = callback; }
+
+void pneu_core_progress(uint8_t phase, uint16_t done, uint16_t total)
+{
+    if (progress) progress(phase, done, total);
+}
+
+/* Phase start (done 0), every 8 records/steps and the phase end. */
+static void report(uint8_t phase, uint16_t done, uint16_t total)
+{
+    if (done % 8U == 0U || done == total) pneu_core_progress(phase, done, total);
+}
+
+bool pneu_core_held(uint16_t index, uint8_t fold)
+{
+    return fold != PNEU_NO_FOLD && index % PNEU_TUNE_FOLDS == fold;
+}
+
+/* Records of [0, n) that fold holds out. */
+static uint16_t held_count(uint16_t n, uint8_t fold)
+{
+    return fold == PNEU_NO_FOLD ? 0U : (uint16_t)((n+PNEU_TUNE_FOLDS-1U-fold)/PNEU_TUNE_FOLDS);
+}
 
 static bool wait_ai(void)
 {
@@ -25,96 +60,214 @@ static bool wait_ai(void)
     return true;
 }
 
-static bool normalize(const float logged[12], uint16_t words[12],
-                      const float mean[12], const float scale[12])
-{
-    unsigned i;
-    for (i = 0; i < 12; ++i) {
-        uint32_t bits;
-        float scaled;
-        scaled = (logged[i]-mean[i])/scale[i];
-        memcpy(&bits, &scaled, sizeof(bits));
-        if ((bits & 0x7f800000U) == 0x7f800000U) return false;
-        words[i] = (uint16_t)(bits >> 16);
-    }
-    return true;
-}
-
-static bool logarithms(const float values[12], float logged[12])
-{
-    unsigned i;
-    for (i = 0; i < 12; ++i) {
-        if (!(values[i] > 0.0f && values[i] < 100000.0f)) return false;
-        logged[i] = logf(values[i]);
-    }
-    return true;
-}
-
-bool pneu_model_transform(const float values[12], uint16_t words[12])
-{
-    float logged[12];
-    return logarithms(values, logged) && normalize(logged, words, model_mean, model_scale);
-}
-
-static bool train_instance(uint8_t instance, unsigned hidden, unsigned steps,
-                           const uint16_t data[][12], const uint8_t labels[],
-                           const uint8_t order[])
+/* Explicit ridge start (Beta=0, P=I) as in the PAI1 validation path. */
+static void reset_instance(void)
 {
     ODL_Parameters p = {0};
-    unsigned i, j;
-    p.inputSize = 12; p.hiddenSize = (uint16_t)hidden; p.outputSize = 4; p.seed = 1;
+    unsigned i;
+    p.inputSize = 12; p.hiddenSize = PNEU_MODEL_HIDDEN; p.outputSize = 4; p.seed = 1;
     p.forgettingFactor = p.scaleAlpha = p.leakRate = (bfloat16)0x3f80;
     p.activationFunction = ODL_ACTV_SIGMOID; p.lossFunction = ODL_LOSS_MSE;
-    ODL_Initialize(instance, &p); ODL_Reset(instance);
+    ODL_Initialize(0, &p); ODL_Reset(0);
     memset(reset_row, 0, sizeof(reset_row));
-    for (i = 0; i < hidden; ++i) ODL_SetWeightBeta(reset_row, instance, i*8U, 8);
-    for (i = 0; i < hidden; ++i) {
+    for (i = 0; i < PNEU_MODEL_HIDDEN; ++i) ODL_SetWeightBeta(reset_row, 0, i*8U, 8);
+    for (i = 0; i < PNEU_MODEL_HIDDEN; ++i) {
         if (i) reset_row[i-1] = 0;
         reset_row[i] = (bfloat16)0x3f80;
-        ODL_SetWeightP(reset_row, instance, i*hidden*2U, (uint16_t)(hidden*2U));
+        ODL_SetWeightP(reset_row, 0, i*PNEU_MODEL_HIDDEN*2U, (uint16_t)(PNEU_MODEL_HIDDEN*2U));
     }
     irq_ai_clearIRQ();
-    for (i = 0; i < steps; ++i) {
-        unsigned index = order[i];
-        for (j = 0; j < 12; ++j) input[j] = (bfloat16)data[index][j];
-        for (j = 0; j < 4; ++j) teacher[j] = j+1U == labels[index] ? (bfloat16)0x3f80 : 0;
+}
+
+static uint8_t train_step(uint8_t label, const float pool[PNEU_POOL_COUNT])
+{
+    uint16_t words[12];
+    unsigned j;
+    if (!pneu_select_words(&selection, pool, words)) return PNEU_MODEL_ERR_RECORD;
+    for (j = 0; j < 12; ++j) input[j] = (bfloat16)words[j];
+    for (j = 0; j < 4; ++j) teacher[j] = j+1U == label ? (bfloat16)0x3f80 : 0;
+    board_watchdog();
+    ODL_StartTrain(0, input, teacher);
+    return wait_ai() ? PNEU_MODEL_ERR_NONE : PNEU_MODEL_ERR_AI;
+}
+
+bool pneu_core_chosen(const uint8_t *chosen, uint16_t index)
+{
+    return (chosen[index >> 3] & (1U << (index & 7U))) != 0U;
+}
+
+/* Training record: not held out by fold and, with a bitmap, inside it. */
+static bool trains(uint16_t index, uint8_t fold, const uint8_t *chosen)
+{
+    return !pneu_core_held(index, fold) && (!chosen || pneu_core_chosen(chosen, index));
+}
+
+/* Records are re-read from FeRAM in a fixed stride order: no RAM copy.
+   used = training records per epoch (for the progress total). */
+static uint8_t train_records(uint8_t slot, uint16_t n, uint8_t fold, const uint8_t *chosen, uint16_t used)
+{
+    float pool[PNEU_POOL_COUNT];
+    uint16_t total = (uint16_t)(PNEU_TRAIN_EPOCHS*used), steps = 0, index;
+    uint8_t label, error;
+    unsigned e, i;
+    reset_instance();
+    report(PNEU_PHASE_TRAIN, 0, total);
+    for (e = 0; e < PNEU_TRAIN_EPOCHS; ++e)
+        for (i = 0; i < n; ++i) {
+            index = pneu_train_index(n, (uint8_t)e, (uint16_t)i);
+            if (!trains(index, fold, chosen)) continue;
+            if (!pneu_store_get(slot, index, &label, pool)) return PNEU_MODEL_ERR_RECORD;
+            if ((error = train_step(label, pool)) != PNEU_MODEL_ERR_NONE) return error;
+            report(PNEU_PHASE_TRAIN, ++steps, total);
+            pneutouch_model.training_steps = steps;
+        }
+    return PNEU_MODEL_ERR_NONE;
+}
+
+uint8_t pneu_core_train(uint8_t slot, uint16_t n, uint8_t fold)
+{
+    return train_records(slot, n, fold, 0, (uint16_t)(n-held_count(n, fold)));
+}
+
+uint8_t pneu_core_train_chosen(uint8_t slot, uint16_t n, const uint8_t *chosen, uint16_t used)
+{
+    return train_records(slot, n, PNEU_NO_FOLD, chosen, used);
+}
+
+void pneu_core_set_object(const char *name)
+{
+    pneutouch_model.object = (uint8_t)pneu_object_of_name(name);
+}
+
+static uint8_t object_classes(void) { return pneu_object((pneu_object_t)pneutouch_model.object)->classes; }
+
+uint8_t pneu_core_load_stats(uint8_t slot, uint16_t n, uint8_t fold)
+{
+    float pool[PNEU_POOL_COUNT];
+    uint8_t label, classes = object_classes();
+    uint16_t i, done = 0, total = (uint16_t)(n-held_count(n, fold));
+    pneu_stats_reset(&stats);
+    report(PNEU_PHASE_STATS, 0, total);
+    for (i = 0; i < n; ++i) {
+        if (pneu_core_held(i, fold)) continue;
         board_watchdog();
-        ODL_StartTrain(instance, input, teacher);
-        if (!wait_ai()) return false;
+        if (!pneu_store_get(slot, i, &label, pool) || label > classes || !pneu_stats_add(&stats, label, pool))
+            return PNEU_MODEL_ERR_RECORD;
+        report(PNEU_PHASE_STATS, ++done, total);
     }
-    return true;
+    return PNEU_MODEL_ERR_NONE;
+}
+
+/* lcd_line2 is published as soon as the selection is known (shown while training). */
+static void publish_line2(bool blank)
+{
+    char line[17];
+    unsigned i;
+    if (blank) { memset(line, ' ', 16); line[16] = '\0'; }
+    else pneu_model_line2(&pneutouch_model, line); /* no 156-byte stack copy */
+    for (i = 0; i < sizeof(line); ++i) pneutouch_model.lcd_line2[i] = line[i];
+}
+
+static uint8_t publish_selection(bool ok)
+{
+    unsigned i;
+    if (!ok) return PNEU_MODEL_ERR_SELECT;
+    pneutouch_model.selected_count = selection.count;
+    pneutouch_model.mask = pneu_selection_mask(&selection);
+    for (i = 0; i < selection.count; ++i) pneutouch_model.selected[i] = selection.index[i];
+    for (i = 0; i < PNEU_POOL_COUNT; ++i) pneutouch_model.fisher[i] = selection.fisher[i];
+    publish_line2(false);
+    return PNEU_MODEL_ERR_NONE;
+}
+
+static uint8_t class_mask(void) { return pneu_object_class_mask((pneu_object_t)pneutouch_model.object); }
+
+uint8_t pneu_core_choose(uint8_t k) { return publish_selection(pneu_select(&stats, class_mask(), k, &selection)); }
+
+uint8_t pneu_core_choose_mask(uint16_t mask)
+{
+    return publish_selection(pneu_select_mask(&stats, class_mask(), mask, &selection));
+}
+
+/* Explicit header k, then the TUNE mask, then a version 1 tuned_k, then Fisher auto. */
+static uint8_t choose_from_header(const pneu_store_slot_t *info)
+{
+    if (info->k) return pneu_core_choose(info->k);
+    if (info->mask) return pneu_core_choose_mask(info->mask);
+    return pneu_core_choose(info->tuned_k);
+}
+
+/* Tuning result of the header and the class counts of the statistics pass. */
+static void publish_tuning(const pneu_store_slot_t *info)
+{
+    unsigned c;
+    pneutouch_model.tuned_k = info->tuned_k;
+    for (c = 0; c < PNEU_CLASS_COUNT; ++c) {
+        pneutouch_model.recall[c] = info->recall[c];
+        pneutouch_model.class_count[c] = stats.n[c];
+    }
+    pneutouch_model.advice = info->tuned_k ? pneu_model_advice(info->recall, stats.n) : 0U;
+}
+
+static uint8_t prepare(pneu_store_slot_t *info)
+{
+    uint8_t slot, error;
+    bool valid;
+    if (!pneu_store_init()) return PNEU_MODEL_ERR_STORE;
+    slot = pneu_store_active();
+    pneutouch_model.slot = slot;
+    valid = pneu_store_slot_info(slot, info); /* an invalid header has an empty name: DINO */
+    pneu_core_set_object(info->name);
+    if (!valid || info->state != PNEU_SLOT_COMMITTED ||
+        info->count < 4U || info->count > PNEU_STORE_MAX_RECORDS) return PNEU_MODEL_ERR_NO_SLOT;
+    pneutouch_model.store_count = info->count;
+    pneutouch_model.training_examples = info->count;
+    error = pneu_core_load_stats(slot, info->count, PNEU_NO_FOLD);
+    if (!error) publish_tuning(info);
+    return error;
 }
 
 bool pneu_model_init(void)
 {
     uint32_t start = board_micros();
+    pneu_store_slot_t info;
+    uint8_t error;
     pneutouch_model = (pneu_model_status_t){0};
-    pneutouch_model.training_examples = PNEU_MODEL_EXAMPLES;
-    pneutouch_model.training_steps = PNEU_MODEL_STEPS + PNEU_SPECIALIST_STEPS;
-    pneutouch_model.specialist_examples = PNEU_SPECIALIST_EXAMPLES;
-    pneutouch_model.specialist_steps = PNEU_SPECIALIST_STEPS;
     irq_ai_dis(); smpl_enablePeripheral(AI_PERI);
-    if (!train_instance(0, PNEU_MODEL_HIDDEN, PNEU_MODEL_STEPS,
-                        model_training, model_labels, model_order) ||
-        !train_instance(1, PNEU_SPECIALIST_HIDDEN, PNEU_SPECIALIST_STEPS,
-                        specialist_training, specialist_labels, specialist_order)) return false;
-    pneutouch_model.training_us = board_micros()-start;
-    pneutouch_model.ready = true;
-    return true;
+    error = prepare(&info);
+    if (!error) error = choose_from_header(&info);
+    if (!error) error = pneu_core_train(pneutouch_model.slot, info.count, PNEU_NO_FOLD);
+    pneutouch_model.error = error;
+    pneutouch_model.ready = error == PNEU_MODEL_ERR_NONE;
+    if (pneutouch_model.ready) pneutouch_model.training_us = board_micros()-start;
+    publish_line2(!pneutouch_model.ready);
+    return pneutouch_model.ready;
 }
 
-static pneu_demo_class_t predict_instance(uint8_t instance, const uint16_t words[12], unsigned first)
+void pneu_model_line2(const volatile pneu_model_status_t *status, char out[17])
+{
+    unsigned i, count = status->selected_count;
+    memset(out, ' ', 16); out[16] = '\0';
+    if (!count) return;
+    for (i = 0; i < count && i < 12U; ++i)
+        if (status->selected[i] < PNEU_POOL_COUNT) out[status->selected[i]] = (char)0xff;
+    out[14] = count >= 10U ? (char)('0'+count/10U) : 'k'; /* "k4"; 10..12 have no room for k */
+    out[15] = (char)('0'+count%10U);
+}
+
+/* All four outputs are checked and published; the argmax covers the object's classes only. */
+static pneu_demo_class_t predict_instance(const uint16_t words[12])
 {
     uint32_t bits;
     float best = 0, value;
-    unsigned i, winner = 0;
+    unsigned i, winner = 0, classes = object_classes();
     for (i = 0; i < 12; ++i) {
         input[i] = (bfloat16)words[i]; pneutouch_model.input[i] = words[i];
     }
     memset(teacher, 0, sizeof(teacher));
-    ODL_StartPredict(instance, input, teacher);
+    ODL_StartPredict(0, input, teacher);
     if (!wait_ai()) return PNEU_CLASS_UNKNOWN;
-    ODL_GetResult(instance, output);
+    ODL_GetResult(0, output);
     for (i = 0; i < 4; ++i) {
         pneutouch_model.scores[i] = (uint16_t)output[i];
         bits = (uint32_t)(uint16_t)output[i] << 16;
@@ -122,52 +275,53 @@ static pneu_demo_class_t predict_instance(uint8_t instance, const uint16_t words
             ++pneutouch_model.failures; return PNEU_CLASS_UNKNOWN;
         }
         memcpy(&value, &bits, sizeof(value));
-        if (i >= first && (i == first || value > best)) { best = value; winner = i; }
+        if (i < classes && (!i || value > best)) { best = value; winner = i; }
     }
     return (pneu_demo_class_t)(winner+1U);
 }
 
+pneu_demo_class_t pneu_core_classify(const float pool[PNEU_POOL_COUNT])
+{
+    uint16_t words[12];
+    if (!pneu_select_words(&selection, pool, words)) return PNEU_CLASS_UNKNOWN;
+    return predict_instance(words);
+}
+
 static bool amplitude_ok(float counts)
 {
-    return counts > 0.0f && counts < 100000000.0f;
+    return counts > 0.0f && counts < AMPLITUDE_LIMIT;
+}
+
+bool pneu_model_pool(const float values[12], float peak, float trough, float pool[PNEU_POOL_COUNT])
+{
+    unsigned i;
+    for (i = 0; i < 12; ++i) {
+        if (!(values[i] > 0.0f && values[i] < SHAPE_LIMIT)) return false;
+        pool[i] = values[i];
+    }
+    pool[12] = peak; pool[13] = trough;
+    return amplitude_ok(peak) && amplitude_ok(trough);
 }
 
 pneu_demo_class_t pneu_model_predict(const float values[12], float positive_peak_counts,
                                      float trough_counts)
 {
-    uint16_t words[12];
-    float logged[12];
+    float pool[PNEU_POOL_COUNT];
     uint32_t start = board_micros();
     pneu_demo_class_t label;
-    unsigned i;
-    pneutouch_model.label = pneutouch_model.primary_label = PNEU_CLASS_UNKNOWN;
-    pneutouch_model.specialist_used = false;
+    pneutouch_model.label = PNEU_CLASS_UNKNOWN;
     pneutouch_model.inference_us = 0;
-    if (!pneutouch_model.ready || !logarithms(values, logged) ||
-        !amplitude_ok(positive_peak_counts) || !amplitude_ok(trough_counts)) return PNEU_CLASS_UNKNOWN;
-    /* Ten shape logarithms are shared by both instances; inputs 5 and 10 are
-       replaced once by absolute positive peak and trough magnitude in kcounts. */
-    logged[5] = logf(positive_peak_counts/1000.0f);
-    logged[10] = logf(trough_counts/1000.0f);
-    if (!normalize(logged, words, model_mean, model_scale)) return PNEU_CLASS_UNKNOWN;
-    label = predict_instance(0, words, 0);
-    pneutouch_model.primary_label = label;
-    for (i = 0; i < 4; ++i) pneutouch_model.primary_scores[i] = pneutouch_model.scores[i];
+    if (!pneutouch_model.ready || !pneu_model_pool(values, positive_peak_counts, trough_counts, pool))
+        return PNEU_CLASS_UNKNOWN;
+    label = pneu_core_classify(pool);
     if (label == PNEU_CLASS_UNKNOWN) return label;
-    if (label == PNEU_CLASS_HEAD || label == PNEU_CLASS_LEGS) {
-        if (!normalize(logged, words, specialist_mean, specialist_scale)) return PNEU_CLASS_UNKNOWN;
-        pneutouch_model.specialist_used = true;
-        label = predict_instance(1, words, 2); /* Only LEGS/HEAD are trained here. */
-        if (label == PNEU_CLASS_UNKNOWN) return label;
-    }
     pneutouch_model.inference_us = board_micros()-start;
     ++pneutouch_model.predictions;
     pneutouch_model.label = label;
-    return pneutouch_model.label;
+    return label;
 }
 
 const char *pneu_class_name(pneu_demo_class_t label)
 {
-    static const char *const names[] = {"UNKNOWN", "TAIL", "BACK", "LEGS", "HEAD"};
-    return label >= PNEU_CLASS_TAIL && label <= PNEU_CLASS_HEAD ? names[label] : names[0];
+    return pneu_object_class_name((pneu_object_t)pneutouch_model.object, (uint8_t)label);
 }

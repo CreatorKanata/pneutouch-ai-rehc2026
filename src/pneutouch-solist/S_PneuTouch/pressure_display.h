@@ -11,4 +11,6 @@ void pneu_display_init(void);
 void pneu_display_poll(void);
 void pneu_display_result(pneu_demo_class_t label);
 void pneu_display_idle(const char *message);
+/* Persistent second line (16 columns, space padded), independent of results. */
+void pneu_display_line2(const char *text);
 #endif
