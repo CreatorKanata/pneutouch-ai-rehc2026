@@ -21,6 +21,14 @@
           <button id="connect" disabled>恐竜につなぐ ↗</button><button id="disconnect" class="subtle" hidden>切断</button>
         </div>
       </header>
+      <div class="mode-row">
+        <span id="mode-badge" class="mode-badge" data-object="DINO">恐竜モード</span>
+        <span class="slot-tools">
+          <select id="slot-select" aria-label="使うモデル（スロット）" hidden></select>
+          <button id="slots-refresh" class="subtle" hidden>モデル一覧</button>
+        </span>
+        <span id="slot-status" class="slot-status" role="status" hidden></span>
+      </div>
 
       <section class="card touch-card" aria-label="恐竜の触れた場所">
         <div class="card-heading"><h1>触れたところ</h1><span id="phase-badge" class="small-pill">待機中</span></div>

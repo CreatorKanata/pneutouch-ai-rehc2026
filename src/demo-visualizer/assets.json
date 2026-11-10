@@ -1,17 +1,35 @@
 {
-  "images": {
-    "idle": "/images/demo/normal.jpg",
-    "pressed": "/images/demo/pressed.jpg",
-    "HEAD": "/images/demo/head.jpg",
-    "BACK": "/images/demo/back.jpg",
-    "LEGS": "/images/demo/legs.jpg",
-    "TAIL": "/images/demo/tail.jpg"
-  },
-  "videos": {
-    "static": "/videos/demo/static.mp4",
-    "head": "/videos/demo/head.mp4",
-    "back": "/videos/demo/back.mp4",
-    "legs": "/videos/demo/legs.mp4",
-    "tail": "/videos/demo/tail.mp4"
+  "objects": {
+    "DINO": {
+      "label": "恐竜",
+      "parts": ["TAIL", "BACK", "LEGS", "HEAD"],
+      "names": {"HEAD": "あたま", "BACK": "せなか", "LEGS": "あし", "TAIL": "しっぽ"},
+      "images": {
+        "idle": "/images/demo/normal.jpg",
+        "pressed": "/images/demo/pressed.jpg",
+        "HEAD": "/images/demo/head.jpg",
+        "BACK": "/images/demo/back.jpg",
+        "LEGS": "/images/demo/legs.jpg",
+        "TAIL": "/images/demo/tail.jpg"
+      },
+      "videos": {
+        "static": "/videos/demo/static.mp4",
+        "HEAD": "/videos/demo/head.mp4",
+        "BACK": "/videos/demo/back.mp4",
+        "LEGS": "/videos/demo/legs.mp4",
+        "TAIL": "/videos/demo/tail.mp4"
+      }
+    },
+    "KRAG": {
+      "label": "からあげ",
+      "parts": ["HAT", "FACE"],
+      "names": {"HAT": "ぼうし", "FACE": "かお"},
+      "images": null,
+      "videos": {
+        "static": "/videos/demo/krag_static.mp4",
+        "HAT": "/videos/demo/krag_hat.mp4",
+        "FACE": "/videos/demo/krag_face.mp4"
+      }
+    }
   }
 }

@@ -29,5 +29,21 @@ export class SerialConnection {
       this.port = undefined; this.onClose();
     }
   }
+  // One command line; the firmware ignores the CR. Throws when no port is open.
+  // paceMs > 0 sends one byte per write with a pause between bytes: during live streaming the
+  // firmware's small RX buffer loses characters of a burst (tools/validate_solist_ai.py does the same).
+  async write(text, {paceMs = 0} = {}) {
+    if (!this.port?.writable) throw new Error('接続していません');
+    const bytes = new TextEncoder().encode(text + '\r\n');
+    const writer = this.port.writable.getWriter();
+    try {
+      if (paceMs <= 0) { await writer.write(bytes); return; }
+      for (const [index, byte] of bytes.entries()) {
+        if (index) await this.sleep(paceMs);
+        await writer.write(Uint8Array.of(byte));
+      }
+    } finally { writer.releaseLock(); }
+  }
+  sleep(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
   async stop() { if (this.reader) await this.reader.cancel(); await this.running; }
 }
