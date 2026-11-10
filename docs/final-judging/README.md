@@ -13,7 +13,8 @@
 | [survey-C-flow-and-structure.md](survey-C-flow-and-structure.md) | ポンプ・穴・構造符号化の先行研究（AirTouch 詳細、Sariola、Blowhole、Lamello）と分圧設計の計算 |
 | [reprint-design.md](reprint-design.md) | 恐竜 v2 再印刷の検討: 先行研究（AirTouch ほか）、星形流路の設計原理、試験片で go/no-go |
 | [teach-mode-spec.md](teach-mode-spec.md) | 「恐竜に教える」モードの仕様（implementer に渡す） |
-| [presentation-5min.md](presentation-5min.md) | 5分の構成、想定質疑と根拠、載せる数字 |
+| [presentation-final-script.md](presentation-final-script.md) | **10/24 本番用（4 分）**: コンセプト、進行表、かなた（小3・読みがな付き）とお父さんの原稿、スライド内容、数字の出典、新しい想定質疑、当日チェックリスト |
+| [presentation-5min.md](presentation-5min.md) | 5分の構成、想定質疑と根拠、載せる数字 |（10/14 版。従来の想定質疑はこちら）
 | [second-opinion-codex.md](second-opinion-codex.md) | 独立した第二意見（Codex）の記録と、それへの判断 |
 | [gpt-strategy-draft-20261014.md](gpt-strategy-draft-20261014.md) | GPT作成の戦略案（原文保存。競合分析と審査員分析はここ） |
 | [rehc2026-official-site.md](rehc2026-official-site.md) | 公式サイト rehc.jp の記録（審査基準、賞、FAQ） |
