@@ -26,3 +26,14 @@ __pycache__/
 # 3D モデルのうち 10 MB 以上のもの（Fusion ファイルと加工前の元 STL）はバージョン管理しない
 /3d-models/**/*.f3d
 /3d-models/new-dinasour-filled.stl
+
+# Android アプリのビルド出力とローカル設定（Gradle wrapper は管理対象）
+/android/.gradle/
+/android/.kotlin/
+/android/**/build/
+/android/local.properties
+/android/.idea/
+/android/captures/
+*.iml
+*.apk
+*.aab

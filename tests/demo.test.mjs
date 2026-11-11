@@ -165,6 +165,42 @@ test('setObject swaps the idle clip and reaction urls, shows idle and cancels a 
   await p.play('HEAD'); assert.equal(p.part,'static'); // DINO clips are gone
   await p.play('HAT'); assert.equal(react.src,'krag_hat.mp4');
 });
+function mediaErrors(){
+  const s=mediaSetup(),errors=[];
+  s.p.onError=(message,options)=>errors.push({message,options});
+  return {...s,errors};
+}
+const rejectWith=name=>()=>Promise.reject(Object.assign(new Error(name),{name}));
+const flush=()=>new Promise(resolve=>setImmediate(resolve));
+test('autoplay block asks for a tap with needsGesture',async()=>{
+  const {p,idle,jobs,errors}=mediaErrors(); idle.play=rejectWith('NotAllowedError');
+  await p.showIdle();
+  assert.deepEqual(errors,[{message:'画面の「動画を再生」を押してください',options:{needsGesture:true}}]);
+  assert.equal(jobs.size,0);
+});
+test('other idle play rejections retry quietly and succeed without an error',async()=>{
+  const {p,idle,jobs,errors}=mediaErrors(); const real=idle.play; idle.play=rejectWith('AbortError');
+  await p.showIdle(); assert.equal(errors.length,0); assert.equal(jobs.size,1);
+  const [job]=[...jobs.values()]; assert(job.ms>0);
+  idle.play=real; job.fn(); await flush();
+  assert.equal(errors.length,0); assert.equal(idle.paused,false); assert.equal(jobs.size,0);
+});
+test('idle retries give up after 3 attempts with a plain error',async()=>{
+  const {p,idle,jobs,errors}=mediaErrors(); idle.play=rejectWith('AbortError');
+  await p.showIdle();
+  for (let i=0;i<3;i++) { assert.equal(errors.length,0); const [[id,job]]=[...jobs]; jobs.delete(id); job.fn(); await flush(); }
+  assert.deepEqual(errors,[{message:'待機動画を再生できませんでした',options:undefined}]);
+  assert.equal(jobs.size,0); assert.equal(idle.playCalls,0);
+});
+test('a newer play or showIdle cancels a pending idle retry and resets the count',async()=>{
+  const {p,idle,react,jobs,errors}=mediaErrors(); const real=idle.play; idle.play=rejectWith('AbortError');
+  await p.showIdle(); await p.play('HEAD');
+  assert.equal(jobs.size,1); assert.equal([...jobs.values()][0].ms,5000); assert.equal(react.src,'head.mp4');
+  await p.showIdle(); for (let i=0;i<3;i++) { const [[id,job]]=[...jobs]; jobs.delete(id); job.fn(); await flush(); }
+  assert.equal(errors.length,1);
+  errors.length=0; await p.showIdle(); assert.equal(errors.length,0); assert.equal(jobs.size,1);
+  idle.play=real; await p.showIdle(); assert.equal(jobs.size,0); assert.equal(errors.length,0);
+});
 test('assets.json lists both objects; validation names the missing asset', () => {
   const assets=JSON.parse(fs.readFileSync(new URL('../src/demo-visualizer/assets.json',import.meta.url),'utf8'));
   assert.equal(validateAssets(assets),assets);
