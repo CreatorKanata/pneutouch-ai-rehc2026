@@ -10,6 +10,8 @@ import {drawTrace} from './chart.mjs';
 const $ = id => document.getElementById(id);
 const FALLBACK = {label: '恐竜', names: {}, images: null};
 const SWITCH_MS = 15000, ANNOUNCE_MS = 5000;
+// The Android app (android/) provides navigator.serial over the USB cable: no COM port to choose.
+const ANDROID_USB = navigator.serial?.androidUsb === true, PORT_NAME = ANDROID_USB ? 'USBケーブル' : 'COM7';
 const model = new DemoState();
 let assets, settings, playback, connection, store, picker, connected = false, opening = false, lastReceived = 0, stalled = false;
 let lastImage = '', raf = 0, imageFailed = false, switchUntil = 0, announceUntil = 0, listPending = false, switchAnnounced = false;
@@ -111,10 +113,10 @@ async function connect() {
     model.reset(); playback.showIdle(); lastReceived=performance.now(); stalled=false; picker.reset();
     await connection.start(port);
     connected=Boolean(connection.port); listPending=connected; picker.setConnected(connected);
-    notice(`COM7の圧力データを待っています。${current().label}を押してみよう。`);
+    notice(`${PORT_NAME}の圧力データを待っています。${current().label}を押してみよう。`);
   } catch (error) {
     connected=false;
-    notice(error.name === 'NotFoundError' ? '接続をキャンセルしました。' : `接続できませんでした。COM7を使っているアプリを確認してください。(${error.message})`,error.name !== 'NotFoundError');
+    notice(error.name === 'NotFoundError' ? '接続をキャンセルしました。' : `接続できませんでした。${ANDROID_USB ? 'USBケーブルを確認してください。' : 'COM7を使っているアプリを確認してください。'}(${error.message})`,error.name !== 'NotFoundError');
   } finally { opening=false; controls(); scheduleRender(); }
 }
 function closed() {
@@ -158,7 +160,7 @@ function tick() {
   picker.sync();
   if (connected && !stalled && !switching() && now-lastReceived>settings.noDataMs) {
     stalled=true; model.reset(); playback.showIdle(); controls(); scheduleRender();
-    notice('圧力データが届いていません。COM7と実機のRun状態を確認してください。',true);
+    notice(`圧力データが届いていません。${PORT_NAME}と実機のRun状態を確認してください。`,true);
   }
 }
 function setup() {
@@ -166,7 +168,13 @@ function setup() {
     for (const src of Object.values(object.images ?? {})) { const preload = new Image(); preload.src = src; }
   playback=new VideoPlayback($('idle-video'),$('reaction-video'),current().videos,{
     onChange:(part,loading=false) => { $('video-label').textContent=part==='static'?`いつもの${current().label}`:`${current().names[part]}のリアクション${loading?' · 準備中':''}`; },
-    onError:message => { notice(message,true); $('play-video').hidden=false; },
+    // The play button is only for a browser autoplay block; other failures just show the notice.
+    onError:(message,{needsGesture=false}={}) => { notice(message,true); if (needsGesture) $('play-video').hidden=false; },
+  });
+  $('idle-video').addEventListener('playing',() => { $('play-video').hidden=true; });
+  // Android WebView pauses media behind system dialogs (USB permission) and other apps; restart the idle loop.
+  document.addEventListener('visibilitychange',() => {
+    if (document.visibilityState==='visible' && playback.part==='static' && $('idle-video').paused) playback.showIdle();
   });
   playback.setMuted(true); playback.showIdle();
   connection=new SerialConnection({...settings,maxLine:256},{onLine:receive, onError:message => notice(message,true), onClose:closed});
@@ -179,7 +187,8 @@ try {
   if (!configResponse.ok || !assetResponse.ok) throw new Error('設定を読み込めません');
   settings=await configResponse.json(); assets=validateAssets(await assetResponse.json());
   setup();
-  notice('serial' in navigator ? `「${current().label}につなぐ」からUSB SerialのCOM7を選んでください。` : 'USB接続にはChromeまたはEdgeで開いてください。');
+  notice(ANDROID_USB ? `USBケーブルで${current().label}をつなぎ、「${current().label}につなぐ」を押してください。` :
+    'serial' in navigator ? `「${current().label}につなぐ」からUSB SerialのCOM7を選んでください。` : 'USB接続にはChromeまたはEdgeで開いてください。');
   setInterval(tick,100);
 } catch (error) { notice(`デモを開けませんでした。起動用サーバーを確認してください。(${error.message})`,true); }
 controls(); render();

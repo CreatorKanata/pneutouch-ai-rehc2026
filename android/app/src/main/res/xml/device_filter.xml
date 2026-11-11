@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Board USB-C (CN9): FTDI FT2232H; channel B is the UART. -->
+    <usb-device vendor-id="1027" product-id="24592" />
+</resources>

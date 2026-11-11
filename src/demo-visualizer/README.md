@@ -5,6 +5,7 @@ Created by Kanata the Kid Creator.
 実際の恐竜から受け取った圧力とSolistAIの推定結果を、動画・状態画像・波形で表示します。
 推定は `src/pneutouch-solist` の実機で行い、HTML/JavaScriptがWeb SerialでUSB UARTを直接読みます。
 Pythonは静的ファイルの配信だけを担当します。
+Androidタブレットで動かす場合は [`android/README.md`](../../android/README.md) を参照してください。
 
 ## 起動
 
